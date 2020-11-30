@@ -1,0 +1,30 @@
+stepmania
+  launch stepmania after setting prefs (input/etc)
+
+stepmania-ensure-ssc-sm
+  runs SM/SSC converter on all song subdirs with only DWI in them
+  (wrapper around https://github.com/stepmania/stepmania/pull/2066)
+
+zenius-ddrsonglist
+  crawls zenius-i-vanisher to fetch/parse/format song names and 'feet' difficulties
+
+ddrname
+  tool to rename pictures/screenshots of DDR scores
+
+ddr-stepmania-score
+  parse stepmania XML score files (/Save/Upload/*.xml) and simfiles to get DDRA-style scores
+
+simfile-radar
+  parse SM/SSC simfiles and calculate groove radar (stream/voltage/air/freeze/chaos) values
+  (uses formulas taken from: https://dancedancerevolution.fandom.com/wiki/Groove_Radar)
+
+simfile-zenius
+  simple zenius crawler to print recent simfile uploads
+
+ddr-radar-feet
+  use trainable neural network to guess 'feet' difficulty based on groove radar values
+
+stepmania-cursong-info
+  using the hack applied in `stepmania`, read the current song from the output
+  calculate radar+feet, format past XML scores, print the best picture score,
+  and get the number of passed/failed XML scores from the current session
