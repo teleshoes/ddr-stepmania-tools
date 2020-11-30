@@ -23,7 +23,7 @@ sub getNoteSetStats($$$);
 sub readNoteSetStatsCache($$);
 sub writeNoteSetStatsCache($$$);
 sub calculateNoteSetStats($$);
-sub getSMInfo($);
+sub getSMInfo($$$);
 sub readSMInfoCache($);
 sub writeSMInfoCache($$);
 sub parseSMFile($);
@@ -297,6 +297,13 @@ my $usage = "Usage:
     --doubles | doubles | --double | double | --dance-double | dance-double
       ignore (and skip calculations for) all note-sets where GAME is not 'doubles'
 
+    -n | --no-cache
+      same as \"--no-read-cache --no-write-cache\"
+    -w | --no-read-cache | --overwrite-cache
+      skip reading from the cache (does not affect writing to the cache)
+    -r | --no-write-cache | --read-only-cache
+      skip writing to the cache (does not affect reading from the cache)
+
     --beginner | beginner
       ignore (and skip calculations for) all note-sets where DIFF is not 'beginner'
     --basic | basic
@@ -369,6 +376,8 @@ sub main(@){
   my $defaultVarsMachine = $DEFAULT_MACHINE;
   my $dump = 0;
   my $formatSpec = $DEFAULT_FORMAT_SPEC;
+  my $readCache = 1;
+  my $writeCache = 1;
   while(@_ > 0){
     my $arg = shift;
     if($arg =~ /^(-h|--help)$/){
@@ -384,6 +393,13 @@ sub main(@){
       $dump = 1;
     }elsif($arg =~ /^--format=(.+)$/){
       $formatSpec = $1;
+    }elsif($arg =~ /^(-n|--no-cache)$/){
+      $readCache = 0;
+      $writeCache = 0;
+    }elsif($arg =~ /^(-w|--no-read-cache|--overwrite-cache)$/){
+      $readCache = 0;
+    }elsif($arg =~ /^(-r|--no-write-cache|--read-only-cache)$/){
+      $writeCache = 0;
     }elsif(-f $arg){
       die "$usage\nERROR: multiple SM_FILE args \"$arg\" + \"$smFile\"\n" if defined $smFile;
       $smFile = $arg;
@@ -393,7 +409,7 @@ sub main(@){
   }
   die "$usage\nERROR: missing SM_FILE\n" if not defined $smFile;
 
-  my $smInfo = getSMInfo($smFile);
+  my $smInfo = getSMInfo($smFile, $readCache, $writeCache);
 
   my @gameDiffKeys = @{$$smInfo{gameDiffKeyOrder}};
 
@@ -847,12 +863,13 @@ sub calculateNoteSetStats($$){
   return $s;
 }
 
-sub getSMInfo($){
-  my ($smFile) = @_;
-  my $smInfo = readSMInfoCache $smFile;
+sub getSMInfo($$$){
+  my ($smFile, $readCache, $writeCache) = @_;
+  my $smInfo = undef;
+  $smInfo = readSMInfoCache $smFile if $readCache;
   if(not defined $smInfo){
     $smInfo = parseSMFile $smFile;
-    writeSMInfoCache($smFile, $smInfo);
+    writeSMInfoCache($smFile, $smInfo) if $writeCache;
   }
   return $smInfo;
 }
