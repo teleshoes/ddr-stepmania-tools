@@ -13,12 +13,16 @@ sub simfileRadar($$$);
 sub calculateRadarFeet($$$);
 sub getDDRStepmaniaScoreAtts($@);
 sub findXmlFiles($$$);
+sub findRecentXmlFiles();
 sub md5sum($);
 sub readProcLine(@);
 
 my $CURSONG_FILE = "$ENV{HOME}/.cache/stepmania-selected-song";
 my $XML_UPLOAD_DIR = "$ENV{HOME}/.stepmania/Save/Upload";
 my $SONG_PARENT_DIR = "$ENV{HOME}/Games/stepmania/latest";
+
+my $RECENT_MILLIS = 6 * 60 * 60 * 1000; #SIX HOURS
+my $RECENT_FRAC_DAYS = sprintf "%.4f", $RECENT_MILLIS / 1000 / 60 / 60 / 24;
 
 my @ATTS = qw(DATETIME PASS_FAIL DDRA_SCORE PERCENT_SCORE FC_MAYBE);
 
@@ -99,6 +103,11 @@ sub formatCurSongInfo($){
 
   $fmt .= "$$info{simfileRadar}\n";
   $fmt .= "  feet=$$info{radarFeet}\n";
+  $fmt .= "  session:"
+          . " passed=$$info{sessionXmlPassedCount}"
+          . " failed=$$info{sessionXmlFailedCount}"
+          . "\n"
+          ;
   $fmt .= "\n";
 
   my @xmlScores = @{$$info{xmlScores}};
@@ -167,6 +176,13 @@ sub getSongInfo($$$){
 
   $$info{simfileRadar} = simfileRadar($simfile, $$info{ddrGame}, $$info{ddrDiff});
   $$info{radarFeet} = calculateRadarFeet($simfile, $$info{ddrGame}, $$info{ddrDiff});
+  my @sessionXmlFiles = findRecentXmlFiles();
+  my $totalCount = @sessionXmlFiles;
+  my $failedCount = grep {system "grep -i failed \"$_\" >/dev/null"; $? == 0;} @sessionXmlFiles;
+  my $passedCount = $totalCount - $failedCount;
+
+  $$info{sessionXmlPassedCount} = $passedCount;
+  $$info{sessionXmlFailedCount} = $failedCount;
 
   return $info;
 }
@@ -250,6 +266,19 @@ sub findXmlFiles($$$){
 
   chomp foreach @files;
   @files = grep {$_ =~ /\.xml$/i} @files;
+  return @files;
+}
+
+sub findRecentXmlFiles(){
+  my @findCmd = ("find",
+    $XML_UPLOAD_DIR,
+    "-mtime", "-$RECENT_FRAC_DAYS",
+    "-iname", "*.xml",
+  );
+  open CMD, "-|", @findCmd or die "ERROR: error running \"@findCmd\"\n";
+  my @files = <CMD>;
+  close CMD;
+  chomp foreach @files;
   return @files;
 }
 
