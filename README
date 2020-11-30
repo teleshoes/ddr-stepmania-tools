@@ -1,3 +1,6 @@
+collection of tools for doing specific, weird things with simfiles, score XML files, and zenius data
+not especially portable (written for GNU/Linux), and the weirder ones have dependencies on other scripts not in this repo
+
 stepmania
   launch stepmania after setting prefs (input/etc)
 
