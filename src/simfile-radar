@@ -704,7 +704,11 @@ sub getBPMChangeAmount($$){
       $bpmDiff = defined $newBPM ? $newBPM : $curBPM;
     }
 
-    $bpmChangeAmount += $bpmDiff;
+    my $firstBPMChange = defined $newBPM && not defined $curBPM ? 1 : 0;
+
+    if(not $firstBPMChange){
+      $bpmChangeAmount += $bpmDiff;
+    }
     $curBPM = $newBPM if defined $newBPM;
   }
 
