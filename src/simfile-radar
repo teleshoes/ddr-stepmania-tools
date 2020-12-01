@@ -4,6 +4,9 @@ use warnings;
 #Copyright 2020 Elliot Wolk
 #License: GPLv3
 
+use File::Basename qw(dirname);
+use Cwd qw(abs_path);
+
 my $ROWS_PER_MEASURE = 192;
 my $ROWS_PER_BEAT = int(192/4); #48
 
@@ -1289,6 +1292,17 @@ sub getCacheDir($){
   $fileName =~ s/--+/-/g;
   $fileName =~ s/^-*//g;
   $fileName =~ s/-*$//g;
+
+  if($fileName eq ""){
+    $fileName = abs_path(dirname($file));
+    $fileName =~ s/^.*\///;
+    $fileName = lc $fileName;
+    $fileName =~ s/\.([a-z0-9]+)$//;
+    $fileName =~ s/[^a-z0-9]/-/g;
+    $fileName =~ s/--+/-/g;
+    $fileName =~ s/^-*//g;
+    $fileName =~ s/-*$//g;
+  }
 
   return "$CACHE_BASE_DIR/$fileName-$checksum";
 }
