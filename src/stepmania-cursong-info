@@ -26,6 +26,11 @@ my $RECENT_FRAC_DAYS = sprintf "%.4f", $RECENT_MILLIS / 1000 / 60 / 60 / 24;
 
 my @ATTS = qw(DATETIME PASS_FAIL DDRA_SCORE PERCENT_SCORE FC_MAYBE);
 
+my @DDR_GAMES = qw(singles doubles);
+my @DDR_DIFFS = qw(beginner basic difficult expert challenge);
+my $OK_DDR_GAMES = join "|", @DDR_GAMES;
+my $OK_DDR_DIFFS = join "|", @DDR_DIFFS;
+
 my $usage = "Usage:
   $0 -h|--help
     show this message
@@ -230,6 +235,8 @@ sub simfileRadar($$$){
 
 sub calculateRadarFeet($$$){
   my ($simfileRadar, $ddrGame, $ddrDiff) = @_;
+  $ddrGame = "singles" if $ddrGame !~ /^($OK_DDR_GAMES)$/;
+  $ddrDiff = "expert" if $ddrDiff !~ /^($OK_DDR_DIFFS)$/;
   return readProcLine(
     "ddr-radar-feet",
     $ddrGame,
