@@ -9,7 +9,7 @@ my $ROWS_PER_BEAT = int(192/4); #48
 
 my $CACHE_BASE_DIR = "$ENV{HOME}/.cache/simfile-radar";
 
-sub formatStats($$);
+sub formatStats($$$);
 sub getSongRowCount($);
 sub getSongDuration($$$);
 sub getNoteCounts($);
@@ -346,6 +346,9 @@ my $usage = "Usage:
       default=$DEFAULT_FORMAT_SPEC
          e.g.: singles | expert     | S122 | V109 | A0   | F0   | C108
 
+      if format does not end in at least one newline, one is appended,
+        unless --no-force-newline is given
+
       PRINTF_MOD = FLAGS|WIDTH|PRECISION|SPECIFIER
         almost any printf string, like '+08.2f',
           except:
@@ -367,6 +370,11 @@ my $usage = "Usage:
         SPECIFIER:
           exactly one of: d i u o x X f F e E g G a A c s
           e.g.: f
+
+    -n | --no-force-newline
+      do not append newlines automatically
+      without this option, if FORMAT_SPEC results in output that does not end in a newline,
+        a newline is appended to each formatted output
 ";
 
 sub main(@){
@@ -376,6 +384,7 @@ sub main(@){
   my $defaultVarsMachine = $DEFAULT_MACHINE;
   my $dump = 0;
   my $formatSpec = $DEFAULT_FORMAT_SPEC;
+  my $forceNewlines = 1;
   my $readCache = 1;
   my $writeCache = 1;
   while(@_ > 0){
@@ -393,6 +402,8 @@ sub main(@){
       $dump = 1;
     }elsif($arg =~ /^--format=(.+)$/){
       $formatSpec = $1;
+    }elsif($arg =~ /^(-n|--no-force-newlines)$/){
+      $forceNewlines = 0;
     }elsif($arg =~ /^(-n|--no-cache)$/){
       $readCache = 0;
       $writeCache = 0;
@@ -437,13 +448,13 @@ sub main(@){
         }
       }
 
-      print formatStats($formatSpec, $s);
+      print formatStats($formatSpec, $forceNewlines, $s);
     }
   }
 }
 
-sub formatStats($$){
-  my ($formatSpec, $stats) = @_;
+sub formatStats($$$){
+  my ($formatSpec, $forceNewlines, $stats) = @_;
 
   my $s = $formatSpec;
   $s =~ s/&/&amp;/g;
@@ -470,6 +481,10 @@ sub formatStats($$){
 
   $s =~ s/&boing;/%/g;
   $s =~ s/&amp;/&/g;
+
+  if($forceNewlines and $s !~ /[\r\n]+$/){
+    $s .= "\n";
+  }
 
   return $s;
 }
