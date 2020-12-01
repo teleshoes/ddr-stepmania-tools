@@ -126,6 +126,7 @@ sub editNames($$@);
 sub parseOptsAndInfoArgs(@);
 sub getScoresByFile();
 sub listScoreFiles();
+sub listDirFiles($);
 sub parseScoreFile($);
 sub getQualityPoints($);
 sub sortScores($);
@@ -1465,11 +1466,22 @@ sub getScoresByFile(){
 }
 
 sub listScoreFiles(){
-  my @files = `cd $scoreDir && ls *.jpg *.png`;
-  chomp foreach @files;
+  my @files = listDirFiles($scoreDir);
+  s/^.*\/// foreach @files;
   @files = sort @files;
   @files = grep {$_ =~ /^\d+_.*\.(jpg|png)$/} @files;
   @files = grep {$_ !~ /_reminder_/} @files;
+  return @files;
+}
+
+sub listDirFiles($){
+  my ($dir) = @_;
+  opendir(my $dh, $dir) or die "ERROR: could not read dir $dir\n$!\n";
+  my @files = readdir($dh);
+  closedir($dh);
+  $dir =~ s/\/?$//;
+  @files = map {"$dir/$_"} @files;
+  @files = grep {-f $_} @files;
   return @files;
 }
 
