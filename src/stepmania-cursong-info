@@ -200,6 +200,8 @@ sub getSongInfo($$$){
 
 sub ddrnameBestScore($$$){
   my ($songNameId, $ddrGame, $ddrDiff) = @_;
+  return "" if $ddrGame !~ /^($OK_DDR_GAMES)$/;
+  return "" if $ddrDiff !~ /^($OK_DDR_DIFFS)$/;
   return readProcLine("ddrname",
     "--scorestats",
     "--song", "$songNameId",
