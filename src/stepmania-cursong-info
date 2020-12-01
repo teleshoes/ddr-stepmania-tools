@@ -36,7 +36,7 @@ my $usage = "Usage:
     extract+print info with `ddr-stepmania-score`, `ddrname`, and `simfile-radar`
 
   OPTS
-    --monitor
+    -m | --monitor
       loop forever, using inotifywait to efficiently wait on I/O writes to:
         $CURSONG_FILE
         $XML_UPLOAD_DIR/
@@ -51,7 +51,7 @@ sub main(@){
     if($arg =~ /^(-h|--help)$/){
       print $usage;
       exit 0;
-    }elsif($arg =~ /^(--monitor)$/){
+    }elsif($arg =~ /^(-m|--monitor)$/){
       $monitor = 1;
     }else{
       die "$usage\nERROR: unknown arg $arg\n";
