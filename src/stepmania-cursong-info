@@ -101,7 +101,13 @@ sub formatCurSongInfo($){
             $best,
   );
 
-  $fmt .= "$$info{simfileRadar}\n";
+  $fmt .= sprintf "S%-3d | V%-3d | A%-3d | F%-3d | C%-3d\n",
+             $$info{simfileRadar}{STREAM},
+             $$info{simfileRadar}{VOLTAGE},
+             $$info{simfileRadar}{AIR},
+             $$info{simfileRadar}{FREEZE},
+             $$info{simfileRadar}{CHAOS},
+             ;
   $fmt .= "  feet=$$info{radarFeet}\n";
   $fmt .= "  session:"
           . " passed=$$info{sessionXmlPassedCount}"
@@ -203,12 +209,23 @@ sub ddrnameBestScore($$$){
 
 sub simfileRadar($$$){
   my ($simfile, $ddrGame, $ddrDiff) = @_;
-  return readProcLine("simfile-radar",
-    "--$ddrGame",
-    "--$ddrDiff",
-    "--format=S%-3d-STREAM | V%-3d-VOLTAGE | A%-3d-AIR | F%-3d-FREEZE | C%-3d-CHAOS",
+  my $line = readProcLine("simfile-radar",
+    "--game=^$ddrGame\$",
+    "--diff=^$ddrDiff\$",
+    "--format=%d-STREAM,%d-VOLTAGE,%d-AIR,%d-FREEZE,%d-CHAOS",
     "$SONG_PARENT_DIR/$simfile",
   );
+  if($line =~ /^(\d+|\d*\.\d+),(\d+|\d*\.\d+),(\d+|\d*\.\d+),(\d+|\d*\.\d+),(\d+|\d*\.\d+)$/){
+    return {
+      STREAM  => $1,
+      VOLTAGE => $2,
+      AIR     => $3,
+      FREEZE  => $4,
+      CHAOS   => $5,
+    };
+  }else{
+    return undef;
+  }
 }
 
 sub calculateRadarFeet($$$){
