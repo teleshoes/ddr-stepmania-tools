@@ -155,7 +155,7 @@ sub getCurSongInfo(){
 }
 
 sub getSongInfo($$$){
-  my ($stepsType, $difficulty, $simfile) = ($1, $2, $3);
+  my ($stepsType, $difficulty, $simfile) = @_;
 
   my $info = {};
   my $songDir = dirname $simfile;
