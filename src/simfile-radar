@@ -296,27 +296,33 @@ my $usage = "Usage:
 
   OPTS
     -c | --no-cache
-      same as \"--no-read-cache --no-write-cache\"
+      same as '--no-read-cache --no-write-cache'
     -w | --no-read-cache | --overwrite-cache
       skip reading from the cache (does not affect writing to the cache)
     -r | --no-write-cache | --read-only-cache
       skip writing to the cache (does not affect reading from the cache)
 
     --singles | singles | --single | single | --dance-single | dance-single
-      ignore (and skip calculations for) all note-sets where GAME is not 'singles'
+      same as: --game='^singles\$'
     --doubles | doubles | --double | double | --dance-double | dance-double
-      ignore (and skip calculations for) all note-sets where GAME is not 'doubles'
+      same as: --game='^doubles\$'
+    --game=GAME_REGEX
+      ignore (and skip calculations for) all note-sets where GAME does not match
+      the regular expression GAME_REGEX (case-insensitive)
 
     --beginner | beginner
-      ignore (and skip calculations for) all note-sets where DIFF is not 'beginner'
+      same as: --difficulty='^beginner\$'
     --basic | basic
-      ignore (and skip calculations for) all note-sets where DIFF is not 'basic'
+      same as: --difficulty='^basic\$'
     --difficult | difficult
-      ignore (and skip calculations for) all note-sets where DIFF is not 'difficult'
+      same as: --difficulty='^difficult\$'
     --expert | expert
-      ignore (and skip calculations for) all note-sets where DIFF is not 'expert'
+      same as: --difficulty='^expert\$'
     --challenge | challenge
-      ignore (and skip calculations for) all note-sets where DIFF is not 'challenge'
+      same as: --difficulty='^challenge\$'
+    --diff=DIFFICULTY_REGEX --difficulty=DIFFICULTY_REGEX
+      ignore (and skip calculations for) all note-sets where DIFF does not match
+      the regular expression DIFFICULTY_REGEX (case-insensitive)
 
     --machine=MACHINE
       MACHINE is one of the following values (case-insensitive):
@@ -382,8 +388,8 @@ my $usage = "Usage:
 
 sub main(@){
   my $smFile;
-  my $gameFilter;
-  my $diffFilter;
+  my $gameFilterRegex;
+  my $diffFilterRegex;
   my $defaultVarsMachine = $DEFAULT_MACHINE;
   my $dump = 0;
   my $formatSpec = $DEFAULT_FORMAT_SPEC;
@@ -403,9 +409,13 @@ sub main(@){
     }elsif($arg =~ /^(-r|--no-write-cache|--read-only-cache)$/){
       $writeCache = 0;
     }elsif($arg =~ /^(?:--)?(?:dance-)?(single|double)s$/){
-      $gameFilter = "$1s";
+      $gameFilterRegex = "^$1s\$";
+    }elsif($arg =~ /^--game=(.+)$/){
+      $gameFilterRegex = $1;
     }elsif($arg =~ /^(?:--)?(beginner|basic|difficult|expert|challenge)$/){
-      $diffFilter = $1;
+      $diffFilterRegex = "^$1\$";
+    }elsif($arg =~ /^--(?:diff|-difficulty)=(.+)$/){
+      $diffFilterRegex = $1;
     }elsif($arg =~ /^--machine=(DDRA|DDRSN2)$/i){
       $defaultVarsMachine = uc $1;
     }elsif($arg =~ /^--dump$/){
@@ -430,8 +440,8 @@ sub main(@){
   my $stats = {};
   for my $gameDiffKey(@gameDiffKeys){
     my $noteSetInfo = $$smInfo{noteSetInfoByGameDiffKey}{$gameDiffKey};
-    next if defined $gameFilter and $$noteSetInfo{ddrGame} !~ /^$gameFilter$/i;
-    next if defined $diffFilter and $$noteSetInfo{ddrDiff} !~ /^$diffFilter$/i;
+    next if defined $gameFilterRegex and $$noteSetInfo{ddrGame} !~ /$gameFilterRegex/i;
+    next if defined $diffFilterRegex and $$noteSetInfo{ddrDiff} !~ /$diffFilterRegex/i;
     $$stats{$gameDiffKey} = getNoteSetStats($smFile, $smInfo, $gameDiffKey);
   }
 
