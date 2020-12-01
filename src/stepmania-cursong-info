@@ -181,7 +181,7 @@ sub getSongInfo($$$){
     $$info{songNameId}, $$info{ddrGame}, $$info{ddrDiff});
 
   $$info{simfileRadar} = simfileRadar($simfile, $$info{ddrGame}, $$info{ddrDiff});
-  $$info{radarFeet} = calculateRadarFeet($simfile, $$info{ddrGame}, $$info{ddrDiff});
+  $$info{radarFeet} = calculateRadarFeet($$info{simfileRadar}, $$info{ddrGame}, $$info{ddrDiff});
   my @sessionXmlFiles = findRecentXmlFiles();
   my $totalCount = @sessionXmlFiles;
   my $failedCount = grep {system "grep -i failed \"$_\" >/dev/null"; $? == 0;} @sessionXmlFiles;
@@ -229,8 +229,17 @@ sub simfileRadar($$$){
 }
 
 sub calculateRadarFeet($$$){
-  my ($simfile, $ddrGame, $ddrDiff) = @_;
-  return readProcLine("ddr-radar-feet", $ddrGame, $ddrDiff, "$SONG_PARENT_DIR/$simfile");
+  my ($simfileRadar, $ddrGame, $ddrDiff) = @_;
+  return readProcLine(
+    "ddr-radar-feet",
+    $ddrGame,
+    $ddrDiff,
+    $$simfileRadar{STREAM},
+    $$simfileRadar{VOLTAGE},
+    $$simfileRadar{AIR},
+    $$simfileRadar{FREEZE},
+    $$simfileRadar{CHAOS},
+  );
 }
 
 sub getDDRStepmaniaScoreAtts($@){
