@@ -29,7 +29,12 @@ my $TRAINING_SIMFILES_PATTERN = "$SONGS_BASE_DIR/DDR_*/*/*.sm";
 my @ALL_GAMES = qw(singles doubles);
 my @ALL_DIFFS = qw(beginner basic difficult expert challenge);
 
-my @SKIP_GAME_DIFF_KEYS = qw(doubles-beginner);
+my $REPLACE_GAME_DIFF_KEYS = {
+  "doubles-beginner" => "doubles-basic",
+};
+my $FMT_REPLACE_GAME_DIFF_KEYS = join "\n      ",
+  map {"$_ => $$REPLACE_GAME_DIFF_KEYS{$_}"} sort keys %$REPLACE_GAME_DIFF_KEYS;
+my $FMT_SKIP_GAME_DIFF_KEYS = join " ", sort keys %$REPLACE_GAME_DIFF_KEYS;
 
 sub runNeuralNet($$$$$$$);
 sub ensureRadarCache();
@@ -67,7 +72,7 @@ my $usage = "Usage:
   $EXEC --ensure | --cache
     -ensure training radar data is cached ($EXEC --ensure-training-radar-data)
     -for each GAME (@ALL_GAMES) and DIFF (@ALL_DIFFS):
-      -skip if GAME-DIFF is: @SKIP_GAME_DIFF_KEYS
+      -skip if GAME-DIFF is: $FMT_SKIP_GAME_DIFF_KEYS
       -ensure neuralnet is built ($EXEC --ensure-neuralnet GAME DIFF)
 
   $EXEC GAME DIFF STREAM VOLTAGE AIR FREEZE CHAOS
@@ -112,6 +117,8 @@ my $usage = "Usage:
       same as: $EXEC --calculate-training-radar-data
 
   $EXEC --build-neuralnet GAME DIFF
+    -replace GAME-DIFF keys that have no training data:
+      $FMT_REPLACE_GAME_DIFF_KEYS
     -remove cached neuralnet: $CACHE_DIR/neuralnet-GAME-DIFF.ann
     -ensure training radar data ($EXEC --ensure-training-radar-data)
     -extract output data from $DDRNAME_SONGLIST
@@ -198,7 +205,7 @@ sub main(@){
 
   if($cmd eq $CMD_ENSURE){
     ensureRadarCache();
-    my %okSkips = map {$_=>1} @SKIP_GAME_DIFF_KEYS;
+    my %okSkips = map {$_=>1} sort keys %$REPLACE_GAME_DIFF_KEYS;
     for my $game(@ALL_GAMES){
       for my $diff(@ALL_DIFFS){
         next if defined $okSkips{"$game-$diff"};
@@ -268,6 +275,19 @@ sub main(@){
 
 sub runNeuralNet($$$$$$$){
   my ($game, $diff, $s, $v, $a, $f, $c) = @_;
+
+  if(defined $$REPLACE_GAME_DIFF_KEYS{"$game-$diff"}){
+    my $oldGameDiffKey = $$REPLACE_GAME_DIFF_KEYS{"$game-$diff"};
+    if($oldGameDiffKey =~ /^(.+)-(.+)$/){
+      ($game, $diff) = ($1, $2);
+    }
+    my $gameDiffKey = "$game-$diff";
+    print STDERR "WARNING: $oldGameDiffKey neuralnet does not exist, using $gameDiffKey\n";
+  }
+
+  if($game eq "doubles" and $diff eq "beginner"){
+    $diff = "basic";
+  }
   my $ann = loadNeuralNet($game, $diff);
   my $input = [
     getScaledValue($s, $$SCALE{S}),
