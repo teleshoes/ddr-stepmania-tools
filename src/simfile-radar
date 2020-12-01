@@ -938,7 +938,7 @@ sub writeSMInfoCache($$){
     . "songNameTranslit=$$smInfo{songNameTranslit}\n"
     . "songNameId=$$smInfo{songNameId}\n"
     . "bpms=$$smInfo{bpms}\n"
-    . "stops=$$smInfo{bpms}\n"
+    . "stops=$$smInfo{stops}\n"
     . "gameDiffKeyOrder=" . join(",", @{$$smInfo{gameDiffKeyOrder}}) . "\n"
     ;
   close FH;
