@@ -1304,6 +1304,10 @@ sub getCacheDir($){
     $fileName =~ s/-*$//g;
   }
 
+  if($fileName eq ""){
+    $fileName = "unknown";
+  }
+
   return "$CACHE_BASE_DIR/$fileName-$checksum";
 }
 
