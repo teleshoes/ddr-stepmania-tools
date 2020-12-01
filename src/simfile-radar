@@ -300,7 +300,7 @@ my $usage = "Usage:
     --doubles | doubles | --double | double | --dance-double | dance-double
       ignore (and skip calculations for) all note-sets where GAME is not 'doubles'
 
-    -n | --no-cache
+    -c | --no-cache
       same as \"--no-read-cache --no-write-cache\"
     -w | --no-read-cache | --overwrite-cache
       skip reading from the cache (does not affect writing to the cache)
@@ -407,7 +407,7 @@ sub main(@){
       $formatSpec = $1;
     }elsif($arg =~ /^(-n|--no-force-newlines)$/){
       $forceNewlines = 0;
-    }elsif($arg =~ /^(-n|--no-cache)$/){
+    }elsif($arg =~ /^(-c|--no-cache)$/){
       $readCache = 0;
       $writeCache = 0;
     }elsif($arg =~ /^(-w|--no-read-cache|--overwrite-cache)$/){
