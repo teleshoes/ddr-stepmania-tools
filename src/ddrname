@@ -124,7 +124,7 @@ sub nameReminder($$);
 sub nameFile($$$$);
 sub editNames($$@);
 sub parseOptsAndInfoArgs(@);
-sub getScoresByFile();
+sub getScoresByFile($);
 sub listScoreFiles();
 sub listDirFiles($);
 sub parseScoreFile($);
@@ -139,6 +139,7 @@ sub getMtimesByFile($);
 sub splitScoresIntoCourses($$);
 sub splitCoursesIntoSessions(@);
 sub formatScores($$$$$$$);
+sub extractFileNameFilterRegex($);
 sub getBestScore($);
 sub gnuplot($$);
 sub combine(@);
@@ -735,7 +736,7 @@ sub main(@){
     $$info{special} = $emptySpecialArg if not defined $$info{special};
     $$info{failed} = $emptyFailedArg if not defined $$info{failed};
 
-    my $scoresByFile = getScoresByFile();
+    my $scoresByFile = getScoresByFile(undef);
     my $scores = [values %$scoresByFile];
     my $buckets = getScoreBuckets($scores, 0, @DEFAULT_BUCKET_FIELDS);
 
@@ -787,7 +788,7 @@ sub orientation($@){
   my $opts = [@_];
 
   my $filters = parseFilterOptions $opts;
-  my $scoresByFile = getScoresByFile();
+  my $scoresByFile = getScoresByFile(extractFileNameFilterRegex($filters));
   $scoresByFile = filterScores $scoresByFile, $filters;
 
   for my $file(sort keys %$scoresByFile){
@@ -825,7 +826,7 @@ sub dateStats($@){
 
   die getUsage() if @$opts != 0;
 
-  my $scoresByFile = getScoresByFile();
+  my $scoresByFile = getScoresByFile(extractFileNameFilterRegex($filters));
   $scoresByFile = filterScores $scoresByFile, $filters;
 
   my @courses = splitScoresIntoCourses $scoresByFile, getMtimesByFile $scoresByFile;
@@ -924,7 +925,7 @@ sub courseStats($@){
 
   die getUsage() if @$opts != 0;
 
-  my $scoresByFile = getScoresByFile();
+  my $scoresByFile = getScoresByFile(extractFileNameFilterRegex($filters));
   $scoresByFile = filterScores $scoresByFile, $filters;
 
   my @courses = splitScoresIntoCourses($scoresByFile, getMtimesByFile $scoresByFile);
@@ -1371,7 +1372,7 @@ sub editNames($$@){
     validateInfo $info;
   }
 
-  my $scoresByFile = getScoresByFile();
+  my $scoresByFile = getScoresByFile(undef);
   my $scores = [values %$scoresByFile];
   my $buckets = getScoreBuckets($scores, 0, @DEFAULT_BUCKET_FIELDS);
 
@@ -1459,8 +1460,10 @@ sub parseOptsAndInfoArgs(@){
   return ($opts, $info);
 }
 
-sub getScoresByFile(){
+sub getScoresByFile($){
+  my ($filenameFilterRegex) = @_;
   my @files = listScoreFiles();
+  @files = grep {/$filenameFilterRegex/} @files if defined $filenameFilterRegex;
   my $scoresByFile = { map {$_ => parseScoreFile $_} @files };
   return $scoresByFile;
 }
@@ -2003,7 +2006,7 @@ sub formatScores($$$$$$$){
   my ($format, $groupBuckets, $bestByBucketOnly,
       $okNotes, $abbrevBucket, $combineMachines, $filters) = @_;
 
-  my $scoresByFile = getScoresByFile();
+  my $scoresByFile = getScoresByFile(extractFileNameFilterRegex($filters));
   $scoresByFile = filterScores $scoresByFile, $filters;
 
   my @bucketFields = @DEFAULT_BUCKET_FIELDS;
@@ -2035,6 +2038,14 @@ sub formatScores($$$$$$$){
     $isFirstBucket = 0;
   }
   return $fmt;
+}
+
+sub extractFileNameFilterRegex($){
+  my ($filters) = @_;
+  my $songs = $$filters{songs};
+  return undef if not defined $songs;
+  my @okSongs = grep {$$songs{$_}} sort keys %$songs;
+  return join "|", @okSongs;
 }
 
 sub getBestScore($){
