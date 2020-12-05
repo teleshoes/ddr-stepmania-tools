@@ -5,18 +5,6 @@ use File::Basename qw(dirname);
 
 my $LIMIT = 10;
 
-sub formatCurSongInfo($);
-sub getCurSongInfo();
-sub getSongInfo($$$);
-sub ddrnameBestScore($$$);
-sub simfileRadar($$$);
-sub calculateRadarFeet($$$);
-sub getDDRStepmaniaScoreAtts($@);
-sub findXmlFiles($$$);
-sub findRecentXmlFiles();
-sub md5sum($);
-sub readProcLine(@);
-
 my $CURSONG_FILE = "$ENV{HOME}/.cache/stepmania-selected-song";
 my $XML_UPLOAD_DIR = "$ENV{HOME}/.stepmania/Save/Upload";
 my $SONG_PARENT_DIR = "$ENV{HOME}/Games/stepmania/latest";
@@ -48,6 +36,18 @@ my $usage = "Usage:
       when either is written to (current song changes or new XML score appears),
         do the same as `$0`
 ";
+
+sub formatCurSongInfo($);
+sub getCurSongInfo();
+sub getSongInfo($$$);
+sub ddrnameBestScore($$$);
+sub simfileRadar($$$);
+sub calculateRadarFeet($$$);
+sub getDDRStepmaniaScoreAtts($@);
+sub findXmlFiles($$$);
+sub findRecentXmlFiles();
+sub md5sum($);
+sub readProcLine(@);
 
 sub main(@){
   my $monitor = 0;
