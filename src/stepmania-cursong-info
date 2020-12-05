@@ -120,10 +120,10 @@ sub formatCurSongInfo($){
   }
 
   $fmt .= sprintf("%s\n%-7s %-9s %s\n",
-            $trimSongNameId,
+            blue($trimSongNameId),
             $$info{ddrGame},
             $$info{ddrDiff},
-            $best,
+            yellow($best),
   );
 
   $fmt .= sprintf "S%-3d | V%-3d | A%-3d | F%-3d | C%-3d\n",
@@ -133,10 +133,10 @@ sub formatCurSongInfo($){
              $$info{simfileRadar}{FREEZE},
              $$info{simfileRadar}{CHAOS},
              ;
-  $fmt .= "  feet=$$info{radarFeet}\n";
+  $fmt .= "  feet=" . yellow($$info{radarFeet}) . "\n";
   $fmt .= "  session:"
-          . " passed=$$info{sessionXmlPassedCount}"
-          . " failed=$$info{sessionXmlFailedCount}"
+          . " passed=" . yellow($$info{sessionXmlPassedCount})
+          . " failed=" . yellow($$info{sessionXmlFailedCount})
           . "\n"
           ;
   $fmt .= "\n";
