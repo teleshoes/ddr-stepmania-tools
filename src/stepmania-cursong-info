@@ -4,6 +4,7 @@ use warnings;
 use File::Basename qw(dirname);
 
 my $XML_SCORE_LIMIT = 10;
+my $USE_TERM_COLOR = -t STDOUT;
 
 my $CURSONG_FILE = "$ENV{HOME}/.cache/stepmania-selected-song";
 my $XML_UPLOAD_DIR = "$ENV{HOME}/.stepmania/Save/Upload";
@@ -35,6 +36,15 @@ my $usage = "Usage:
         $XML_UPLOAD_DIR/
       when either is written to (current song changes or new XML score appears),
         do the same as `$0`
+
+    --color
+      use Term::ANSIColor to output text formatted with ANSI color escapes
+    --no-color
+      do not output any ANSI color escapes
+    --color-term-only
+      (this is the default)
+      if STDOUT is a TTY, same as --color
+      if STDOUT is not a TTY, same as --no-color
 ";
 
 sub formatCurSongInfo($);
@@ -46,6 +56,10 @@ sub calculateRadarFeet($$$);
 sub getDDRStepmaniaScoreAtts($@);
 sub findXmlFiles($$$);
 sub findRecentXmlFiles();
+sub blue($);
+sub yellow($);
+sub red($);
+sub colorText($$);
 sub md5sum($);
 sub readProcLine(@);
 
@@ -58,6 +72,12 @@ sub main(@){
       exit 0;
     }elsif($arg =~ /^(-m|--monitor)$/){
       $monitor = 1;
+    }elsif($arg =~ /^(--color)$/){
+      $USE_TERM_COLOR = 1;
+    }elsif($arg =~ /^(--no-color)$/){
+      $USE_TERM_COLOR = 0;
+    }elsif($arg =~ /^(--color-term-only)$/){
+      $USE_TERM_COLOR = -t STDOUT;
     }else{
       die "$usage\nERROR: unknown arg $arg\n";
     }
@@ -315,6 +335,22 @@ sub findRecentXmlFiles(){
   close CMD;
   chomp foreach @files;
   return @files;
+}
+
+sub blue($){
+  return colorText($_[0], "bold blue");
+}
+sub yellow($){
+  return colorText($_[0], "yellow");
+}
+sub red($){
+  return colorText($_[0], "red");
+}
+sub colorText($$){
+  if($USE_TERM_COLOR){
+    require Term::ANSIColor;
+  }
+  return $USE_TERM_COLOR ? Term::ANSIColor::colored($_[0], $_[1]) : return $_[0];
 }
 
 sub md5sum($){
