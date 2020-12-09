@@ -253,13 +253,6 @@ my $usage = "Usage:
       treat all FILE args as IMG_FILE
       mtime of IMG_FILE is used to obtain the XML_SCORE_FILE
 
-    --filename | --filenames
-      always print FILE before parsing scoredata
-      (default is to print only if more than one FILE given)
-    --no-filename | --nofilename | --no-filenames | --nofilenames
-      never print FILE before parsing scoredata
-      (default is to print only if more than one FILE given)
-
     --check-mtime
       (this is the default)
       warn if image file and XML file mtime differ by more than ${XML_MTIME_DIFF_WARNING_SECONDS}s
@@ -267,6 +260,13 @@ my $usage = "Usage:
     --no-check-mtime | --force-mtime | --force
       allow any amount of difference between mtimes between image file and XML file,
       without failing or warning
+
+    --filename | --filenames
+      always print FILE before parsing scoredata
+      (default is to print only if more than one FILE given)
+    --no-filename | --nofilename | --no-filenames | --nofilenames
+      never print FILE before parsing scoredata
+      (default is to print only if more than one FILE given)
 
     --format=FORMAT_SPEC
       instead of printing one item per line in SCORE_DATA surrounded by the SEP,
@@ -313,14 +313,14 @@ sub main(@){
       $scoreFileMode = $SCORE_FILE_MODE_DIRECT_XML;
     }elsif($arg =~ /^(--img|--image|--closest-by-mtime)$/i){
       $scoreFileMode = $SCORE_FILE_MODE_CLOSEST_XML_BY_MTIME;
-    }elsif($arg =~ /^(--filenames?)$/i){
-      $filenamePrintMode = $FILENAME_PRINT_MODE_ALWAYS;
-    }elsif($arg =~ /^(--no-filenames?|--nofilenames?)$/i){
-      $filenamePrintMode = $FILENAME_PRINT_MODE_NEVER;
     }elsif($arg =~ /^(--check-mtimes)$/i){
       $checkMtimes = 1;
     }elsif($arg =~ /^(--no-check-mtimes|--force-mtimes|--force)$/i){
       $checkMtimes = 0;
+    }elsif($arg =~ /^(--filenames?)$/i){
+      $filenamePrintMode = $FILENAME_PRINT_MODE_ALWAYS;
+    }elsif($arg =~ /^(--no-filenames?|--nofilenames?)$/i){
+      $filenamePrintMode = $FILENAME_PRINT_MODE_NEVER;
     }elsif($arg =~ /^--format=(.+)$/i){
       $formatSpec = $1;
     }elsif(-f $arg){
