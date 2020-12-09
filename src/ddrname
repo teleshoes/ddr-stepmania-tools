@@ -654,6 +654,7 @@ sub getUsage(;$){
 
   $0 --edit-names [OPT OPT ..] [INFO_ARG INFO_ARG ..] [IMG_FILE IMG_FILE ..]
     group-edit a single attribute for multiple files
+    NOTE: implies --fast (can be overridden with later options)
     for each IMG_FILE:
       -parse original info args attributes from IMG_FILE file name
       -replace previous values of the attribute for each INFO_ARG given
@@ -721,6 +722,7 @@ sub main(@){
     while(@args > 0 and not -f $args[0]){
       push @infoArgs, shift @args;
     }
+    @infoArgs = ("--fast", @infoArgs);
     @imgFiles = @args;
     my ($opts, $editInfo) = parseOptsAndInfoArgs @infoArgs;
     editNames($editInfo, $opts, @imgFiles);
