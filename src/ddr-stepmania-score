@@ -3,7 +3,7 @@ use strict;
 use warnings;
 use File::Basename qw(basename);
 
-sub getScoreDataByXmlFile($);
+sub getScoreDataByXmlFile($$$);
 sub readScoreDataCache($);
 sub writeScoreDataCache($$);
 sub getCacheFile($);
@@ -261,6 +261,13 @@ my $usage = "Usage:
       allow any amount of difference between mtimes between image file and XML file,
       without failing or warning
 
+    -c | --no-cache
+      same as '--no-read-cache --no-write-cache'
+    -w | --no-read-cache | --overwrite-cache
+      skip reading from the cache (does not affect writing to the cache)
+    -r | --no-write-cache | --read-only-cache
+      skip writing to the cache (does not affect reading from the cache)
+
     --filename | --filenames
       always print FILE before parsing scoredata
       (default is to print only if more than one FILE given)
@@ -284,6 +291,8 @@ sub main(@){
   my $scoreFileMode = $SCORE_FILE_MODE_BY_FILE_EXT;
   my $filenamePrintMode = $FILENAME_PRINT_MODE_MULTIPLE_ONLY;
   my $checkMtimes = 1;
+  my $readCache = 1;
+  my $writeCache = 1;
   my $formatSpec = $DEFAULT_FORMAT_SPEC;
   while(@_ > 0){
     my $arg = shift @_;
@@ -317,6 +326,13 @@ sub main(@){
       $checkMtimes = 1;
     }elsif($arg =~ /^(--no-check-mtimes|--force-mtimes|--force)$/i){
       $checkMtimes = 0;
+    }elsif($arg =~ /^(-c|--no-cache)$/){
+      $readCache = 0;
+      $writeCache = 0;
+    }elsif($arg =~ /^(-w|--no-read-cache|--overwrite-cache)$/){
+      $readCache = 0;
+    }elsif($arg =~ /^(-r|--no-write-cache|--read-only-cache)$/){
+      $writeCache = 0;
     }elsif($arg =~ /^(--filenames?)$/i){
       $filenamePrintMode = $FILENAME_PRINT_MODE_ALWAYS;
     }elsif($arg =~ /^(--no-filenames?|--nofilenames?)$/i){
@@ -357,7 +373,7 @@ sub main(@){
       die "ERROR: unknown SCORE_FILE_MODE: $mode\n";
     }
 
-    my $sd = getScoreDataByXmlFile($xmlFile);
+    my $sd = getScoreDataByXmlFile($xmlFile, $readCache, $writeCache);
 
     if($cmd eq $COMMAND_PRINT){
       my $printFilename;
@@ -404,12 +420,13 @@ sub main(@){
   }
 }
 
-sub getScoreDataByXmlFile($){
-  my ($xmlFile) = @_;
-  my $sd = readScoreDataCache($xmlFile);
+sub getScoreDataByXmlFile($$$){
+  my ($xmlFile, $readCache, $writeCache) = @_;
+  my $sd = undef;
+  $sd = readScoreDataCache($xmlFile) if $readCache;
   if(not defined $sd){
     $sd = calculateScoreDataCache($xmlFile);
-    writeScoreDataCache($xmlFile, $sd);
+    writeScoreDataCache($xmlFile, $sd) if $writeCache;
   }
   return $sd;
 }
