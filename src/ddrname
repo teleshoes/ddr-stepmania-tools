@@ -188,6 +188,7 @@ my $okMachineArgs = join '|', @machineArgs;
 
 my @timingWindowsArgs = (
   "twdefault", #no timing windows specified
+  "twsmorig",  #Stepmania "Orginal" timing windows
 );
 my $emptyTimingWindowsArg = "twdefault";
 my $okTimingWindowsArgs = join '|', @timingWindowsArgs;
