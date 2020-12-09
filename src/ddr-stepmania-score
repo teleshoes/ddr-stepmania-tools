@@ -381,7 +381,7 @@ sub main(@){
         $DDRNAME_BAR,
         $$sd{SONG_NAME},
         $$sd{PASS_FAIL},
-        $$sd{DDRA_SCORE},
+        sprintf("%06d", $$sd{DDRA_SCORE}),
         $$sd{FC},
         $$sd{DDRA_GAME},
         $$sd{DDRA_DIFFICULTY},
