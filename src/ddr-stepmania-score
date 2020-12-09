@@ -364,12 +364,12 @@ sub main(@){
         $DDRNAME_MACHINE,
         $DDRNAME_STAGE,
         $DDRNAME_BAR,
-        $$sd{songName},
-        $$sd{passFail},
-        $$sd{ddraScore},
-        $$sd{fc},
-        $$sd{ddraGame},
-        $$sd{ddraDifficulty},
+        $$sd{SONG_NAME},
+        $$sd{PASS_FAIL},
+        $$sd{DDRA_SCORE},
+        $$sd{FC},
+        $$sd{DDRA_GAME},
+        $$sd{DDRA_DIFFICULTY},
       );
       print "$SEP\n";
       print "@cmd\n";
