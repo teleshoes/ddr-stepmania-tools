@@ -257,6 +257,14 @@ my $usage = "Usage:
       never print FILE before parsing scoredata
       (default is to print only if more than one FILE given)
 
+    --check-mtime
+      (this is the default)
+      warn if image file and XML file mtime differ by more than ${XML_MTIME_DIFF_WARNING_SECONDS}s
+      FAIL if image file and XML file mtime differ by more than ${XML_MTIME_DIFF_ERROR_SECONDS}s
+    --no-check-mtime | --force-mtime | --force
+      allow any amount of difference between mtimes between image file and XML file,
+      without failing or warning
+
     --format=FORMAT_SPEC
       instead of printing one item per line in SCORE_DATA surrounded by the SEP,
       print given format
@@ -272,6 +280,7 @@ sub main(@){
   my @files;
   my $scoreFileMode = $SCORE_FILE_MODE_BY_FILE_EXT;
   my $filenamePrintMode = $FILENAME_PRINT_MODE_MULTIPLE_ONLY;
+  my $checkMtimes = 1;
   my $formatSpec = $DEFAULT_FORMAT_SPEC;
   while(@_ > 0){
     my $arg = shift @_;
@@ -305,6 +314,10 @@ sub main(@){
       $filenamePrintMode = $FILENAME_PRINT_MODE_ALWAYS;
     }elsif($arg =~ /^(--no-filenames?|--nofilenames?)$/i){
       $filenamePrintMode = $FILENAME_PRINT_MODE_NEVER;
+    }elsif($arg =~ /^(--check-mtimes)$/i){
+      $checkMtimes = 1;
+    }elsif($arg =~ /^(--no-check-mtimes|--force-mtimes|--force)$/i){
+      $checkMtimes = 0;
     }elsif($arg =~ /^--format=(.+)$/i){
       $formatSpec = $1;
     }elsif(-f $arg){
@@ -333,8 +346,10 @@ sub main(@){
       $xmlFile = $file;
     }elsif($mode eq $SCORE_FILE_MODE_CLOSEST_XML_BY_MTIME){
       $xmlFile = getOldestXmlFileAfterMtime mtime($file);
-      assertMtimesCloseEnough($file, $xmlFile,
-        $XML_MTIME_DIFF_WARNING_SECONDS, $XML_MTIME_DIFF_ERROR_SECONDS);
+      if($checkMtimes){
+        assertMtimesCloseEnough($file, $xmlFile,
+          $XML_MTIME_DIFF_WARNING_SECONDS, $XML_MTIME_DIFF_ERROR_SECONDS);
+      }
     }else{
       die "ERROR: unknown SCORE_FILE_MODE: $mode\n";
     }
