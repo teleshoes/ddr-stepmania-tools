@@ -182,7 +182,7 @@ my %difficultyAbbrevs = (
   challenge => 'cha',
 );
 
-my @machineArgs = qw(sn2 2013 x3 a sm50pdp sm53pdp);
+my @machineArgs = qw(sn2 2013 x3 a sm50pdp sm53pdp sm53ltek);
 my $defaultMachineArg = "sm53pdp";
 my $okMachineArgs = join '|', @machineArgs;
 
