@@ -183,7 +183,7 @@ my %difficultyAbbrevs = (
 );
 
 my @machineArgs = qw(sn2 2013 x3 a sm50pdp sm53pdp sm53ltek);
-my $defaultMachineArg = "sm53pdp";
+my $defaultMachineArg = "sm53ltek";
 my $okMachineArgs = join '|', @machineArgs;
 
 my @timingWindowsArgs = (
