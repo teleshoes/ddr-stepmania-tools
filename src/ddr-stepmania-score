@@ -59,8 +59,12 @@ my $SONG_NAME_IDS_BY_SONG_DIR_SUFFIX = {
   "DDR_10_Supernova2/SUNKiSS DROP~Alison Side~"            => "sunkiss-drop",
 
   #custom/stepmania songs with too-long/unclear/duplicate auto-generated song-name-ids
+  "ani/Elfen Lied AMV (Blue by The Birthday Massacre) [Sanjuro]" =>
+      => "blue-birthday-massacre-condemned-memoir",
   "ani/Zetsubou Billy [Death Note 2nd Ending] [neothe0ne]" => "zetsubou-billy-death-note",
   "ani/The WORLD - Death Note 1st OP [Asahina-san]"        => "the-world-death-note",
+  "KoL DDR Post-5th & Pre-Supernova Edit Pack/V(for EXTREME)"
+      => "v-for-extreme-king-of-light",
   "otakus_dream_pad_mix_02/(Huzure) Hacking to the Gate (Steins Gate)",
       => "hacking-to-the-gate-huzure",
   "test7/let_it_go_frozen_winter_vivaldi_piano_guys"       => "let-it-go-winter-vivaldi-piano-guys",
