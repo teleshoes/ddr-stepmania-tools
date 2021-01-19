@@ -15,8 +15,6 @@ my $defaultScreen = 'ScreenSelectMusic';
 
 my $selectedSongCacheFile = "$ENV{HOME}/.cache/stepmania-selected-song";
 
-my $execThemesDir = "$execDir/Appearance/Themes";
-
 my $prefs = {
   'Options' => {
     GlobalOffsetSeconds       => "-0.070",
@@ -117,7 +115,7 @@ my %okScreensHash = map {$_ => 1} @okScreens;
 
 my $patches = {
   # print songtype, difficulty, and SM file on ScreenSelectMusic
-  "$execThemesDir/default/BGAnimations/ScreenSelectMusic decorations/panels.lua" => ''
+  "$execDir/Appearance/Themes/default/BGAnimations/ScreenSelectMusic decorations/panels.lua" => ''
     . '*** panels.lua.orig	2020-11-24 11:46:36.518666321 -0500' . "\n"
     . '--- panels.lua.printsongselect	2020-11-24 11:46:27.463459477 -0500' . "\n"
     . '***************' . "\n"
