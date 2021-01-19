@@ -20,6 +20,8 @@ my @DDR_DIFFS = qw(beginner basic difficult expert challenge);
 my $OK_DDR_GAMES = join "|", @DDR_GAMES;
 my $OK_DDR_DIFFS = join "|", @DDR_DIFFS;
 
+my $EXEC_DDR_NEW_SCORE = "ddr-new-score";
+
 my $usage = "Usage:
   $0 -h|--help
     show this message
@@ -36,6 +38,8 @@ my $usage = "Usage:
         $XML_UPLOAD_DIR/
       when either is written to (current song changes or new XML score appears),
         do the same as `$0`
+      also, if the number of XML files is different after I/O write, run the command:
+        $EXEC_DDR_NEW_SCORE &
 
     --color
       use Term::ANSIColor to output text formatted with ANSI color escapes
@@ -90,6 +94,8 @@ sub main(@){
       if($md5 ne md5sum $CURSONG_FILE){
         next;
       }
+      my @xmlFiles = findRecentXmlFiles();
+      my $oldXmlCount = @xmlFiles;
       system "inotifywait",
         "-q", "-q",          #silent
         "-e", "close_write", #directory or file written
@@ -98,6 +104,11 @@ sub main(@){
       ;
       if($? != 0){
         die "inotifywait quit unexpectedly\n";
+      }
+      @xmlFiles = findRecentXmlFiles();
+      my $newXmlCount = @xmlFiles;
+      if($oldXmlCount != $newXmlCount){
+        system "$EXEC_DDR_NEW_SCORE &";
       }
     }
   }else{
