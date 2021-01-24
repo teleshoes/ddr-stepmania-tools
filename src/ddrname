@@ -44,7 +44,7 @@ my @okFilters = qw(
   --hard --nothard --feet --minfeet --maxfeet
   --singles --doubles --nonstop --nonstopdoubles
   --beginner --basic --difficult --expert --challenge
-  --machine --sn2 --2013 --x3 --a --sm
+  --machine --sn2 --2013 --x3 --a --sm --default-machine
   --tw
   --score --minscore --maxscore --monotonic --increasing --records
   --date --mindate --maxdate --dailybest
@@ -455,6 +455,9 @@ sub getUsage(;$){
       --sm
         include only scores where MACHINE is sm50pdp or sm53pdp or sm53ltek
         (same as: --machine sm50pdp,sm53pdp,sm53ltek)
+      --default-machine
+        include only scores where MACHINE is $defaultMachineArg
+        (same as: --machine $defaultMachineArg)
 
     FILTER: TIMING_WINDOWS
       --tw TIMING_WINDOWS_CSV
@@ -1149,6 +1152,9 @@ sub parseFilterOptions($){
       $$filters{machine}{sm50pdp} = 1;
       $$filters{machine}{sm53pdp} = 1;
       $$filters{machine}{sm53ltek} = 1;
+    }elsif($opt =~ /^(--default-machine)$/){
+      $$filters{machine} = {map {$_ => 0} @machineArgs};
+      $$filters{machine}{$defaultMachineArg} = 1;
     }elsif($opt =~ /^(--machine)$/){
       $$filters{machine} = {map {$_ => 0} @machineArgs};
       my @okMachines = split /\s*,\s*/, $arg;
