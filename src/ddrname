@@ -453,8 +453,8 @@ sub getUsage(;$){
       --a
         include only scores where MACHINE is a (same as: --machine a)
       --sm
-        include only scores where MACHINE is sm50pdp or sm53pdp
-        (same as: --machine sm50pdp,sm53pdp)
+        include only scores where MACHINE is sm50pdp or sm53pdp or sm53ltek
+        (same as: --machine sm50pdp,sm53pdp,sm53ltek)
 
     FILTER: TIMING_WINDOWS
       --tw TIMING_WINDOWS_CSV
@@ -1148,6 +1148,7 @@ sub parseFilterOptions($){
       $$filters{machine} = {map {$_ => 0} @machineArgs};
       $$filters{machine}{sm50pdp} = 1;
       $$filters{machine}{sm53pdp} = 1;
+      $$filters{machine}{sm53ltek} = 1;
     }elsif($opt =~ /^(--machine)$/){
       $$filters{machine} = {map {$_ => 0} @machineArgs};
       my @okMachines = split /\s*,\s*/, $arg;
