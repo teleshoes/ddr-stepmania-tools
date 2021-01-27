@@ -819,8 +819,20 @@ sub calculateNoteSetStats($$){
   };
 
   my $rows = $$noteSetInfo{expandedNoteRows};
-  my $bpmsByRow = $$smInfo{bpmsByRow};
-  my $stopsByRow = $$smInfo{stopsByRow};
+
+  my $bpmsByRow;
+  if(defined $$noteSetInfo{bpmsByRow}){
+    $bpmsByRow = $$noteSetInfo{bpmsByRow};
+  }else{
+    $bpmsByRow = $$smInfo{bpmsByRow};
+  }
+
+  my $stopsByRow;
+  if(defined $$noteSetInfo{stopsByRow}){
+    $stopsByRow = $$noteSetInfo{stopsByRow};
+  }else{
+    $stopsByRow = $$smInfo{stopsByRow};
+  }
 
   #analysis + data-collection
   $s = {%$s,                     %{getNoteCounts($rows)},
@@ -939,6 +951,20 @@ sub readSMInfoCache($){
     $$noteSetInfo{ddrGame} = $1 if $noteSetInfoTxt =~ /^ddrGame=(.+)$/m;
     $$noteSetInfo{ddrDiff} = $1 if $noteSetInfoTxt =~ /^ddrDiff=(.+)$/m;
     $$noteSetInfo{smFeet} = $1  if $noteSetInfoTxt =~ /^smFeet=(.+)$/m;
+    $$noteSetInfo{bpms} = $1    if $noteSetInfoTxt =~ /^bpms=(.+)$/m;
+    $$noteSetInfo{stops} = $1   if $noteSetInfoTxt =~ /^stops=(.+)$/m;
+
+    my $bpmsByRow = undef;
+    if(defined $$noteSetInfo{bpms}){
+      $bpmsByRow = convertValuesByBeatToValuesByRow($$noteSetInfo{bpms});
+    }
+    $$noteSetInfo{bpmsByRow} = $bpmsByRow;
+
+    my $stopsByRow = undef;
+    if(defined $$noteSetInfo{stops}){
+      $stopsByRow = convertValuesByBeatToValuesByRow($$noteSetInfo{stops});
+    }
+    $$noteSetInfo{stopsByRow} = $stopsByRow;
 
     if(not -f "$cacheDir/expandedNoteRows-$gameDiffKey.gz"){
       return undef;
@@ -982,6 +1008,8 @@ sub writeSMInfoCache($$){
       . "ddrDiff=$$noteSetInfo{ddrDiff}\n"
       . "smFeet=$$noteSetInfo{smFeet}\n"
       ;
+    print FH "bpms=$$noteSetInfo{bpms}\n" if defined $$noteSetInfo{bpms};
+    print FH "stops=$$noteSetInfo{stops}\n" if defined $$noteSetInfo{stops};
     close FH;
 
     open FH, "> $cacheDir/expandedNoteRows-$gameDiffKey";
@@ -1080,6 +1108,10 @@ sub parseSMFile($){
       ddrDiff => formatDDRDiff($difficulty),
       smFeet => $smFeet,
       expandedNoteRows => getExpandedNoteRows $notes,
+      bpms => undef,
+      stops => undef,
+      bpmsByRow => undef,
+      stopsByRow => undef,
     };
     push @{$$smInfo{gameDiffKeyOrder}}, $gameDiffKey;
   }
@@ -1091,6 +1123,11 @@ sub parseSMFile($){
     my $difficulty = $1 if $noteSet =~ /\#DIFFICULTY   \s*:\s*   ($reName)   \s*;\s*/sxi;
     my $smFeet = $1     if $noteSet =~ /\#METER        \s*:\s*   (\d+)       \s*;\s*/sxi;
     my $notes = $1      if $noteSet =~ /\#NOTES        \s*:\s*   ([^;]+)     \s*;\s*/sxi;
+    my $bpms = $1       if $noteSet =~ /\#BPMS         \s*:\s*   ([^;]+)     \s*;\s*/sxi;
+    my $stops = $1      if $noteSet =~ /\#STOPS        \s*:\s*   ([^;]+)     \s*;\s*/sxi;
+
+    my $bpmsByRow = convertValuesByBeatToValuesByRow($bpms) if defined $bpms;
+    my $stopsByRow = convertValuesByBeatToValuesByRow($stops) if defined $stops;
 
     die "ERROR: missing STEPSTYPE from $smFile $noteSet\n" if not defined $game;
     die "ERROR: missing DIFFICULTY from $smFile\n" if not defined $difficulty;
@@ -1116,6 +1153,10 @@ sub parseSMFile($){
       ddrDiff => formatDDRDiff($difficulty),
       smFeet => $smFeet,
       expandedNoteRows => getExpandedNoteRows $notes,
+      bpms => $bpms,
+      stops => $stops,
+      bpmsByRow => $bpmsByRow,
+      stopsByRow => $stopsByRow,
     };
     push @{$$smInfo{gameDiffKeyOrder}}, $gameDiffKey;
   }
