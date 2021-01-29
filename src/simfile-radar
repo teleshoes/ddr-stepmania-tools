@@ -1141,9 +1141,9 @@ sub parseSMFile($){
       $index++;
       $difficulty = "$difficulty$index";
       my $dupeGameDiffKey = $gameDiffKey;
+      $gameDiffKey = gameDiffKey($game, $difficulty);
       print STDERR "WARNING: duplicate game/difficulty: "
         ." $dupeGameDiffKey (using $gameDiffKey)\n";
-      $gameDiffKey = gameDiffKey($game, $difficulty);
     }
 
     $$smInfo{noteSetInfoByGameDiffKey}{$gameDiffKey} = {
