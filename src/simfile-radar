@@ -1127,6 +1127,33 @@ sub parseSMFile($){
     };
   }
 
+  my @playerNoteSetInfos;
+  for my $noteSetInfo(@noteSetInfos){
+    my $game = $$noteSetInfo{game};
+    my $notes = $$noteSetInfo{notes};
+
+    if($game =~ /^(dance-couple)$/i and $notes =~ /[01234MLFAKNH]{8}/){
+      my $notesP1 = $notes;
+      my $notesP2 = $notes;
+      $notesP1 =~ s/([01234MLFAKNH]{4})([01234MLFAKNH]{4})/$1/g;
+      $notesP2 =~ s/([01234MLFAKNH]{4})([01234MLFAKNH]{4})/$2/g;
+      push @playerNoteSetInfos, {
+        %$noteSetInfo,
+        game => "$$noteSetInfo{game}-p1",
+        notes => $notesP1,
+      };
+      push @playerNoteSetInfos, {
+        %$noteSetInfo,
+        game => "$$noteSetInfo{game}-p2",
+        notes => $notesP2,
+      };
+    }else{
+      push @playerNoteSetInfos, $noteSetInfo;
+    }
+  }
+
+  @noteSetInfos = @playerNoteSetInfos;
+
   #process/expand/format note-set data
   for my $noteSetInfo(@noteSetInfos){
     $$noteSetInfo{expandedNoteRows} = getExpandedNoteRows $$noteSetInfo{notes};
@@ -1136,32 +1163,6 @@ sub parseSMFile($){
     $$noteSetInfo{ddrDiff} = formatDDRDiff($$noteSetInfo{diff});
   }
 
-  my @playerNoteSetInfos;
-  for my $noteSetInfo(@noteSetInfos){
-    my $game = $$noteSetInfo{game};
-    my $noteRows = $$noteSetInfo{expandedNoteRows};
-    my $firstNoteRow = $$noteRows[0];
-    my $notesPerRow = length $firstNoteRow;
-
-    if($game =~ /^(dance-couple)$/i and $notesPerRow == 8){
-      push @playerNoteSetInfos, {
-        %$noteSetInfo,
-        game => "$$noteSetInfo{game}-p1",
-        ddrGame => "$$noteSetInfo{ddrGame}-p1",
-        expandedNoteRows => [map {substr $_, 0, 4} @$noteRows],
-      };
-      push @playerNoteSetInfos, {
-        %$noteSetInfo,
-        game => "$$noteSetInfo{game}-p2",
-        ddrGame => "$$noteSetInfo{ddrGame}-p2",
-        expandedNoteRows => [map {substr $_, 4, 8} @$noteRows],
-      };
-    }else{
-      push @playerNoteSetInfos, $noteSetInfo;
-    }
-  }
-
-  @noteSetInfos = @playerNoteSetInfos;
 
   #generate a unique game-diff-key for each note-set in the file
   for my $noteSetInfo(@noteSetInfos){
