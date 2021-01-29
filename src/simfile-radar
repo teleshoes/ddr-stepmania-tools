@@ -1070,7 +1070,7 @@ sub parseSMFile($){
   #in case one #NOTES doesnt have a ";", add it before the next
   $sm =~ s/^#NOTES/;\n#NOTES/gm;
 
-  my @parsedNoteSets;
+  my @noteSetInfos;
 
   #SM files
   while($sm =~ /
@@ -1091,7 +1091,7 @@ sub parseSMFile($){
       next;
     }
 
-    push @parsedNoteSets, {
+    push @noteSetInfos, {
       game   => $game,
       diff   => $difficulty,
       smFeet => $smFeet,
@@ -1117,7 +1117,7 @@ sub parseSMFile($){
     die "ERROR: missing DIFFICULTY from $smFile\n" if not defined $difficulty;
     die "ERROR: missing NOTES from $smFile\n" if not defined $notes;
 
-    push @parsedNoteSets, {
+    push @noteSetInfos, {
       game   => $game,
       diff   => $difficulty,
       smFeet => $smFeet,
@@ -1127,9 +1127,19 @@ sub parseSMFile($){
     };
   }
 
-  for my $parsedNoteSet(@parsedNoteSets){
-    my $game = $$parsedNoteSet{game};
-    my $difficulty = $$parsedNoteSet{diff};
+  #process/expand/format note-set data
+  for my $noteSetInfo(@noteSetInfos){
+    $$noteSetInfo{expandedNoteRows} = getExpandedNoteRows $$noteSetInfo{notes};
+    $$noteSetInfo{bpmsByRow} = convertValuesByBeatToValuesByRow($$noteSetInfo{bpms});
+    $$noteSetInfo{stopsByRow} = convertValuesByBeatToValuesByRow($$noteSetInfo{stops});
+    $$noteSetInfo{ddrGame} = formatDDRGame($$noteSetInfo{game});
+    $$noteSetInfo{ddrDiff} = formatDDRDiff($$noteSetInfo{diff});
+  }
+
+  #generate a unique game-diff-key for each note-set in the file
+  for my $noteSetInfo(@noteSetInfos){
+    my $game = $$noteSetInfo{game};
+    my $difficulty = $$noteSetInfo{diff};
     my $gameDiffKey = generateGameDiffKey($game, $difficulty);
     while(defined $$smInfo{noteSetInfoByGameDiffKey}{$gameDiffKey}){
       my $index = 1;
@@ -1142,18 +1152,7 @@ sub parseSMFile($){
         ." $dupeGameDiffKey (using $gameDiffKey)\n";
     }
 
-    $$smInfo{noteSetInfoByGameDiffKey}{$gameDiffKey} = {
-      game => $game,
-      diff => $difficulty,
-      ddrGame => formatDDRGame($game),
-      ddrDiff => formatDDRDiff($difficulty),
-      smFeet => $$parsedNoteSet{smFeet},
-      expandedNoteRows => getExpandedNoteRows $$parsedNoteSet{notes},
-      bpms => $$parsedNoteSet{bpms},
-      stops => $$parsedNoteSet{stops},
-      bpmsByRow => convertValuesByBeatToValuesByRow($$parsedNoteSet{bpms}),
-      stopsByRow =>convertValuesByBeatToValuesByRow($$parsedNoteSet{stops}),
-    };
+    $$smInfo{noteSetInfoByGameDiffKey}{$gameDiffKey} = $noteSetInfo;
     push @{$$smInfo{gameDiffKeyOrder}}, $gameDiffKey;
   }
 
