@@ -1147,6 +1147,21 @@ sub parseSMFile($){
         game => "$$noteSetInfo{game}-p2",
         notes => $notesP2,
       };
+    }elsif($game =~ /^(dance-routine)$/i and $notes =~ /&/){
+      my $notesP1 = $notes;
+      my $notesP2 = $notes;
+      $notesP1 =~ s/^(.*)&(.*)$/$1/s;
+      $notesP2 =~ s/^(.*)&(.*)$/$2/s;
+      push @playerNoteSetInfos, {
+        %$noteSetInfo,
+        game => "$$noteSetInfo{game}-p1",
+        notes => $notesP1,
+      };
+      push @playerNoteSetInfos, {
+        %$noteSetInfo,
+        game => "$$noteSetInfo{game}-p2",
+        notes => $notesP2,
+      };
     }else{
       push @playerNoteSetInfos, $noteSetInfo;
     }
