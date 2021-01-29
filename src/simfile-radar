@@ -1128,14 +1128,6 @@ sub parseSMFile($){
   }
 
   for my $parsedNoteSet(@parsedNoteSets){
-    my ($bpmsByRow, $stopsByRow);
-    if(defined $$parsedNoteSet{bpms}){
-      $bpmsByRow = convertValuesByBeatToValuesByRow($$parsedNoteSet{bpms});
-    }
-    if(defined $$parsedNoteSet{stops}){
-      $stopsByRow = convertValuesByBeatToValuesByRow($$parsedNoteSet{stops});
-    }
-
     my $game = $$parsedNoteSet{game};
     my $difficulty = $$parsedNoteSet{diff};
     my $gameDiffKey = generateGameDiffKey($game, $difficulty);
@@ -1159,8 +1151,8 @@ sub parseSMFile($){
       expandedNoteRows => getExpandedNoteRows $$parsedNoteSet{notes},
       bpms => $$parsedNoteSet{bpms},
       stops => $$parsedNoteSet{stops},
-      bpmsByRow => $bpmsByRow,
-      stopsByRow => $stopsByRow,
+      bpmsByRow => convertValuesByBeatToValuesByRow($$parsedNoteSet{bpms}),
+      stopsByRow =>convertValuesByBeatToValuesByRow($$parsedNoteSet{stops}),
     };
     push @{$$smInfo{gameDiffKeyOrder}}, $gameDiffKey;
   }
@@ -1201,6 +1193,10 @@ sub extractSongNameId($){
 # to values like BPM_ROWS and STOP_ROWS, which are by row
 sub convertValuesByBeatToValuesByRow($){
   my ($csvBeatValPairs) = @_;
+
+  if(not defined $csvBeatValPairs){
+    return undef;
+  }
 
   my $valsByRow = {};
   my @beatValPairs = split /,/, $csvBeatValPairs;
