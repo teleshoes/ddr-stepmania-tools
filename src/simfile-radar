@@ -32,7 +32,7 @@ sub writeSMInfoCache($$);
 sub parseSMFile($);
 sub extractSongNameId($);
 sub convertValuesByBeatToValuesByRow($);
-sub gameDiffKey($$);
+sub generateGameDiffKey($$);
 sub parseGameDiffKey($);
 sub getExpandedNoteRows($);
 sub formatTimeMSS($);
@@ -1139,14 +1139,14 @@ sub parseSMFile($){
 
     my $game = $$parsedNoteSet{game};
     my $difficulty = $$parsedNoteSet{diff};
-    my $gameDiffKey = gameDiffKey($game, $difficulty);
+    my $gameDiffKey = generateGameDiffKey($game, $difficulty);
     while(defined $$smInfo{noteSetInfoByGameDiffKey}{$gameDiffKey}){
       my $index = 1;
       $index = $1 if $difficulty =~ s/(\d+)$//;
       $index++;
       $difficulty = "$difficulty$index";
       my $dupeGameDiffKey = $gameDiffKey;
-      $gameDiffKey = gameDiffKey($game, $difficulty);
+      $gameDiffKey = generateGameDiffKey($game, $difficulty);
       print STDERR "WARNING: duplicate game/difficulty: "
         ." $dupeGameDiffKey (using $gameDiffKey)\n";
     }
@@ -1240,7 +1240,7 @@ sub convertValuesByBeatToValuesByRow($){
   return $valsByRow;
 }
 
-sub gameDiffKey($$){
+sub generateGameDiffKey($$){
   my ($game, $diff) = @_;
   return lc "$game-$diff";
 }
