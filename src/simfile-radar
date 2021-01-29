@@ -1136,6 +1136,33 @@ sub parseSMFile($){
     $$noteSetInfo{ddrDiff} = formatDDRDiff($$noteSetInfo{diff});
   }
 
+  my @playerNoteSetInfos;
+  for my $noteSetInfo(@noteSetInfos){
+    my $game = $$noteSetInfo{game};
+    my $noteRows = $$noteSetInfo{expandedNoteRows};
+    my $firstNoteRow = $$noteRows[0];
+    my $notesPerRow = length $firstNoteRow;
+
+    if($game =~ /^(dance-couple)$/i and $notesPerRow == 8){
+      push @playerNoteSetInfos, {
+        %$noteSetInfo,
+        game => "$$noteSetInfo{game}-p1",
+        ddrGame => "$$noteSetInfo{ddrGame}-p1",
+        expandedNoteRows => [map {substr $_, 0, 4} @$noteRows],
+      };
+      push @playerNoteSetInfos, {
+        %$noteSetInfo,
+        game => "$$noteSetInfo{game}-p2",
+        ddrGame => "$$noteSetInfo{ddrGame}-p2",
+        expandedNoteRows => [map {substr $_, 4, 8} @$noteRows],
+      };
+    }else{
+      push @playerNoteSetInfos, $noteSetInfo;
+    }
+  }
+
+  @noteSetInfos = @playerNoteSetInfos;
+
   #generate a unique game-diff-key for each note-set in the file
   for my $noteSetInfo(@noteSetInfos){
     my $game = $$noteSetInfo{game};
