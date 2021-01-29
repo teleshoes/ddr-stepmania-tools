@@ -33,7 +33,6 @@ sub parseSMFile($);
 sub extractSongNameId($);
 sub convertValuesByBeatToValuesByRow($);
 sub generateGameDiffKey($$);
-sub parseGameDiffKey($);
 sub getExpandedNoteRows($);
 sub formatTimeMSS($);
 sub readFile($);
@@ -1243,12 +1242,6 @@ sub convertValuesByBeatToValuesByRow($){
 sub generateGameDiffKey($$){
   my ($game, $diff) = @_;
   return lc "$game-$diff";
-}
-sub parseGameDiffKey($){
-  my ($gameDiffKey) = @_;
-  if($gameDiffKey =~ /^(.+)-(.+)$/){
-    return ($1, $2);
-  }
 }
 
 #SM files contain a list of MEASUREs for each game-difficulty pair
