@@ -11,7 +11,7 @@ $scoreDir = "/home/user/pixmirror/xddr" if not -d $scoreDir;
 
 my $EXIFTOOL_EXEC = "exiftool";
 my $PIX_EXEC = "pix";
-my @EXTS = qw(png jpg);
+my @EXTS = qw(png jpg mp4 mkv);
 my $EXT_REGEX = join "|", @EXTS;
 
 my $gnuplotDefaultPngSize = "1920,1080";
@@ -1218,7 +1218,7 @@ sub validateFile($){
   my ($file) = @_;
 
   die getUsage() if not defined $file;
-  die "\n\n!!!\nmisnamed $EXT_REGEX file: $file\n" if $file !~ /^(.\/)?(IMG_)?(\d{8}_\d{3,}).*\.($EXT_REGEX)$/;
+  die "\n\n!!!\nmisnamed $EXT_REGEX file: $file\n" if $file !~ /^(.\/)?(IMG_|VID_)?(\d{8}_\d{3,}).*\.($EXT_REGEX)$/;
   die "\n\n!!!\nfile not found: $file\n" if not -f $file;
 }
 
@@ -1340,7 +1340,7 @@ sub nameFile($$$$){
 
   $file =~ s/^\.\///;
 
-  if($file !~ /^(?:IMG_)?(\d{8}_\d{3,}).*\.($EXT_REGEX)$/){
+  if($file !~ /^(?:IMG_|VID_)?(\d{8}_\d{3,}).*\.($EXT_REGEX)$/){
     die "\n\n!!!\nmisnamed $EXT_REGEX file: $file\n";
   }
   my ($prefix, $ext) = ($1, $2);
