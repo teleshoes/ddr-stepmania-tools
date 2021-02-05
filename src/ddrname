@@ -11,6 +11,8 @@ $scoreDir = "/home/user/pixmirror/xddr" if not -d $scoreDir;
 
 my $EXIFTOOL_EXEC = "exiftool";
 my $PIX_EXEC = "pix";
+my @EXTS = qw(png jpg);
+my $EXT_REGEX = join "|", @EXTS;
 
 my $gnuplotDefaultPngSize = "1920,1080";
 
@@ -551,14 +553,14 @@ sub getUsage(;$){
 
   $0 IMG_FILE REMINDER
 
-    rename a jpg/png file, adding '_<REMINDER>' before '.EXT'
+    rename a $EXT_REGEX file, adding '_<REMINDER>' before '.EXT'
 
      IMG_FILE
-       jpg/png file to rename
+       $EXT_REGEX file to rename
        must start with '########_###' and end with '.EXT'
 
      EXT
-       one of [jpg|png]
+       one of [$EXT_REGEX]
 
      REMINDER
        text to append
@@ -573,16 +575,16 @@ sub getUsage(;$){
 
   $0 IMG_FILE [OPT OPT ..] [INFO_ARG INFO_ARG ..]
 
-    rename a jpg/png file using a consistent format
+    rename a $EXT_REGEX file using a consistent format
     \"########_###_SONG_GAME_DIFFICULTY_MACHINE_SCORE_FC_SPECIAL_BAR_STAGE.EXT\"
     ######## is presumably a date in YYYYMMDD and ### is the camera pic index
 
      IMG_FILE
-       jpg/png file to rename
+       $EXT_REGEX file to rename
        must start with '########_###' and end with .EXT
 
      EXT
-       one of [jpg|png]
+       one of [$EXT_REGEX]
 
      INFO_ARG
        one of [SONG|GAME|DIFFICULTY|MACHINE|TIMING_WINDOWS|SCORE|STAGE|BAR|FC|SPECIAL|FAILED]
@@ -732,9 +734,9 @@ sub main(@){
     @imgFiles = @args;
     my ($opts, $editInfo) = parseOptsAndInfoArgs @infoArgs;
     editNames($editInfo, $opts, @imgFiles);
-  }elsif(@_ == 2 and $_[0] =~ /\.(jpg|png)$/){
+  }elsif(@_ == 2 and $_[0] =~ /\.($EXT_REGEX)$/){
     nameReminder($_[0], $_[1]);
-  }elsif(@_ > 1 and $_[0] =~ /\.(jpg|png)$/){
+  }elsif(@_ > 1 and $_[0] =~ /\.($EXT_REGEX)$/){
     my ($file, @args) = @_;
     my ($opts, $info) = parseOptsAndInfoArgs @args;
     $$info{machine} = $defaultMachineArg if not defined $$info{machine};
@@ -1216,7 +1218,7 @@ sub validateFile($){
   my ($file) = @_;
 
   die getUsage() if not defined $file;
-  die "\n\n!!!\nmisnamed jpg/png file: $file\n" if $file !~ /^(.\/)?(IMG_)?(\d{8}_\d{3,}).*\.(jpg|png)$/;
+  die "\n\n!!!\nmisnamed $EXT_REGEX file: $file\n" if $file !~ /^(.\/)?(IMG_)?(\d{8}_\d{3,}).*\.($EXT_REGEX)$/;
   die "\n\n!!!\nfile not found: $file\n" if not -f $file;
 }
 
@@ -1239,8 +1241,8 @@ sub nameReminder($$){
 
   $file =~ s/^\.\///;
 
-  if($file !~ /^(?:IMG_)?(\d{8}_\d{3,}).*\.(jpg|png)$/){
-    die "\n\n!!!\nmisnamed jpg/png file: $file\n";
+  if($file !~ /^(?:IMG_)?(\d{8}_\d{3,}).*\.($EXT_REGEX)$/){
+    die "\n\n!!!\nmisnamed $EXT_REGEX file: $file\n";
   }
   my ($prefix, $ext) = ($1, $2);
   $reminder =~ s/^$prefix//;
@@ -1338,8 +1340,8 @@ sub nameFile($$$$){
 
   $file =~ s/^\.\///;
 
-  if($file !~ /^(?:IMG_)?(\d{8}_\d{3,}).*\.(jpg|png)$/){
-    die "\n\n!!!\nmisnamed jpg/png file: $file\n";
+  if($file !~ /^(?:IMG_)?(\d{8}_\d{3,}).*\.($EXT_REGEX)$/){
+    die "\n\n!!!\nmisnamed $EXT_REGEX file: $file\n";
   }
   my ($prefix, $ext) = ($1, $2);
 
@@ -1484,7 +1486,7 @@ sub listScoreFiles(){
   my @files = listDirFiles($scoreDir);
   s/^.*\/// foreach @files;
   @files = sort @files;
-  @files = grep {$_ =~ /^\d+_.*\.(jpg|png)$/} @files;
+  @files = grep {$_ =~ /^\d+_.*\.($EXT_REGEX)$/} @files;
   @files = grep {$_ !~ /_reminder_/} @files;
   return @files;
 }
@@ -1517,7 +1519,7 @@ sub parseScoreFile($){
     (?:_(?<special>$okSpecialArgs))?
     _(?<bar>$okBarArgs)
     _(?<stage>$okStageArgs)
-    \.(?:jpg|png)$/x){
+    \.(?:$EXT_REGEX)$/x){
     die "malformed file name: $file\n";
   }
   my $info = {
@@ -2304,7 +2306,8 @@ sub bashComplete($$){
   pop @words if not $isNewWord;
 
   if(@words == 0){
-    my @imgFiles = `ls *.jpg *.png 2>/dev/null`;
+    my @extGlobs = map {"*.$_"} @EXTS;
+    my @imgFiles = `ls @extGlobs 2>/dev/null`;
     chomp foreach @imgFiles;
     @imgFiles = sort @imgFiles;
     return ("--fehterm", "--banners", "--orientation", "--datestats", "--coursestats",
@@ -2410,7 +2413,8 @@ sub bashComplete($$){
   #@complete = (@failedArgs, @complete) if not defined $$info{failed};
 
   if($editNames){
-    my @imgFiles = `ls *.jpg *.png 2>/dev/null`;
+    my @extGlobs = map {"*.$_"} @EXTS;
+    my @imgFiles = `ls @extGlobs 2>/dev/null`;
     chomp foreach @imgFiles;
     @imgFiles = sort @imgFiles;
     @complete = (@imgFiles, @complete);
