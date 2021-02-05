@@ -212,6 +212,10 @@ my @specialArgs = qw(nospecial unlock);
 my $emptySpecialArg = qw(nospecial);
 my $okSpecialArgs = join '|', @specialArgs;
 
+my @videoTypeArgs = qw(novideo camera screen);
+my $emptyVideoTypeArg = "novideo";
+my $okVideoTypeArgs = join '|', @videoTypeArgs;
+
 my @failedArgs = qw(passed failed);
 my $emptyFailedArg = "passed";
 my $okFailedArgs = join '|', @failedArgs;
@@ -587,13 +591,14 @@ sub getUsage(;$){
        one of [$EXT_REGEX]
 
      INFO_ARG
-       one of [SONG|GAME|DIFFICULTY|MACHINE|TIMING_WINDOWS|SCORE|STAGE|BAR|FC|SPECIAL|FAILED]
+       one of [SONG|GAME|DIFFICULTY|MACHINE|TIMING_WINDOWS|SCORE|STAGE|BAR|FC|SPECIAL|FAILED|VIDEO_TYPE]
        exactly one SONG, DIFFICULTY, SCORE, STAGE, and BAR must be given
        exactly zero or one MACHINE args can be given  {REQUIRED, but defaults to '$defaultMachineArg' if missing}
        exactly zero or one GAME args can be given  {optional, '$emptyGameArg' is the same as no GAME arg}
        exactly zero or one TIMING_WINDOWS args can be given {optional, '$emptyTimingWindowsArg' is the same as no TIMING_WINDOWS arg}
        exactly zero or one FC args can be given  {optional, '$emptyFCArg' is the same as no FC arg}
        exactly zero or one SPECIAL args can be given  {optional, '$emptySpecialArg' is the same as no SPECIAL arg}
+       exactly zero or one VIDEO_TYPE args can be given  {optional, '$emptyVideoTypeArg' is the same as no FAILED arg}
        exactly zero or one FAILED args can be given  {optional, '$emptyFailedArg' is the same as no FAILED arg}
 
      SONG            {REQUIRED}
@@ -643,6 +648,9 @@ sub getUsage(;$){
 
      STAGE           {REQUIRED}
        one of [$okStageArgs]
+
+    VIDEO_TYPE       {optional, '$emptyVideoTypeArg' is the same as no VIDEO_TYPE arg}
+      one of [$okVideoTypeArgs]
 
      FAILED          {optional, '$emptyFailedArg' is the same as no FAILED arg}
        one of [$okFailedArgs]
@@ -744,6 +752,7 @@ sub main(@){
     $$info{timingWindows} = $emptyTimingWindowsArg if not defined $$info{timingWindows};
     $$info{fc} = $emptyFCArg if not defined $$info{fc};
     $$info{special} = $emptySpecialArg if not defined $$info{special};
+    $$info{videoType} = $emptyVideoTypeArg if not defined $$info{videoType};
     $$info{failed} = $emptyFailedArg if not defined $$info{failed};
 
     my $scoresByFile = getScoresByFile(undef);
@@ -1349,10 +1358,12 @@ sub nameFile($$$$){
   delete $$info{timingWindows} if defined $$info{timingWindows} and $$info{timingWindows} eq $emptyTimingWindowsArg;
   delete $$info{fc} if defined $$info{fc} and $$info{fc} eq $emptyFCArg;
   delete $$info{special} if defined $$info{special} and $$info{special} eq $emptySpecialArg;
+  delete $$info{videoType} if defined $$info{videoType} and $$info{videoType} eq $emptyVideoTypeArg;
   delete $$info{failed} if defined $$info{failed} and $$info{failed} eq $emptyFailedArg;
 
   my $newFileName = '';
   $newFileName .= "$prefix";
+  $newFileName .= "_$$info{videoType}" if defined $$info{videoType};
   $newFileName .= "_reminder_failed" if defined $$info{failed};
   $newFileName .= "_$$info{song}";
   $newFileName .= "_$$info{game}" if defined $$info{game};
@@ -1452,6 +1463,8 @@ sub parseOptsAndInfoArgs(@){
       $infoAtt = "bar";
     }elsif($arg =~ /^($okStageArgs)$/){
       $infoAtt = "stage";
+    }elsif($arg =~ /^($okVideoTypeArgs)$/){
+      $infoAtt = "videoType";
     }elsif($arg =~ /^($okFailedArgs)$/){
       $infoAtt = "failed";
     }else{
@@ -1543,6 +1556,7 @@ sub parseScoreFile($){
   $$info{timingWindows} = $emptyGameArg if not defined $$info{timingWindows} or $$info{timingWindows} eq "";
   $$info{fc} = $emptyFCArg if not defined $$info{fc} or $$info{fc} eq "";
   $$info{special} = $emptySpecialArg if not defined $$info{special} or $$info{special} eq "";
+  $$info{videoType} = $emptyVideoTypeArg if not defined $$info{videoType} or $$info{videoType} eq "";
   $$info{failed} = $emptyFailedArg if not defined $$info{failed} or $$info{failed} eq "";
 
   my $feet = $songFeetDifficulties{$$info{song}}{$$info{game}}{$$info{difficulty}};
@@ -2410,6 +2424,7 @@ sub bashComplete($$){
   #@complete = (@specialArgs, @complete) if not defined $$info{special};
   @complete = (@barArgs, @complete) if not defined $$info{bar};
   @complete = (@stageArgs, @complete) if not defined $$info{stage};
+  #@complete = (@videoTypeArgs, @complete) if not defined $$info{videoType};
   #@complete = (@failedArgs, @complete) if not defined $$info{failed};
 
   if($editNames){
