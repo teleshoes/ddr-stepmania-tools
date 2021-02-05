@@ -267,6 +267,9 @@ my $usage = "Usage:
       allow any amount of difference between mtimes between image file and XML file,
       without failing or warning
 
+    --ddrname-opt=DDRNAME_OPT
+      append DDRNAME_OPT to ddrname command (can be given multiple times)
+
     -c | --no-cache
       same as '--no-read-cache --no-write-cache'
     -w | --no-read-cache | --overwrite-cache
@@ -294,6 +297,7 @@ my $usage = "Usage:
 sub main(@){
   my $cmd = $COMMAND_PRINT;
   my @files;
+  my @ddrnamePassedInOpts;
   my $scoreFileMode = $SCORE_FILE_MODE_BY_FILE_EXT;
   my $filenamePrintMode = $FILENAME_PRINT_MODE_MULTIPLE_ONLY;
   my $checkMtimes = 1;
@@ -324,6 +328,8 @@ sub main(@){
       $cmd = $COMMAND_PRINT;
     }elsif($arg =~ /^(--ddrname)$/i){
       $cmd = $COMMAND_DDRNAME;
+    }elsif($arg =~ /^--ddrname-opt=(.+)$/i){
+      push @ddrnamePassedInOpts, $1;
     }elsif($arg =~ /^(--xml)$/i){
       $scoreFileMode = $SCORE_FILE_MODE_DIRECT_XML;
     }elsif($arg =~ /^(--img|--image|--closest-by-mtime)$/i){
@@ -411,6 +417,7 @@ sub main(@){
         $$sd{FC},
         $$sd{DDRA_GAME},
         $$sd{DDRA_DIFFICULTY},
+        @ddrnamePassedInOpts,
       );
       print "$SEP\n";
       print "@cmd\n";
