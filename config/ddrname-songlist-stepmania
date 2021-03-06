@@ -1,11 +1,13 @@
 #----------------------------------------|--------|------SINGLES------|--|----DOUBLES----|
 #SONG_NAME_ID----------------------------|ABBREV--|BEG|BAS|DIF|EXP|CHA|--|BAS|DIF|EXP|CHA|
+an-underlying-problem                    |undrPrb | --| --| --| --| 15|  | --| --| --| --|
 bazlisk-mine-field-from-ninja-gaiden     |bzlskNG | --| 06| 08| 12| 15|  | --| --| --| --|
 blue-birthday-massacre-condemned-memoir  |bluBrth | --| 05| 07| 12| 15|  | --| --| --| --|
 carry-me-home                            |caryMeH | --| --| --| --| 15|  | --| --| --| --|
 cavestory                                |cavstry | --| --| --| --| 11|  | --| --| --| --|
 clash-original-mix                       |clashOM | --| 06| 09| 13| --|  | --| --| --| --|
 dance-of-thorns                          |dncOfTh | --| --| --| --| 16|  | --| --| --| --|
+dragostea-din-tei-english-9              |drgDinT | --| --| --| --| 13|  | --| --| --| --|
 dvno                                     |dvnoJst | --| --| --| 14| --|  | --| --| --| --|
 eggs-sanxion7-remix                      |eggsSnx | --| --| --| --| 14|  | --| --| --| --|
 el-mariachi                              |elMrchi | --| --| --| --| 14|  | --| --| --| --|
@@ -17,6 +19,7 @@ history-maker                            |histMak | --| --| --| --| 12|  | --| -
 hacking-to-the-gate-huzure               |hcknGtH | --| --| --| --| 13|  | --| --| --| --|
 hyrule-overworld-princess-z-trigger-mix  |hyrlPZT | --| --| --| 14| --|  | --| --| --| --|
 i-love-it-tyler                          |iLovItT | --| 14| 16| 19| 20|  | --| --| --| --|
+in-the-halls-of-the-usurper              |hlsUsrp | --| --| --| --| 15|  | --| --| --| --|
 jai-ho-original-mix                      |jaiHoOM | 02| 05| 10| 14| --|  | --| --| --| --|
 last-battle-cave-story                   |lstBtCS | --| --| --| 13| --|  | --| --| --| --|
 leaving-leafwood-forest                  |lvngLWF | --| --| --| --| 14|  | --| --| --| --|
@@ -26,8 +29,11 @@ let-it-go-winter-vivaldi-piano-guys      |lIGWiPG | --| --| --| 14| --|  | --| -
 let-there-be-light                       |letTBLi | --| --| --| 15| --|  | --| --| --| --|
 lisztomania-phoenix-009                  |lsztmni | --| --| --| --| 13|  | --| --| --| --|
 mario-djbouche-cpubasic13                |mrioDJB | --| --| --| 14| --|  | --| --| --| --|
+maze-of-mayonnaise                       |mazMayo | --| --| --| --| 14|  | --| --| --| --|
 mint                                     |mintShp | --| --| --| --| 14|  | --| --| --| --|
 mr-saxobeat-valex-and-tylr               |mrSaxob | --| --| --| 12| 17|  | --| --| --| --|
+pingpong                                 |pingPng | --| --| --| --| 15|  | --| --| --| --|
+plains-of-passage                        |plnsPsg | --| --| --| --| 17|  | --| --| --| --|
 rockman-ii-intro                         |rckMnII | --| --| --| 15| 17|  | --| --| --| --|
 rolling-in-the-deep-gazebo               |rlnITDp | --| --| --| 16| 17|  | --| --| --| --|
 satellite                                |satllit | --| --| --| 10| --|  | --| --| --| --|
@@ -42,6 +48,7 @@ still-more-fighting-nes                  |stMFNes | --| --| --| 18| --|  | --| -
 super-mario-bros-2-techno                |smb2Tcn | --| --| --| 13| --|  | --| --| --| --|
 super-mario-bros-behemoth                |smbBhmt | --| --| --| --| 14|  | --| --| --| --|
 super-mario-world-level2                 |smbLvl2 | --| --| --| 14| 17|  | --| --| --| --|
+the-cave-the-treasure                    |caveTrs | --| --| --| --| 13|  | --| --| --| --|
 the-world-death-note                     |theWrld | --| --| --| 12| 18|  | --| --| --| --|
 threshold-8bit                           |thrsh8B | --| --| --| --| 14|  | --| --| --| --|
 toxic-gazebo                             |toxicSV | --| --| --| 15| 16|  | --| --| --| --|
