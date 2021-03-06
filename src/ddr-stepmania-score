@@ -138,7 +138,7 @@ my $usage = "Usage:
         (i) if FILE ends in .xml (or --xml is gven)
             -use FILE as XML_SCORE_FILE
             -obtain SCORE_DATA from XML_SCORE_FILE
-        (ii) if FILE ends in .jpg or .png (or --img is given):
+        (ii) if FILE ends in .png/jpg/.jpeg/.mkv/.mp4 (or --img is given):
              -use FILE as IMG_FILE
              -take all XML score file matching $XML_FILE_PATTERN
              -ignore any XML files with mtime after IMG_FILE mtime
@@ -363,7 +363,7 @@ sub main(@){
     if($scoreFileMode eq $SCORE_FILE_MODE_BY_FILE_EXT){
       if($file =~ /\.xml$/i){
         $mode = $SCORE_FILE_MODE_DIRECT_XML;
-      }elsif($file =~ /\.(png|jpg|jpeg)$/i){
+      }elsif($file =~ /\.(png|jpg|jpeg|mkv|mp4)$/i){
         $mode = $SCORE_FILE_MODE_CLOSEST_XML_BY_MTIME;
       }else{
         die "ERROR: unknown file type $file\n";
