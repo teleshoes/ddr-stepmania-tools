@@ -96,7 +96,7 @@ my $jsKeyGrid = {
 my $kbKeyGrid = {
             ##  LT DN UP RT  ML     MD     MU     MR     BK     ST
   kb1       => "d  f  j  k   left   down   up     right  escape enter",
-  kb2       => "e  r  u  i   home   pgdn   pgup   end    .      /",
+  kb2       => "e  r  u  i   home   pgdn   pgup   end    period /",
 };
 my $keyGrid = {%$jsKeyGrid, %$kbKeyGrid};
 my @jsNames = sort keys %$jsKeyGrid;
