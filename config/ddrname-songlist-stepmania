@@ -1,8 +1,10 @@
 #----------------------------------------|--------|------SINGLES------|--|----DOUBLES----|
 #SONG_NAME_ID----------------------------|ABBREV--|BEG|BAS|DIF|EXP|CHA|--|BAS|DIF|EXP|CHA|
 an-underlying-problem                    |undrPrb | --| --| --| --| 15|  | --| --| --| --|
+anti-gravity                             |antiGrv | --| --| --| 16| 17|  | --| --| --| --|
 bazlisk-mine-field-from-ninja-gaiden     |bzlskNG | --| 06| 08| 12| 15|  | --| --| --| --|
 blue-birthday-massacre-condemned-memoir  |bluBrth | --| 05| 07| 12| 15|  | --| --| --| --|
+bustin-sx-10                             |bustnSX | --| --| --| --| 14|  | --| --| --| --|
 carry-me-home                            |caryMeH | --| --| --| --| 15|  | --| --| --| --|
 cavestory                                |cavstry | --| --| --| --| 11|  | --| --| --| --|
 clash-original-mix                       |clashOM | --| 06| 09| 13| --|  | --| --| --| --|
@@ -36,6 +38,7 @@ mint                                     |mintShp | --| --| --| --| 14|  | --| -
 mr-saxobeat-valex-and-tylr               |mrSaxob | --| --| --| 12| 17|  | --| --| --| --|
 pingpong                                 |pingPng | --| --| --| --| 15|  | --| --| --| --|
 plains-of-passage                        |plnsPsg | --| --| --| --| 17|  | --| --| --| --|
+prism                                    |prsmLSt | --| --| --| 14| 15|  | --| --| --| --|
 rockman-ii-intro                         |rckMnII | --| --| --| 15| 17|  | --| --| --| --|
 rolling-in-the-deep-gazebo               |rlnITDp | --| --| --| 16| 17|  | --| --| --| --|
 satellite                                |satllit | --| --| --| 10| --|  | --| --| --| --|
@@ -56,6 +59,7 @@ threshold-8bit                           |thrsh8B | --| --| --| --| 14|  | --| -
 toxic-gazebo                             |toxicSV | --| --| --| 15| 16|  | --| --| --| --|
 tranoid-dj-dmaxel                        |trndDjD | --| --| --| --| 12|  | --| --| --| --|
 v-for-extreme-king-of-light              |vFExKoL | --| --| --| --| 15|  | --| --| --| --|
+where-do-you-go-sx-10                    |whrDYGo | --| --| --| --| 14|  | --| --| --| --|
 zelda-dungeon-remix                      |zldDngR | --| --| --| 17| --|  | --| --| --| --|
 zetsubou-billy-death-note                |ztsbBil | --| --| --| --| 14|  | --| --| --| --|
 zoot-suit-riot                           |zootStR | --| --| --| 13| --|  | --| --| --| --|
