@@ -7,6 +7,8 @@ my $XML_SCORE_LIMIT = 10;
 my $USE_TERM_COLOR = -t STDOUT;
 
 my $CURSONG_FILE = "$ENV{HOME}/.cache/stepmania-selected-song";
+my $PREFS_INI = "$ENV{HOME}/.stepmania/Save/Preferences.ini";
+my $OUTFOX_PREFS_INI = "$ENV{HOME}/.stepmania/Save/OutFoxPrefs.ini";
 my $XML_UPLOAD_DIR = "$ENV{HOME}/.stepmania/Save/Upload";
 my $SONG_PARENT_DIR = "$ENV{HOME}/Games/stepmania/latest";
 
@@ -120,7 +122,12 @@ sub formatCurSongInfo($){
   my ($info) = @_;
   my $fmt = "\n";
   $fmt .= readProcLine("date") . "\n";
+  $fmt .= sprintf("  offset=%s   timings=%s\n",
+            red("$$info{offsetMillis}ms"),
+            red($$info{smartTimings}),
+  );
   $fmt .= "\n";
+
 
   my $trimSongNameId = $$info{songNameId};
   $trimSongNameId = substr($trimSongNameId, 0, 35) . "..." if length $trimSongNameId > 38;
@@ -198,6 +205,25 @@ sub getSongInfo($$$){
   $$info{songNameId} = readProcLine("ddr-stepmania-score", "--extract-song-name", $songDir);
   $$info{ddrGame}    = readProcLine("ddr-stepmania-score", "--extract-ddra-game", $smGame);
   $$info{ddrDiff}    = readProcLine("ddr-stepmania-score", "--extract-ddra-diff", $smDiff);
+
+  my $sep = '(?:^|$|\r|\n)';
+
+  my $prefs = `cat $PREFS_INI`;
+  if($prefs =~ /${sep}\s*GlobalOffsetSeconds\s*=\s*(\+|-)?(\d+|\d*\.\d+)\s*${sep}/){
+    my ($sign, $offsetS) = ($1, $2);
+    $offsetS *= (defined $sign and $sign =~ /-/) ? "-1" : "1";
+    $offsetS = int(1000.0 * $offsetS);
+    $$info{offsetMillis} = $offsetS;
+  }else{
+    $$info{offsetMillis} = "?";
+  }
+
+  my $outfoxPrefs = `cat $OUTFOX_PREFS_INI`;
+  if($outfoxPrefs =~ /${sep}\s*SmartTimings\s*=\s*([a-zA-Z0-9_\- ]+)${sep}/){
+    $$info{smartTimings} = $1;
+  }else{
+    $$info{smartTimings} = "?";
+  }
 
   my @xmlFiles = findXmlFiles($songDir, $smGame, $smDiff);
   @xmlFiles = reverse @xmlFiles;
