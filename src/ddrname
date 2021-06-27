@@ -184,8 +184,8 @@ my %difficultyAbbrevs = (
   challenge => 'cha',
 );
 
-my @machineArgs = qw(sn2 2013 x3 a sm50pdp sm53pdp sm53ltek);
-my $defaultMachineArg = "sm53ltek";
+my @machineArgs = qw(sn2 2013 x3 a sm50pdp sm53pdp sm53ltek sm53ltekp);
+my $defaultMachineArg = "sm53ltekp";
 my $okMachineArgs = join '|', @machineArgs;
 
 my @timingWindowsArgs = (
