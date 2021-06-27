@@ -40,7 +40,7 @@ my $ZENIUS_TOOL = "zenius-ddrsonglist";
 
 my $DDRNAME_TOOL = "ddrname";
 my @DDRNAME_OPTS = qw(--no-check-orientation --no-banner-flash);
-my $DDRNAME_MACHINE = "sm53ltek";
+my $DDRNAME_MACHINE = "sm53ltekp";
 my $DDRNAME_STAGE = "0none";
 my $DDRNAME_BAR = "avgbar";
 my $DDRNAME_TW = "twdefault";
