@@ -425,7 +425,14 @@ sub main(@){
       my $exitCode = $?;
       print "$SEP\n";
       if($exitCode != 0){
-        die "ERROR: $DDRNAME_TOOL failed for $file\n";
+        my $songDir = $$sd{SONG_DIR};
+        my $smFile = getSMFileFromSongDir $songDir;
+        die "\n\nERROR: $DDRNAME_TOOL failed\n"
+          . "target: $file\n"
+          . "song: $$sd{SONG_NAME}\n"
+          . "xml: $xmlFile\n"
+          . "sm: $smFile\n"
+          ;
       }
     }else{
       die "$usage\nERROR: unknown command $cmd\n";
