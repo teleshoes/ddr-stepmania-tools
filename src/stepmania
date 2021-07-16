@@ -222,6 +222,7 @@ my $usage = "Usage:
    --js2Name=JOYNAME p2 joystick name {default=$$keyArgs{joy2Name}}
    --js1=JS#         p1 joystick index {default=$$keyArgs{joy1Index}}
    --js2=JS#         p2 joystick index {default=$$keyArgs{joy2Index}}
+   --res=WxH         set DisplayWidth to W and DisplayHeight to H, overriding config
    -w                set Windowed to 1, overriding config
    -f                set Windowed to 0, overriding config
    --screen=SCREEN   jump to screen SCREEN {default=$defaultScreen}
@@ -267,6 +268,9 @@ sub main(@){
       $$keyArgs{joy1Index} = $1;
     }elsif($_[$i] =~ /--js2=(\d+)/){
       $$keyArgs{joy2Index} = $1;
+    }elsif($_[$i] =~ /^--res=(\d+)x(\d+)$/){
+      $$prefs{Options}{DisplayWidth} = $1;
+      $$prefs{Options}{DisplayHeight} = $2;
     }elsif($_[$i] eq '-w'){
       $$prefs{Options}{Windowed} = 1;
     }elsif($_[$i] eq '-f'){
