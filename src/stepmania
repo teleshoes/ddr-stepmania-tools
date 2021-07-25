@@ -222,6 +222,7 @@ my $usage = "Usage:
    --js2Name=JOYNAME p2 joystick name {default=$$keyArgs{joy2Name}}
    --js1=JS#         p1 joystick index {default=$$keyArgs{joy1Index}}
    --js2=JS#         p2 joystick index {default=$$keyArgs{joy2Index}}
+   --itg             add 9ms to GlobalOffsetSeconds (i.e.: decrease the audio delay)
    -m                run `stepmania-cursong-info --monitor` using `term-window`
    --res=WxH         set DisplayWidth to W and DisplayHeight to H, overriding config
    -r                same as --res=\"\$(`res -w`)x\$(`res -h --percent=95`)\"
@@ -271,6 +272,8 @@ sub main(@){
       $$keyArgs{joy1Index} = $1;
     }elsif($_[$i] =~ /--js2=(\d+)/){
       $$keyArgs{joy2Index} = $1;
+    }elsif($_[$i] eq '--itg'){
+      $$prefs{Options}{GlobalOffsetSeconds} += 0.009;
     }elsif($_[$i] eq '-m'){
       $openMonitorTerm = 1;
     }elsif($_[$i] =~ /^--res=(\d+)x(\d+)$/){
