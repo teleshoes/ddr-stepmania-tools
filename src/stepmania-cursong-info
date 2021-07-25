@@ -13,7 +13,6 @@ my $XML_UPLOAD_DIR = "$ENV{HOME}/.stepmania/Save/Upload";
 my $SONG_PARENT_DIR = "$ENV{HOME}/Games/stepmania/latest";
 
 my $RECENT_MILLIS = 6 * 60 * 60 * 1000; #SIX HOURS
-my $RECENT_FRAC_DAYS = sprintf "%.4f", $RECENT_MILLIS / 1000 / 60 / 60 / 24;
 
 my @ATTS = qw(DATETIME PASS_FAIL DDRA_SCORE PERCENT_SCORE FC_MAYBE);
 
@@ -365,9 +364,10 @@ sub findXmlFiles($$$){
 }
 
 sub findRecentXmlFiles(){
+  my $recentFractionalDays = sprintf "%.4f", $RECENT_MILLIS / 1000 / 60 / 60 / 24;
   my @findCmd = ("find",
     $XML_UPLOAD_DIR,
-    "-mtime", "-$RECENT_FRAC_DAYS",
+    "-mtime", "-$recentFractionalDays",
     "-iname", "*.xml",
   );
   open CMD, "-|", @findCmd or die "ERROR: error running \"@findCmd\"\n";
