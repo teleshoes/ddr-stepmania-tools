@@ -11,7 +11,7 @@ my $songsDir = "$execDir/Songs";
 my $saveDir = "$confDir/Save";
 my $machineProfileDir = "$confDir/Save/MachineProfile";
 
-my $defaultSpeedMod = "m550";
+my $defaultSpeedMod = "m650";
 my $defaultScreen = 'ScreenSelectMusic';
 
 my $selectedSongCacheFile = "$ENV{HOME}/.cache/stepmania-selected-song";
