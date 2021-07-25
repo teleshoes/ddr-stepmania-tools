@@ -69,8 +69,8 @@ sub md5sum($);
 sub readProcLine(@);
 
 sub main(@){
-  my $monitor = 0;
   my $opts = {
+    monitor => 0,
     useTermColor => $DEFAULT_USE_TERM_COLOR,
   };
   while(@_ > 0){
@@ -79,7 +79,7 @@ sub main(@){
       print $usage;
       exit 0;
     }elsif($arg =~ /^(-m|--monitor)$/){
-      $monitor = 1;
+      $$opts{monitor} = 1;
     }elsif($arg =~ /^(--color)$/){
       $$opts{useTermColor} = 1;
     }elsif($arg =~ /^(--no-color)$/){
@@ -91,7 +91,7 @@ sub main(@){
     }
   }
 
-  if($monitor){
+  if($$opts{monitor}){
     while(1){
       my $md5 = md5sum $CURSONG_FILE;
       print formatCurSongInfo($opts, getCurSongInfo());
