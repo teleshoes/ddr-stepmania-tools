@@ -4,7 +4,7 @@ use warnings;
 use File::Basename qw(dirname);
 
 my $XML_SCORE_LIMIT = 10;
-my $USE_TERM_COLOR = -t STDOUT;
+my $DEFAULT_USE_TERM_COLOR = -t STDOUT;
 
 my $CURSONG_FILE = "$ENV{HOME}/.cache/stepmania-selected-song";
 my $PREFS_INI = "$ENV{HOME}/.stepmania/Save/Preferences.ini";
@@ -53,7 +53,7 @@ my $usage = "Usage:
       if STDOUT is not a TTY, same as --no-color
 ";
 
-sub formatCurSongInfo($);
+sub formatCurSongInfo($$);
 sub getCurSongInfo();
 sub getSongInfo($$$);
 sub ddrnameBestScore($$$);
@@ -62,15 +62,18 @@ sub calculateRadarFeet($$$);
 sub getDDRStepmaniaScoreAtts($@);
 sub findXmlFiles($$$);
 sub findRecentXmlFiles();
-sub blue($);
-sub yellow($);
-sub red($);
-sub colorText($$);
+sub blue($$);
+sub yellow($$);
+sub red($$);
+sub colorText($$$);
 sub md5sum($);
 sub readProcLine(@);
 
 sub main(@){
   my $monitor = 0;
+  my $opts = {
+    useTermColor => $DEFAULT_USE_TERM_COLOR,
+  };
   while(@_ > 0){
     my $arg = shift;
     if($arg =~ /^(-h|--help)$/){
@@ -79,11 +82,11 @@ sub main(@){
     }elsif($arg =~ /^(-m|--monitor)$/){
       $monitor = 1;
     }elsif($arg =~ /^(--color)$/){
-      $USE_TERM_COLOR = 1;
+      $$opts{useTermColor} = 1;
     }elsif($arg =~ /^(--no-color)$/){
-      $USE_TERM_COLOR = 0;
+      $$opts{useTermColor} = 0;
     }elsif($arg =~ /^(--color-term-only)$/){
-      $USE_TERM_COLOR = -t STDOUT;
+      $$opts{useTermColor} = -t STDOUT;
     }else{
       die "$usage\nERROR: unknown arg $arg\n";
     }
@@ -92,7 +95,7 @@ sub main(@){
   if($monitor){
     while(1){
       my $md5 = md5sum $CURSONG_FILE;
-      print formatCurSongInfo(getCurSongInfo());
+      print formatCurSongInfo($opts, getCurSongInfo());
       if($md5 ne md5sum $CURSONG_FILE){
         next;
       }
@@ -114,17 +117,17 @@ sub main(@){
       }
     }
   }else{
-    print formatCurSongInfo(getCurSongInfo());
+    print formatCurSongInfo($opts, getCurSongInfo());
   }
 }
 
-sub formatCurSongInfo($){
-  my ($info) = @_;
+sub formatCurSongInfo($$){
+  my ($opts, $info) = @_;
   my $fmt = "\n";
   $fmt .= readProcLine("date") . "\n";
   $fmt .= sprintf("  offset=%s   timings=%s\n",
-            red("$$info{offsetMillis}ms"),
-            red($$info{smartTimings}),
+            red($opts, "$$info{offsetMillis}ms"),
+            red($opts, $$info{smartTimings}),
   );
   $fmt .= "\n";
 
@@ -138,10 +141,10 @@ sub formatCurSongInfo($){
   }
 
   $fmt .= sprintf("%s\n%-7s %-9s %s\n",
-            blue($trimSongNameId),
+            blue($opts, $trimSongNameId),
             $$info{ddrGame},
             $$info{ddrDiff},
-            yellow($best),
+            yellow($opts, $best),
   );
 
   $fmt .= sprintf "S%-3d | V%-3d | A%-3d | F%-3d | C%-3d\n",
@@ -151,10 +154,10 @@ sub formatCurSongInfo($){
              $$info{simfileRadar}{FREEZE},
              $$info{simfileRadar}{CHAOS},
              ;
-  $fmt .= "  feet=" . yellow($$info{radarFeet}) . "\n";
+  $fmt .= "  feet=" . yellow($opts, $$info{radarFeet}) . "\n";
   $fmt .= "  session:"
-          . " passed=" . yellow($$info{sessionXmlPassedCount})
-          . " failed=" . yellow($$info{sessionXmlFailedCount})
+          . " passed=" . yellow($opts, $$info{sessionXmlPassedCount})
+          . " failed=" . yellow($opts, $$info{sessionXmlFailedCount})
           . "\n"
           ;
   $fmt .= "\n";
@@ -374,20 +377,26 @@ sub findRecentXmlFiles(){
   return @files;
 }
 
-sub blue($){
-  return colorText($_[0], "bold blue");
+sub blue($$){
+  my ($opts, $text) = @_;
+  return colorText($opts, $text, "bold blue");
 }
-sub yellow($){
-  return colorText($_[0], "yellow");
+sub yellow($$){
+  my ($opts, $text) = @_;
+  return colorText($opts, $text, "yellow");
 }
-sub red($){
-  return colorText($_[0], "red");
+sub red($$){
+  my ($opts, $text) = @_;
+  return colorText($opts, $text, "red");
 }
-sub colorText($$){
-  if($USE_TERM_COLOR){
+sub colorText($$$){
+  my ($opts, $text, $color) = @_;
+  if($$opts{useTermColor}){
     require Term::ANSIColor;
+    return Term::ANSIColor::colored($text, $color);
+  }else{
+    return $text;
   }
-  return $USE_TERM_COLOR ? Term::ANSIColor::colored($_[0], $_[1]) : return $_[0];
 }
 
 sub md5sum($){
