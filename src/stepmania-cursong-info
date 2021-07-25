@@ -24,6 +24,9 @@ my $OK_DDR_DIFFS = join "|", @DDR_DIFFS;
 
 my $EXEC_DDR_NEW_SCORE = "ddr-new-score";
 
+my $FORMAT_DEFAULT = "default";
+my $FORMAT_SHORT = "short";
+
 my $usage = "Usage:
   $0 -h|--help
     show this message
@@ -51,6 +54,9 @@ my $usage = "Usage:
       (this is the default)
       if STDOUT is a TTY, same as --color
       if STDOUT is not a TTY, same as --no-color
+
+    -s | --short
+      do not print XML scores
 ";
 
 sub formatCurSongInfo($$);
@@ -73,6 +79,7 @@ sub main(@){
   my $opts = {
     monitor => 0,
     useTermColor => $DEFAULT_USE_TERM_COLOR,
+    format => $FORMAT_DEFAULT
   };
   while(@_ > 0){
     my $arg = shift;
@@ -87,6 +94,8 @@ sub main(@){
       $$opts{useTermColor} = 0;
     }elsif($arg =~ /^(--color-term-only)$/){
       $$opts{useTermColor} = -t STDOUT;
+    }elsif($arg =~ /^(-s|--short)$/){
+      $$opts{format} = $FORMAT_SHORT;
     }else{
       die "$usage\nERROR: unknown arg $arg\n";
     }
@@ -175,13 +184,15 @@ sub formatCurSongInfo($$){
     my $passFail = $$scoreAtts{PASS_FAIL};
     $passFail = "p" if $passFail =~ /^passed$/i;
     $passFail = "F" if $passFail =~ /^failed$/i;
-    $fmt .= sprintf("  %s   %-7s %s %s\n    %s\n",
-              $$scoreAtts{PASS_FAIL},
-              $$scoreAtts{DDRA_SCORE},
-              $$scoreAtts{PERCENT_SCORE},
-              $$scoreAtts{FC_MAYBE},
-              $$scoreAtts{DATETIME},
-    );
+    if($$opts{format} ne $FORMAT_SHORT){
+      $fmt .= sprintf("  %s   %-7s %s %s\n    %s\n",
+                $$scoreAtts{PASS_FAIL},
+                $$scoreAtts{DDRA_SCORE},
+                $$scoreAtts{PERCENT_SCORE},
+                $$scoreAtts{FC_MAYBE},
+                $$scoreAtts{DATETIME},
+      );
+    }
   }
 
   return $fmt;
