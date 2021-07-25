@@ -4,6 +4,7 @@ use warnings;
 use File::Basename qw(dirname);
 
 my $XML_SCORE_LIMIT = 10;
+my $MAX_SONG_NAME_LEN = 38;
 my $DEFAULT_USE_TERM_COLOR = -t STDOUT;
 
 my $CURSONG_FILE = "$ENV{HOME}/.cache/stepmania-selected-song";
@@ -132,7 +133,9 @@ sub formatCurSongInfo($$){
 
 
   my $trimSongNameId = $$info{songNameId};
-  $trimSongNameId = substr($trimSongNameId, 0, 35) . "..." if length $trimSongNameId > 38;
+  if(length $trimSongNameId > $MAX_SONG_NAME_LEN){
+    $trimSongNameId = substr($trimSongNameId, 0, $MAX_SONG_NAME_LEN-3) . "...";
+  }
 
   my $best = $$info{ddrnameBestScore};
   if(not defined $best or $best =~ /^\s*$/){
