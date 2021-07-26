@@ -225,7 +225,10 @@ my $usage = "Usage:
    --itg             add 9ms to GlobalOffsetSeconds (i.e.: decrease the audio delay)
    -m                run `stepmania-cursong-info --monitor` using `term-window`
    --res=WxH         set DisplayWidth to W and DisplayHeight to H, overriding config
-   -r                same as --res=\"\$(`res -w`)x\$(`res -h --percent=95`)\"
+                       W can be in pixels, or percent of screen width e.g.: '1824' or '95%'
+                       H can be in pixels, or percent of screen height e.g.: '1080' or '100%'
+                       `res` command is used to calculate screen width/height
+   -r                same as --res=100%x95%
    -w                set Windowed to 1, overriding config
    -f                set Windowed to 0, overriding config
    --screen=SCREEN   jump to screen SCREEN {default=$defaultScreen}
@@ -263,6 +266,8 @@ sub main(@){
 
   my $openMonitorTerm = 0;
   $$prefs{Options}{TestInitialScreen} = $defaultScreen;
+  my $targetDisplayWidth = undef;
+  my $targetDisplayHeight = undef;
   for(my $i=0; $i<@_; $i++){
     if($_[$i] =~ /--js1Name=(.+)/ and defined $$jsKeyGrid{$1}){
       $$keyArgs{joy1Name} = $1;
@@ -276,17 +281,10 @@ sub main(@){
       $$prefs{Options}{GlobalOffsetSeconds} += 0.009;
     }elsif($_[$i] eq '-m'){
       $openMonitorTerm = 1;
-    }elsif($_[$i] =~ /^--res=(\d+)x(\d+)$/){
-      $$prefs{Options}{DisplayWidth} = $1;
-      $$prefs{Options}{DisplayHeight} = $2;
+    }elsif($_[$i] =~ /^--res=(\d+%?)x(\d+%?)$/){
+      ($targetDisplayWidth, $targetDisplayHeight) = ($1, $2);
     }elsif($_[$i] eq '-r'){
-      my $w = `res -w`;
-      chomp $w;
-      my $h = `res -h --percent=95`;
-      chomp $h;
-      die "ERROR: could not parse output of `res`\n" if $w !~ /^\d+$/ or $h !~ /^\d+$/;
-      $$prefs{Options}{DisplayWidth} = $w;
-      $$prefs{Options}{DisplayHeight} = $h;
+      ($targetDisplayWidth, $targetDisplayHeight) = ("100%", "95%");
     }elsif($_[$i] eq '-w'){
       $$prefs{Options}{Windowed} = 1;
     }elsif($_[$i] eq '-f'){
@@ -299,6 +297,20 @@ sub main(@){
       die $usage;
     }
   }
+
+  if(defined $targetDisplayWidth and $targetDisplayWidth =~ /^(\d+)%$/){
+    $targetDisplayWidth = `res -w --percent=$1`;
+    chomp $targetDisplayWidth;
+    die "ERROR: `res` command failed\n" if $targetDisplayWidth !~ /^\d+$/;
+  }
+  if(defined $targetDisplayHeight and $targetDisplayHeight =~ /^(\d+)%$/){
+    $targetDisplayHeight = `res -h --percent=$1`;
+    chomp $targetDisplayHeight;
+    die "ERROR: `res` command failed\n" if $targetDisplayHeight !~ /^\d+$/;
+  }
+
+  $$prefs{Options}{DisplayWidth} = $targetDisplayWidth if defined $targetDisplayWidth;
+  $$prefs{Options}{DisplayHeight} = $targetDisplayHeight if defined $targetDisplayHeight;
 
   system "mkdir", "-p", "$saveDir";
   replaceConf $prefsIni, $prefs;
