@@ -85,7 +85,7 @@ bakunana-testroyer                       |bknnTst | 04| 07| 11| 13| --|  | 07| 1
 balalaika-carried-with-the-wind          |bCrWThW | 03| 04| 07| 09| --|  | 04| 07| 09| --|
 ballad-for-you-omoi-no-ami               |bFYONAm | 02| 05| 07| 08| --|  | 04| 07| 09| --|
 ballad-the-feathers                      |blThFth | 01| 04| 07| 10| 08|  | 04| 07| 11| 08|
-bamboo-sword-girl                        |bmSwrGr | 02| 07| 11| 15| --|  | 07| 12| 15| --|
+bamboo-sword-girl                        |bmSwrGr | 02| 07| 11| 15| 18|  | 07| 12| 15| 17|
 bass-2-bass                              |ba2Bass | 02| 05| 09| 12| --|  | 05| 10| 12| --|
 bassdrop-freaks                          |bssdFrk | 03| 07| 10| 13| --|  | 07| 10| 13| --|
 be-a-hero                                |beAHero | 07| 09| 13| 17| --|  | 10| 14| 17| --|
@@ -96,7 +96,7 @@ beautiful-inside-cube-hard-mix           |bInCHrM | 03| 05| 07| 10| --|  | 04| 0
 beautiful-receipt                        |btflRcp | 04| 08| 10| 13| --|  | 07| 10| 13| --|
 bebeatstream                             |bbtstrm | 04| 06| 10| 13| --|  | 06| 10| 13| --|
 believe                                  |believe | 02| 04| 09| 11| --|  | 05| 09| 11| --|
-bi                                       |biRsFtC | 05| 09| 12| 17| --|  | 09| 12| 17| --|
+bi                                       |biRsFtC | 05| 09| 12| 17| 18|  | 09| 12| 17| 18|
 big-girls-dont-cry                       |bgGrDnC | 02| 04| 07| 09| --|  | 04| 07| 08| --|
 black-jackal                             |blckJck | 03| 07| 11| 15| --|  | 07| 11| 15| --|
 blew-my-mind                             |blMyMnd | 04| 09| 12| 16| 18|  | 09| 12| 16| 18|
@@ -314,7 +314,7 @@ find-you-again                           |fiYouAg | 03| 05| 09| 12| --|  | 05| 0
 fire                                     |fireMtI | 04| 05| 08| 11| --|  | 04| 08| 12| --|
 fire-fire                                |fireFir | 03| 05| 08| 14| --|  | 05| 08| 13| --|
 firefly                                  |firefly | 03| 01| 07| 10| --|  | 03| 07| 11| --|
-firestorm                                |firesto | 05| 08| 13| 16| --|  | 08| 13| 16| --|
+firestorm                                |firesto | 05| 08| 13| 16| 16|  | 08| 13| 16| 16|
 first-time                               |firsTim | 04| 07| 11| 15| 18|  | 07| 11| 15| 18|
 flight-of-the-phoenix                    |flOfThP | 02| 05| 07| 09| 07|  | 04| 06| 09| 07|
 flourish                                 |flouris | 03| 05| 08| 10| --|  | 06| 08| 10| --|
@@ -374,7 +374,7 @@ hana-ranman-flowers                      |hnRnmFl | 03| 05| 07| 11| --|  | 04| 0
 hanamaru-pippi-hayo-iko-dake             |hPpHIkD | 04| 07| 10| 12| --|  | 06| 10| 12| --|
 hands-up-in-the-air                      |hUpIThA | 01| 05| 09| 13| --|  | 05| 09| 13| --|
 happy                                    |happyPW | 03| 05| 09| 12| --|  | 06| 08| 13| --|
-happy-angel                              |hppyAng | 04| 04| 08| 12| --|  | 03| 08| 11| --|
+happy-angel                              |hppyAng | 04| 04| 08| 12| 16|  | 03| 08| 11| 16|
 happy-kitakata                           |hppyKtk | 01| 03| 07| 10| --|  | 04| 07| 12| --|
 happy-koi-lovely-time                    |hpKLvTm | 02| 05| 08| 11| --|  | 05| 08| 11| --|
 happy-lucky-yeappy                       |hpLckYp | 06| 10| 13| 16| --|  | 09| 13| 16| --|
@@ -510,7 +510,7 @@ la-libertad                              |laLiber | 03| 05| 09| 12| 14|  | 06| 0
 la-receta                                |laRecet | 03| 04| 07| 11| 13|  | 05| 07| 11| 13|
 la-senorita                              |laSenor | 04| 06| 08| 10| --|  | 05| 09| 13| --|
 la-senorita-virtual                      |lSnrVrt | 04| 08| 10| 12| --|  | 09| 10| 12| --|
-lachryma-re-queen-m                      |laReQuM | 05| 09| 14| 18| --|  | 09| 14| 18| --|
+lachryma-re-queen-m                      |laReQuM | 05| 09| 14| 18| 19|  | 09| 14| 18| 19|
 le-siana-no-kimochi                      |lSnNKmc | 02| 05| 08| 11| --|  | 05| 09| 12| --|
 leading-cyber                            |ldngCyb | 03| 08| 09| 13| --|  | 07| 10| 13| --|
 leaving                                  |leaving | 02| 05| 08| 11| 13|  | 05| 08| 11| 13|
@@ -677,7 +677,7 @@ our-soul                                 |ourSoul | 03| 06| 08| 11| 15|  | 06| 0
 ourmemories                              |ourmemo | 03| 06| 09| 12| 11|  | 06| 09| 12| 11|
 out-of-focus                             |otOfFcs | 03| 06| 12| 15| 16|  | 06| 12| 15| 16|
 over-the-period                          |ovThPrd | 08| 12| 15| 18| 19|  | 12| 15| 18| 19|
-oversoul                                 |oversou | 03| 06| 12| 15| --|  | 06| 12| 15| --|
+oversoul                                 |oversou | 03| 06| 12| 15| 17|  | 06| 12| 15| 17|
 pa-pi-pu-yeah                            |paPiPuY | 03| 05| 10| 13| --|  | 06| 08| 13| --|
 paranoia                                 |paranoi | 04| 08| 09| 11| --|  | 08| 13| 11| --|
 paranoia-eternal                         |prnEtrn | 04| 08| 10| 13| --|  | 09| 11| 13| --|
@@ -703,7 +703,7 @@ party-rock-anthem                        |prRckAn | 02| 05| 08| 11| --|  | 05| 0
 passion-of-love                          |paOfLov | 04| 05| 07| 10| --|  | 06| 08| 10| --|
 peace-out                                |peacOut | 03| 03| 06| 10| --|  | 04| 07| 10| --|
 peace-v                                  |peacVBf | 03| 03| 07| 09| --|  | 03| 07| 09| --|
-pierce-the-sky                           |prThSky | 03| 08| 11| 14| --|  | 08| 11| 14| --|
+pierce-the-sky                           |prThSky | 03| 08| 11| 14| 16|  | 08| 11| 14| 16|
 pink-rose                                |pinkRos | 03| 04| 06| 10| --|  | 04| 07| 10| --|
 plain-asia-phq-remix                     |plAsPhR | 05| 07| 10| 13| --|  | 07| 10| 13| --|
 plan-8                                   |plan8RS | 04| 08| 11| 14| --|  | 08| 11| 14| --|
@@ -794,7 +794,7 @@ sakura                                   |sakuraR | 05| 07| 11| 13| 11|  | 07| 1
 sakura-mirage                            |sakuMir | 04| 07| 11| 14| --|  | 07| 11| 14| --|
 sakura-reflection                        |skrRflc | 04| 08| 10| 15| --|  | 07| 10| 14| --|
 sakura-storm                             |skrStrm | 02| 04| 07| 10| 13|  | 04| 07| 11| 14|
-sakura-sunrise                           |skrSnrs | 03| 07| 10| 14| --|  | 08| 10| 15| --|
+sakura-sunrise                           |skrSnrs | 03| 07| 10| 14| 16|  | 08| 10| 15| 16|
 samurai-shogun-vs-master-ninja           |sShVMsN | 03| 07| 12| 14| --|  | 07| 12| 15| --|
 sana-mollete-ne-ente                     |snMlNEn | 03| 04| 09| 12| --|  | 05| 09| 12| --|
 sand-blow                                |sandBlo | 03| 07| 12| 15| --|  | 07| 12| 16| --|
@@ -830,7 +830,7 @@ shiawase-ni-nareru-kakushi-command       |sNNrKkC | 02| 06| 10| 13| --|  | 07| 1
 shikkoku-no-special-princess-sundae      |sNSpPrS | 04| 08| 11| 13| --|  | 07| 11| 13| --|
 shine                                    |shineTF | 02| 04| 06| 09| 12|  | 04| 07| 09| 12|
 shining                                  |shining | 02| 05| 08| 11| --|  | 05| 08| 11| --|
-shiny-world                              |shnyWrl | 02| 08| 11| 14| --|  | 08| 11| 14| --|
+shiny-world                              |shnyWrl | 02| 08| 11| 14| 16|  | 08| 11| 14| 16|
 shion                                    |shionDY | 04| 07| 10| 13| --|  | 06| 10| 13| --|
 shizuku                                  |shizuku | 02| 05| 09| 12| --|  | 05| 09| 12| --|
 show-me-your-moves                       |shMYrMv | 03| 05| 08| 11| 14|  | 05| 08| 12| 14|
@@ -1077,7 +1077,7 @@ your-angel                               |yourAng | 02| 04| 07| 10| --|  | 04| 0
 your-rain-rage-mix                       |yrRnRgM | 03| 04| 06| 09| --|  | 03| 07| 10| --|
 zephyranthes                             |zphyrnt | 03| 07| 11| 15| --|  | 07| 11| 15| --|
 zero                                     |zeroTio | 03| 05| 08| 11| --|  | 06| 08| 13| --|
-zeta-the-world-of-prime-numbers          |zTWOPrN | 03| 06| 11| 15| --|  | 06| 09| 14| --|
+zeta-the-world-of-prime-numbers          |zTWOPrN | 03| 06| 11| 15| 17|  | 06| 09| 14| 17|
 zutto-mitsu-meteite-ryu-star-remix       |zMMRStR | 01| 07| 09| 12| 15|  | 07| 10| 12| 15|
 
 bemani-spirits                           |nonBmSp | --| --| --| --| --|  | --| --| --| --|
