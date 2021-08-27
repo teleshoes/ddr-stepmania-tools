@@ -59,7 +59,7 @@ my $SONG_NAME_IDS_BY_SONG_DIR_SUFFIX = {
   "DDR_10_Supernova2/SUNKiSS DROP~Alison Side~"            => "sunkiss-drop",
 
   #custom/stepmania songs with too-long/unclear/duplicate auto-generated song-name-ids
-  "ani/Elfen Lied AMV (Blue by The Birthday Massacre) [Sanjuro]" =>
+  "ani/Elfen Lied AMV (Blue by The Birthday Massacre) [Sanjuro]"
       => "blue-birthday-massacre-condemned-memoir",
   "ani/Zetsubou Billy [Death Note 2nd Ending] [neothe0ne]" => "zetsubou-billy-death-note",
   "ani/The WORLD - Death Note 1st OP [Asahina-san]"        => "the-world-death-note",
