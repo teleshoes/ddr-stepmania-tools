@@ -12,7 +12,7 @@ my $ROWS_PER_BEAT = int(192/4); #48
 
 my $CACHE_BASE_DIR = "$ENV{HOME}/.cache/simfile-radar";
 
-my $SM_CHARS = '[01234MLFAKNH]';
+my $SM_CHARS = '[01234MLFAKNHGOETU]';
 
 sub formatStats($$$);
 sub getSongRowCount($);
