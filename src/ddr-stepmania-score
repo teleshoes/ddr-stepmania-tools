@@ -51,6 +51,8 @@ my $XML_MTIME_DIFF_ERROR_SECONDS = 600; #FAIL if image file and XML file mtimes 
 #song-name-id overrides to use instead of zenius
 my $SONG_NAME_IDS_BY_SONG_DIR_SUFFIX = {
   #zenius-generated songs with song-dirs that dont match DDR
+  "DDR_17_A20/Lachryma (Re-Queen'M)"                       => "lachryma-re-queen-m",
+  "DDR_17_A20/Night of Knights (Ryu Remix)"                => "night-of-knights-ryu-star-remix",
   "DDR_16_A/Cirno's Perfect Math Class"                    => "cirno-no-perfect-sansuu-kyoushitsu",
   "DDR_15_2014/Cirno's Perfect Math Class (EDM REMIX)"     => "cirno-no-perfect-sansuu-kyoushitsu-edm",
   "DDR_16_A/Cirno's Perfect Math Class (EDM REMIX)"        => "cirno-no-perfect-sansuu-kyoushitsu-edm",
