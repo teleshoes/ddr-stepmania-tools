@@ -57,6 +57,8 @@ my $SONG_NAME_IDS_BY_SONG_DIR_SUFFIX = {
   "DDR_16_A/Koisuru uchuu sensou!!"                        => "koisuru-uchusensou",
   "DDR_16_A/Night of knights"                              => "night-of-nights",
   "DDR_14_2013/Meumeupettantan!!"                          => "meu-meu-petantan",
+  "DDR_14_2013/Okome no oishii takikata, soshite okome wo taberu koto ni yoru sono kouka"
+                                                           => "how-to-cook-delicious-rice",
   "DDR_10_Supernova2/SUNKiSS DROP~Alison Side~"            => "sunkiss-drop",
 
   #custom/stepmania songs with too-long/unclear/duplicate auto-generated song-name-ids
