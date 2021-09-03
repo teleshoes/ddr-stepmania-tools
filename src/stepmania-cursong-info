@@ -26,6 +26,7 @@ my $EXEC_DDR_NEW_SCORE = "ddr-new-score";
 
 my $FORMAT_DEFAULT = "default";
 my $FORMAT_SHORT = "short";
+my $FORMAT_QML = "qml";
 
 my $usage = "Usage:
   $0 -h|--help
@@ -49,11 +50,15 @@ my $usage = "Usage:
     --color
       use Term::ANSIColor to output text formatted with ANSI color escapes
     --no-color
-      do not output any ANSI color escapes
+      do not output any ANSI color escapes (also print XML without colors for --qml)
     --color-term-only
       (this is the default)
       if STDOUT is a TTY, same as --color
       if STDOUT is not a TTY, same as --no-color
+
+    --qml | --xml
+      output XML suitable for displaying in a Text.text attribute in QML QtQuick
+      implies --color, which can be overridden with --no-color
 
     -s | --short
       do not print XML scores
@@ -79,6 +84,7 @@ sub main(@){
   my $opts = {
     monitor => 0,
     useTermColor => $DEFAULT_USE_TERM_COLOR,
+    useQMLColor => 1,
     format => $FORMAT_DEFAULT
   };
   while(@_ > 0){
@@ -90,12 +96,16 @@ sub main(@){
       $$opts{monitor} = 1;
     }elsif($arg =~ /^(--color)$/){
       $$opts{useTermColor} = 1;
+      $$opts{useQMLColor} = 1;
     }elsif($arg =~ /^(--no-color)$/){
       $$opts{useTermColor} = 0;
+      $$opts{useQMLColor} = 0;
     }elsif($arg =~ /^(--color-term-only)$/){
       $$opts{useTermColor} = -t STDOUT;
     }elsif($arg =~ /^(-s|--short)$/){
       $$opts{format} = $FORMAT_SHORT;
+    }elsif($arg =~ /^(--qml|--xml)$/){
+      $$opts{format} = $FORMAT_QML;
     }else{
       die "$usage\nERROR: unknown arg $arg\n";
     }
@@ -193,6 +203,10 @@ sub formatCurSongInfo($$){
                 $$scoreAtts{DATETIME},
       );
     }
+  }
+
+  if($$opts{format} eq $FORMAT_QML){
+    $fmt =~ s/\n/<br\/>\n/g;
   }
 
   return $fmt;
@@ -393,6 +407,7 @@ sub findRecentXmlFiles(){
 
 sub blue($$){
   my ($opts, $text) = @_;
+  my $color = $$opts{format} eq $FORMAT_QML ? "blue" : "bold blue";
   return colorText($opts, $text, "bold blue");
 }
 sub yellow($$){
@@ -405,11 +420,19 @@ sub red($$){
 }
 sub colorText($$$){
   my ($opts, $text, $color) = @_;
-  if($$opts{useTermColor}){
-    require Term::ANSIColor;
-    return Term::ANSIColor::colored($text, $color);
+  if($$opts{format} eq $FORMAT_QML){
+    if($$opts{useQMLColor}){
+      return "<font color='$color'>$text</font>";
+    }else{
+      return $text;
+    }
   }else{
-    return $text;
+    if($$opts{useTermColor}){
+      require Term::ANSIColor;
+      return Term::ANSIColor::colored($text, $color);
+    }else{
+      return $text;
+    }
   }
 }
 
