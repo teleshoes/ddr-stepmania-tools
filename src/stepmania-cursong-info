@@ -76,6 +76,7 @@ sub calculateRadarFeet($$$);
 sub getDDRStepmaniaScoreAtts($@);
 sub findXmlFiles($$$);
 sub findRecentXmlFiles();
+sub maybeBig($$);
 sub blue($$);
 sub yellow($$);
 sub red($$);
@@ -192,12 +193,17 @@ sub formatCurSongInfo($$){
              $$info{simfileRadar}{FREEZE},
              $$info{simfileRadar}{CHAOS},
              ;
-  $fmt .= "  feet=" . yellow($opts, $$info{radarFeet}) . "\n";
-  $fmt .= "  session:"
-          . " passed=" . yellow($opts, $$info{sessionXmlPassedCount})
-          . " failed=" . yellow($opts, $$info{sessionXmlFailedCount})
-          . "\n"
-          ;
+  $fmt .= maybeBig($opts,
+    "  feet=" . yellow($opts, $$info{radarFeet}) . "\n");
+
+  $fmt .= "\n";
+
+  my $passedFmt = " passed=" . yellow($opts, $$info{sessionXmlPassedCount});
+  my $failedFmt = " failed=" . yellow($opts, $$info{sessionXmlFailedCount});
+
+  $fmt .= maybeBig($opts, $passedFmt) . "\n";
+  $fmt .= maybeBig($opts, $failedFmt) . "\n";
+
   $fmt .= "\n";
 
   my @xmlScores = @{$$info{xmlScores}};
@@ -212,9 +218,12 @@ sub formatCurSongInfo($$){
     $passFail = "p" if $passFail =~ /^passed$/i;
     $passFail = "F" if $passFail =~ /^failed$/i;
     if($$opts{format} ne $FORMAT_SHORT){
-      $fmt .= sprintf("  %s   %-7s %s %s\n    %s\n",
+      my $ddrScore = sprintf "%-7s", $$scoreAtts{DDRA_SCORE};
+      $ddrScore = maybeBig($opts, $ddrScore) if $i == 0;
+
+      $fmt .= sprintf("  %s   %s %s %s\n    %s\n",
                 $$scoreAtts{PASS_FAIL},
-                $$scoreAtts{DDRA_SCORE},
+                $ddrScore,
                 $$scoreAtts{PERCENT_SCORE},
                 $$scoreAtts{FC_MAYBE},
                 $$scoreAtts{DATETIME},
@@ -420,6 +429,15 @@ sub findRecentXmlFiles(){
   close CMD;
   chomp foreach @files;
   return @files;
+}
+
+sub maybeBig($$){
+  my ($opts, $text) = @_;
+  if($$opts{format} eq $FORMAT_QML){
+    return "<font size='+2'><b>$text</b></font>";
+  }else{
+    return $text;
+  }
 }
 
 sub blue($$){
