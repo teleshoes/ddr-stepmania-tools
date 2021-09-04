@@ -408,11 +408,12 @@ sub findRecentXmlFiles(){
 sub blue($$){
   my ($opts, $text) = @_;
   my $color = $$opts{format} eq $FORMAT_QML ? "blue" : "bold blue";
-  return colorText($opts, $text, "bold blue");
+  return colorText($opts, $text, $color);
 }
 sub yellow($$){
   my ($opts, $text) = @_;
-  return colorText($opts, $text, "yellow");
+  my $color = $$opts{format} eq $FORMAT_QML ? "brown" : "yellow";
+  return colorText($opts, $text, $color);
 }
 sub red($$){
   my ($opts, $text) = @_;
