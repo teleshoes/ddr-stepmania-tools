@@ -353,7 +353,7 @@ sub main(@){
          "windowmove", 100, 100,
          ;
     }
-    if($line =~ /^(StepsType_\w+)%%%(Difficulty_\w+)%%%(.+)$/){
+    if($line =~ /^PlayerNumber_P(\d+)%%%StepsType_(\w+)%%%Difficulty_(\w+)%%%(.+)$/){
       open SEL_FH, "> $selectedSongCacheFile"
         or print STDERR "WARNING: could not write $selectedSongCacheFile\n$!\n";
       print SEL_FH $line;
