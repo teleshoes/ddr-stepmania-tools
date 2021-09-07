@@ -14,7 +14,7 @@ my $machineProfileDir = "$confDir/Save/MachineProfile";
 my $defaultSpeedMod = "m650";
 my $defaultScreen = 'ScreenSelectMusic';
 
-my $selectedSongCacheFile = "$ENV{HOME}/.cache/stepmania-selected-song";
+my $selectedSongCacheFilePrefix = "$ENV{HOME}/.cache/stepmania-selected-song-p";
 
 my $prefs = {
   'Options' => {
@@ -356,6 +356,7 @@ sub main(@){
     if($line =~ /^PlayerNumber_P(\d+)%%%StepsType_(\w+)%%%Difficulty_(\w+)%%%(.+)$/){
       my ($player, $stepsType, $difficulty, $simfileRelPath) = ($1, $2, $3, $4);
 
+      my $selSongCacheFile = $selectedSongCacheFilePrefix . $player;
       my $fmt = ''
         . "player=$player\n"
         . "stepsType=$stepsType\n"
@@ -363,8 +364,8 @@ sub main(@){
         . "simfileRelPath=$simfileRelPath\n"
         ;
 
-      open SEL_FH, "> $selectedSongCacheFile"
-        or print STDERR "WARNING: could not write $selectedSongCacheFile\n$!\n";
+      open SEL_FH, "> $selSongCacheFile"
+        or print STDERR "WARNING: could not write $selSongCacheFile\n$!\n";
       print SEL_FH $fmt;
       close SEL_FH;
     }
