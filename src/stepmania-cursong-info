@@ -243,12 +243,26 @@ sub formatCurSongInfo($$){
 
 sub getCurSongInfo(){
   my $out = `cat $CURSONG_FILE_P1`;
-  if($out =~ /^StepsType_(\w+)%%%Difficulty_(\w+)%%%(.+)$/){
-    my ($stepsType, $difficulty, $simfile) = ($1, $2, $3);
-    getSongInfo($stepsType, $difficulty, $simfile);
-  }else{
+
+  my $player         = $1 if $out =~ /^player=(\d+)$/m;
+  my $stepsType      = $1 if $out =~ /^stepsType=(\w+)$/m;
+  my $difficulty     = $1 if $out =~ /^difficulty=(\w+)$/m;
+  my $simfileRelPath = $1 if $out =~ /^simfileRelPath=(.+)$/m;
+
+  if(0
+    or not defined $player
+    or not defined $stepsType
+    or not defined $difficulty
+    or not defined $simfileRelPath
+  ){
     die "ERROR: could not parse $CURSONG_FILE_P1\n";
   }
+
+  if(defined $player and $player ne "1"){
+    die "ERROR: cur-song-info player number mismatch\n";
+  }
+
+  return getSongInfo($stepsType, $difficulty, $simfileRelPath);
 }
 
 sub getSongInfo($$$){
