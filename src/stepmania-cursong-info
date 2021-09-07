@@ -7,7 +7,7 @@ my $XML_SCORE_LIMIT = 10;
 my $MAX_SONG_NAME_LEN = 38;
 my $DEFAULT_USE_TERM_COLOR = -t STDOUT;
 
-my $CURSONG_FILE = "$ENV{HOME}/.cache/stepmania-selected-song";
+my $CURSONG_FILE_P1 = "$ENV{HOME}/.cache/stepmania-selected-song-p1";
 my $PREFS_INI = "$ENV{HOME}/.stepmania/Save/Preferences.ini";
 my $OUTFOX_PREFS_INI = "$ENV{HOME}/.stepmania/Save/OutFoxPrefs.ini";
 my $XML_UPLOAD_DIR = "$ENV{HOME}/.stepmania/Save/Upload";
@@ -33,14 +33,14 @@ my $usage = "Usage:
     show this message
 
   $0 [OPTS]
-    read current song from $CURSONG_FILE
+    read current song from $CURSONG_FILE_P1
       (set by hack in stepmania theme)
     extract+print info with `ddr-stepmania-score`, `ddrname`, and `simfile-radar`
 
   OPTS
     -m | --monitor
       loop forever, using inotifywait to efficiently wait on I/O writes to:
-        $CURSONG_FILE
+        $CURSONG_FILE_P1
         $XML_UPLOAD_DIR/
       when either is written to (current song changes or new XML score appears),
         do the same as `$0`
@@ -121,14 +121,14 @@ sub main(@){
 
   if($$opts{monitor}){
     while(1){
-      my $md5 = md5sum $CURSONG_FILE;
+      my $md5 = md5sum $CURSONG_FILE_P1;
       my $fmt = formatCurSongInfo($opts, getCurSongInfo());
       if(defined $$opts{outputFile}){
         writeFile $$opts{outputFile}, $fmt;
       }else{
         print $fmt;
       }
-      if($md5 ne md5sum $CURSONG_FILE){
+      if($md5 ne md5sum $CURSONG_FILE_P1){
         next;
       }
       my @xmlFiles = findRecentXmlFiles();
@@ -136,7 +136,7 @@ sub main(@){
       system "inotifywait",
         "-q", "-q",          #silent
         "-e", "close_write", #directory or file written
-        $CURSONG_FILE,       #song selected in stepmania
+        $CURSONG_FILE_P1,    #song selected in stepmania
         $XML_UPLOAD_DIR,     #new score file appeared in stepmania
       ;
       if($? != 0){
@@ -242,12 +242,12 @@ sub formatCurSongInfo($$){
 }
 
 sub getCurSongInfo(){
-  my $out = `cat $CURSONG_FILE`;
+  my $out = `cat $CURSONG_FILE_P1`;
   if($out =~ /^StepsType_(\w+)%%%Difficulty_(\w+)%%%(.+)$/){
     my ($stepsType, $difficulty, $simfile) = ($1, $2, $3);
     getSongInfo($stepsType, $difficulty, $simfile);
   }else{
-    die "ERROR: could not parse $CURSONG_FILE\n";
+    die "ERROR: could not parse $CURSONG_FILE_P1\n";
   }
 }
 
