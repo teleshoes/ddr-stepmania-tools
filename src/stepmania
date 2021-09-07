@@ -119,7 +119,7 @@ my $patches = {
   # print songtype, difficulty, and SM file on ScreenSelectMusic
   "$execDir/Appearance/Themes/default/BGAnimations/ScreenSelectMusic decorations/panels.lua" => ''
     . '136a137' . "\n"
-    . '> 						print(st .. "%%%" .. diff .. "%%%" .. song:GetSongFilePath());' . "\n"
+    . '> 						print(pn .. "%%%" .. st .. "%%%" .. diff .. "%%%" .. song:GetSongFilePath());' . "\n"
   ,
   #screen filter 0 => 0.5
   "$execDir/Appearance/Themes/default/Modules/Options.Prefs.lua" => ''
