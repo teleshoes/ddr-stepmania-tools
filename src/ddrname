@@ -1263,7 +1263,7 @@ sub nameReminder($$){
 
   my $newFileName = "${prefix}_${reminder}.$ext";
 
-  my @cmd = ("mv", $file, $newFileName);
+  my @cmd = ("mv", "--no-clobber", $file, $newFileName);
   run @cmd;
 }
 
@@ -1377,7 +1377,7 @@ sub nameFile($$$$){
   $newFileName .= "_$$info{stage}";
   $newFileName .= ".$ext";
 
-  my @cmd = ("mv", $file, $newFileName);
+  my @cmd = ("mv", "--no-clobber", $file, $newFileName);
   if($file eq $newFileName){
     print "SKIPPING: $file is unchanged\n";
   }else{
