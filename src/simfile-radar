@@ -16,7 +16,7 @@ my $CACHE_BASE_DIR = "$ENV{HOME}/.cache/simfile-radar";
 
 my $SM_CHARS = '[01234MLFAKNHGOETU]';
 
-my @COMPRESSED_VARIABLE_NAMES = qw( );
+my @COMPRESSED_VARIABLE_NAMES = qw( NOTE_ROWS );
 
 sub formatStats($$$);
 sub getSongRowCount($);
