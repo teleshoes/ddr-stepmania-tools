@@ -124,10 +124,34 @@ my $usage = "Usage:
     SONG_DUR_FMT
       SONG_DUR formatted M:SS (e.g.: 2:01)
     NOTE_ROWS
-      a comma-separated list of *expanded* note rows ($ROWS_PER_MEASURE rows per measure)
-      note that there are no measure dividers or newlines,
-        and each row is exactly 1/$ROWS_PER_BEAT of a beat
-      (this value is very large)
+      a comma-separated list of *expanded* note rows in one game+difficulty of the song
+      there are $ROWS_PER_MEASURE rows for each measure
+      each row is exactly 1/$ROWS_PER_BEAT of a beat ($BEATS_PER_MEASURE beats per measure)
+        (note that there are no measure dividers or newlines. also, this value is very large)
+      this list is expanded from the measure-separated rows in the simfile
+        (the simfile has between 4 and $ROWS_PER_MEASURE rows per measure,
+         which is expanded to exactly $ROWS_PER_MEASURE rows per measure)
+      a single row is a list of characters (4 for singles, 5 for pump, 6 for solo, 8 for doubles)
+      each character represents one arrow/panel, and is one of: $SM_CHARS
+      these characters are used for calculations:
+        0 - nothing for this arrow
+        1 - a 'tap' arrow (regular arrow)
+        2 - a 'hold' arrow (start hold)
+        3 - hold/roll release (same character for 'hold' or 'roll')
+        4 - a 'roll' arrow
+        M - a 'mine' (note: shock rows are rows containing only 'mine')
+      these are ignored:
+        L - lift
+        F - fake
+        A - attack
+        K - automatic keysound
+        N - minefield (was never a real thing)
+        H - hidden
+        G - ???
+        O - ???
+        E - ???
+        T - ???
+        U - ???
     BPM_ROWS
       a comma-separated list of ROW=BPM pairs
       (this is converted from the BEAT=BPM pairs stored in the simfile)
