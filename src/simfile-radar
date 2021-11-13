@@ -230,6 +230,9 @@ my $usage = "Usage:
     COUNT_HOLD_ROWS
       total number of rows in the song that contain:
         single-arrow-hold-start, multi-arrow-hold-start
+    COUNT_ROLL_ROWS
+      total number of rows in the song that contain:
+        single-arrow-roll-start, multi-arrow-roll-start
     COUNT_JUMP_ROWS
       total number of rows in the song that contain:
         mutli-arrow-tap,
@@ -566,6 +569,7 @@ sub getNoteCounts($){
     COUNT_NOTE_ROWS  => 0,
     COUNT_TAP_ROWS   => 0,
     COUNT_HOLD_ROWS  => 0,
+    COUNT_ROLL_ROWS  => 0,
     COUNT_JUMP_ROWS  => 0,
     COUNT_MINE_ROWS  => 0,
     COUNT_SHOCK_ROWS => 0,
@@ -578,6 +582,7 @@ sub getNoteCounts($){
     $$noteCounts{COUNT_NOTE_ROWS}++  if $row =~ /[124]/;
     $$noteCounts{COUNT_TAP_ROWS}++   if $row =~ /1/;
     $$noteCounts{COUNT_HOLD_ROWS}++  if $row =~ /[2]/;
+    $$noteCounts{COUNT_ROLL_ROWS}++  if $row =~ /[4]/;
     $$noteCounts{COUNT_JUMP_ROWS}++  if $row =~ /[124].*[124]/;
     $$noteCounts{COUNT_MINE_ROWS}++  if $row =~ /M/;
     $$noteCounts{COUNT_SHOCK_ROWS}++ if $row =~ /^M+$/; #"shocks" are mine-only rows
