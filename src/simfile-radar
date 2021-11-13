@@ -122,6 +122,11 @@ my $usage = "Usage:
       e.g.: 121.000666666667
     SONG_DUR_FMT
       SONG_DUR formatted M:SS (e.g.: 2:01)
+    NOTE_ROWS
+      a comma-separated list of *expanded* note rows ($ROWS_PER_MEASURE rows per measure)
+      note that there are no measure dividers or newlines,
+        and each row is exactly 1/$ROWS_PER_BEAT of a beat
+      (this value is very large)
     BPM_ROWS
       a comma-separated list of ROW=BPM pairs
       (this is converted from the BEAT=BPM pairs stored in the simfile)
@@ -847,6 +852,7 @@ sub calculateNoteSetStats($$){
 
   #meaningful calculated values
   $$s{SONG_DUR_FMT}              = formatTimeMSS $$s{SONG_DUR};
+  $$s{NOTE_ROWS}                 = join ",", @$rows;
   $$s{BPM_ROWS}                  = join ",", map {"$_=$$bpmsByRow{$_}"} sort {$a <=> $b} keys %$bpmsByRow;
   $$s{STOP_ROWS}                 = join ",", map {"$_=$$stopsByRow{$_}"} sort {$a <=> $b} keys %$stopsByRow;
   $$s{SONG_BEAT_COUNT}           = int($$s{SONG_ROW_COUNT}/$ROWS_PER_BEAT + 0.5);
