@@ -224,25 +224,32 @@ my $usage = "Usage:
         single-arrow-tap,        multi-arrow-tap,
         single-arrow-hold-start, multi-arrow-hold-start,
         single-arrow-roll-start, multi-arrow-roll-start
+      e.g.: '0001', '1100', '0002', '0202', '0400', '4400'
     COUNT_TAP_ROWS
       total number of rows in the song that contain:
         single-arrow-tap,        multi-arrow-tap
+      e.g.: '0001', '1100'
     COUNT_HOLD_ROWS
       total number of rows in the song that contain:
         single-arrow-hold-start, multi-arrow-hold-start
+      e.g.: '0002', '0202'
     COUNT_ROLL_ROWS
       total number of rows in the song that contain:
         single-arrow-roll-start, multi-arrow-roll-start
+      e.g.: '0400', '4400'
     COUNT_JUMP_ROWS
       total number of rows in the song that contain:
         mutli-arrow-tap,
         multi-arrow-hold-start
         multi-arrow-roll-start
+      e.g.: '1100', '0202', '4400'
     COUNT_MINE_ROWS
       total number of rows in the song that contain:
         single-mine,              multi-mine
+      e.g.: '0M00', 'MM00'
     COUNT_SHOCK_ROWS
       total number of rows in the song that contain ONLY mines, for all arrows
+      e.g.: 'MMMM'
     COUNT_TAPS
       total number of ARROWS in single-arrow-tap or multi-arrow-tap rows
         e.g.: a jump is 2 taps, but only 1 tap-row
