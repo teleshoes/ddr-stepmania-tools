@@ -157,7 +157,7 @@ my $usage = "Usage:
       e.g.: 360
     MAX_MEASURE_DENSITY
       for every contiguous chain of $ROWS_PER_MEASURE rows in the song,
-        count the number of non-empty ROWS (not arrows),
+        count the number of non-empty ROWS (not the number of arrows in those rows),
         where non-empty rows contain at least one arrow with a tap, hold, roll, or mine
       take the maximum count of non-empty rows of any contiguous chain
       if a 'song' has fewer than $ROWS_PER_MEASURE rows (song is shorter than one measure),
@@ -249,6 +249,7 @@ my $usage = "Usage:
       e.g.: '0M00', 'MM00'
     COUNT_SHOCK_ROWS
       total number of rows in the song that contain ONLY mines, for all arrows
+        (no 'empty' arrows, no taps, etc)
       e.g.: 'MMMM'
     COUNT_TAPS
       total number of ARROWS in single-arrow-tap or multi-arrow-tap rows
