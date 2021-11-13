@@ -171,7 +171,7 @@ my $usage = "Usage:
             =>
             7152=0.167,7176=0.167
     SONG_ROW_COUNT
-      this is the total number of rows in the song,
+      this is the total number of rows in NOTE_ROWS,
         with each row being 1/$ROWS_PER_MEASURE of a measure,
         and is equivalent to the number of beats in the song times $ROWS_PER_BEAT
       note that leading empty rows DO count towards the count or song duration,
@@ -182,11 +182,11 @@ my $usage = "Usage:
       SONG_ROW_COUNT divided by $ROWS_PER_BEAT, rounded to the nearest integer
       e.g.: 360
     MAX_MEASURE_DENSITY
-      for every contiguous chain of $ROWS_PER_MEASURE rows in the song,
+      for every contiguous chain of $ROWS_PER_MEASURE rows in NOTE_ROWS,
         count the number of non-empty ROWS (not the number of arrows in those rows),
         where non-empty rows contain at least one arrow with a tap, hold, roll, or mine
       take the maximum count of non-empty rows of any contiguous chain
-      if a 'song' has fewer than $ROWS_PER_MEASURE rows (song is shorter than one measure),
+      if NOTE_ROWS has fewer than $ROWS_PER_MEASURE rows (song is shorter than one measure),
         count the total number of non-empty rows
     TOTAL_FREEZE_ROW_COUNT
       find every hold-row, count the number of rows until its released, and sum the counts
@@ -198,11 +198,11 @@ my $usage = "Usage:
           and each is counted independently
         multi-arrow holds only count once, and the longest-held arrow is used
     TOTAL_NOTE_IRREGULARITY
-      sum( ARROW_COUNT * TIMING_IRREGULARITY / INTERVAL_MEASURES ) for each row in the song
+      sum( ARROW_COUNT * TIMING_IRREGULARITY / INTERVAL_MEASURES ) for each row in NOTE_ROWS
       an arbitrary measure of how closely packed notes with weird timings are
         (this is one of two components of CHAOS, along with BPM_CHANGE_AMOUNT)
         this value typically ranges from 0 to 6000
-      for each row in the song:
+      for each row in NOTE_ROWS:
         find the ARROW_COUNT, the number of taps/holds/rolls/mines in the row
           e.g.: 0 for empty row (contributes nothing to the total)
                 1 for single-arrow taps/holds/rolls/mines
@@ -246,48 +246,48 @@ my $usage = "Usage:
         BPM=100, BPM=300, stop, BPM=100     => BPM_CHANGE_AMOUNT=700
         BPM=50, stop&BPM=100, stop, BPM=120 => BPM_CHANGE_AMOUNT=170
     COUNT_NOTE_ROWS
-      total number of rows in the song that contain:
+      total number of rows in NOTE_ROWS that contain:
         single-arrow-tap,        multi-arrow-tap,
         single-arrow-hold-start, multi-arrow-hold-start,
         single-arrow-roll-start, multi-arrow-roll-start
       e.g.: '0001', '1100', '0002', '0202', '0400', '4400'
     COUNT_TAP_ROWS
-      total number of rows in the song that contain:
+      total number of rows in NOTE_ROWS that contain:
         single-arrow-tap,        multi-arrow-tap
       e.g.: '0001', '1100'
     COUNT_HOLD_ROWS
-      total number of rows in the song that contain:
+      total number of rows in NOTE_ROWS that contain:
         single-arrow-hold-start, multi-arrow-hold-start
       e.g.: '0002', '0202'
     COUNT_ROLL_ROWS
-      total number of rows in the song that contain:
+      total number of rows in NOTE_ROWS that contain:
         single-arrow-roll-start, multi-arrow-roll-start
       e.g.: '0400', '4400'
     COUNT_JUMP_ROWS
-      total number of rows in the song that contain:
+      total number of rows in NOTE_ROWS that contain:
         mutli-arrow-tap,
         multi-arrow-hold-start
         multi-arrow-roll-start
       e.g.: '1100', '0202', '4400'
     COUNT_MINE_ROWS
-      total number of rows in the song that contain:
+      total number of rows in NOTE_ROWS that contain:
         single-mine,              multi-mine
       e.g.: '0M00', 'MM00'
     COUNT_SHOCK_ROWS
-      total number of rows in the song that contain ONLY mines, for all arrows
+      total number of rows in NOTE_ROWS that contain ONLY mines, for all arrows
         (no 'empty' arrows, no taps, etc)
       e.g.: 'MMMM'
     COUNT_TAPS
-      total number of tap ARROWS in all rows in the song
+      total number of tap ARROWS in all rows in NOTE_ROWS
         e.g.: a row with a jump ('1100') increases COUNT_TAPS by 2, and COUNT_TAP_ROWS by 1
     COUNT_HOLDS
-      total number of hold ARROWS in all rows in the song
+      total number of hold ARROWS in all rows in NOTE_ROWS
         e.g.: a row with a jump-hold ('0202') increases COUNT_HOLDS by 2, and COUNT_HOLD_ROWS by 1
     COUNT_ROLLS
-      total number of roll ARROWS in all rows in the song
+      total number of roll ARROWS in all rows in NOTE_ROWS
         e.g.: a row with a jump-roll ('4400') increases COUNT_ROLLS by 2, and COUNT_ROLL_ROWS by 1
     COUNT_MINES
-      total number of MINES in all rows in the song
+      total number of MINES in all rows in NOTE_ROWS
         e.g.: a row with 3 mines ('0MMM') increases COUNT_MINES by 3, and COUNT_MINE_ROWS by 1
 
     TOTAL_NOTES                = COUNT_NOTE_ROWS + COUNT_SHOCK_ROWS
