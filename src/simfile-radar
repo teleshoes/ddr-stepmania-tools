@@ -177,7 +177,7 @@ my $usage = "Usage:
         (this is one of two components of CHAOS, along with BPM_CHANGE_AMOUNT)
         this value typically ranges from 0 to 6000
       for each note-row:
-        find the ARROW_COUNT, the number of taps/holds/mines in the row
+        find the ARROW_COUNT, the number of taps/holds/rolls/mines in the row
           e.g.: 0 for empty row (contributes nothing to the total)
                 1 for single-arrow taps/holds/rolls/mines
                 2 for jumps
