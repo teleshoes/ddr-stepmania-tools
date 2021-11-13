@@ -252,17 +252,17 @@ my $usage = "Usage:
         (no 'empty' arrows, no taps, etc)
       e.g.: 'MMMM'
     COUNT_TAPS
-      total number of ARROWS in single-arrow-tap or multi-arrow-tap rows
-        e.g.: a jump is 2 taps, but only 1 tap-row
+      total number of tap ARROWS in all rows in the song
+        e.g.: a row with a jump ('1100') increases COUNT_TAPS by 2, and COUNT_TAP_ROWS by 1
     COUNT_HOLDS
-      total number of ARROWS in single-arrow-hold-start or multi-arrow-hold-start rows
-        e.g.: a jump-hold is 2 holds, but only 1 hold-row
+      total number of hold ARROWS in all rows in the song
+        e.g.: a row with a jump-hold ('0202') increases COUNT_HOLDS by 2, and COUNT_HOLD_ROWS by 1
     COUNT_ROLLS
-      total number of ARROWS in single-arrow-roll-start or multi-arrow-roll-start rows
-        e.g.: a jump-roll is 2 rolls, but only 1 roll-row
+      total number of roll ARROWS in all rows in the song
+        e.g.: a row with a jump-roll ('4400') increases COUNT_ROLLS by 2, and COUNT_ROLL_ROWS by 1
     COUNT_MINES
-      total number of MINES in single-mine or multi-mine rows
-        e.g.: a shock is 4 mines (in singles play), but only 1 shock-row
+      total number of MINES in all rows in the song
+        e.g.: a row with 3 mines ('0MMM') increases COUNT_MINES by 3, and COUNT_MINE_ROWS by 1
 
     TOTAL_NOTES                = COUNT_NOTE_ROWS + COUNT_SHOCK_ROWS
     TOTAL_JUMPS_SHOCKS         = COUNT_JUMP_ROWS + COUNT_SHOCK_ROWS
