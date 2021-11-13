@@ -211,8 +211,9 @@ my $usage = "Usage:
         a stop is equivalent to a change from 0 BPM back to the current BPM,
           though NOT the current BPM to 0 BPM, which is ignored
           (a stop counts only once, not twice, and the length of the stop is ignored)
-        a stop and a BPM change on the same 1/192 note row counts only as a change from 0BPM
-          to the new BPM (stop+change counts only once)
+        a stop and a BPM change on the same row (1/$ROWS_PER_MEASURE of a measure)
+          counts only as a change from 0BPM to the new BPM
+          (i.e.: stop+change counts only once)
       e.g.:
         BPM=100, BPM=300, BPM=100           => BPM_CHANGE_AMOUNT=400
         BPM=100, stop, stop, stop           => BPM_CHANGE_AMOUNT=300
