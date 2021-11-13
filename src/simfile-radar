@@ -180,11 +180,11 @@ my $usage = "Usage:
         find the ARROW_COUNT, the number of taps/holds/rolls/mines in the row
           e.g.: 0 for empty row (contributes nothing to the total)
                 1 for single-arrow taps/holds/rolls/mines
-                2 for jumps
-                4 for shocks on singles play
-                8 for shocks on doubles play
+                2 for regular two-arrow jumps
+                4 for shocks/all-mines on singles play
+                8 for shocks/all-mines on doubles play
         find the TIMING_IRREGULARITY, based on the timing of the row within a measure
-          (this is sometimes called 'arrow color', as some noteskins assign different colors)
+          (sometimes called 'arrow color', as some noteskins assign different colors)
           timings have arbitrarily-defined TIMING_IRREGULARITY values:
             1/4 notes (red arrows)     => 0
             1/8 notes (blue arrows)    => 0.5
@@ -199,6 +199,7 @@ my $usage = "Usage:
           the timing of each note within a measure (arrow color),
           by the fractional number of measures between that note and the previous note,
           and multiply by the ARROW_COUNT
+      finally, take the sum for each row
     BPM_CHANGE_AMOUNT
       sum( BPM_CHANGE_DIFF )
       the sum of the amount that BPMs change in a song
