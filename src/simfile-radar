@@ -171,8 +171,9 @@ my $usage = "Usage:
             =>
             7152=0.167,7176=0.167
     SONG_ROW_COUNT
-      this is the total number of 1/$ROWS_PER_MEASURE rows in a song,
-        and is equivalent to the number of beats in a song times $ROWS_PER_BEAT
+      this is the total number of rows in the song,
+        with each row being 1/$ROWS_PER_MEASURE of a measure,
+        and is equivalent to the number of beats in the song times $ROWS_PER_BEAT
       note that leading empty rows DO count towards the count or song duration,
         but trailing empty rows do NOT count towards the count or song duration
         (all empty rows at the end of a song are ignored)
