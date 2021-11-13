@@ -8,7 +8,8 @@ use File::Basename qw(dirname);
 use Cwd qw(abs_path);
 
 my $ROWS_PER_MEASURE = 192;
-my $ROWS_PER_BEAT = int(192/4); #48
+my $BEATS_PER_MEASURE = 4;
+my $ROWS_PER_BEAT = int($ROWS_PER_MEASURE/$BEATS_PER_MEASURE); #48
 
 my $CACHE_BASE_DIR = "$ENV{HOME}/.cache/simfile-radar";
 
