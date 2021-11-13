@@ -177,6 +177,11 @@ my $usage = "Usage:
         (this is one of two components of CHAOS, along with BPM_CHANGE_AMOUNT)
         this value typically ranges from 0 to 6000
       for each note-row (row containing taps/holds/rolls/mines):
+        find the ARROW_COUNT, the number of taps/holds/mines in the row
+          e.g.: 1 for single-arrow taps/holds/rolls
+                2 for jumps
+                4 for shocks on singles play
+                8 for shocks on doubles play
         find the TIMING_IRREGULARITY, based on the timing of the row within a measure
           (this is sometimes called 'arrow color', as some noteskins assign different colors)
           timings have arbitrarily-defined TIMING_IRREGULARITY values:
@@ -189,11 +194,6 @@ my $usage = "Usage:
         find the INTERVAL_MEASURES, in fractional measures,
           between this note-row and the previous note-row
           (count the number of rows between, and divide by $ROWS_PER_MEASURE)
-        find the ARROW_COUNT, the number of taps/holds/mines in the row
-          e.g.: 1 for single-arrow taps/holds/rolls
-                2 for jumps
-                4 for shocks on singles play
-                8 for shocks on doubles play
         divide the arbitrary timing-irregularity based on
           the timing of each note within a measure (arrow color),
           by the fractional number of measures between that note and the previous note,
