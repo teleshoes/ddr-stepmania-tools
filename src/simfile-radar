@@ -39,6 +39,7 @@ sub generateGameDiffKey($$);
 sub getExpandedNoteRows($);
 sub formatTimeMSS($);
 sub readFile($);
+sub getChecksumFile($);
 
 my $DEFAULT_MACHINE = "DDRA";
 
@@ -1421,7 +1422,7 @@ sub getExpandedNoteRows($){
 
 sub getCacheDir($){
   my ($file) = @_;
-  my $checksum = getChecksum($file);
+  my $checksum = getChecksumFile($file);
   my $fileName = $file;
   $fileName =~ s/^.*\///;
   $fileName = lc $fileName;
@@ -1464,7 +1465,7 @@ sub readFile($){
   return $contents;
 }
 
-sub getChecksum($){
+sub getChecksumFile($){
   my ($file) = @_;
   open CMD, "-|", "sha256sum", $file or die "ERROR: sha256sum failed for $file\n$!\n";
   my $checksum = <CMD>;
