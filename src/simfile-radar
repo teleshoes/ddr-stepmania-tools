@@ -172,7 +172,7 @@ my $usage = "Usage:
           and each is counted independently
         multi-arrow holds only count once, and the longest-held arrow is used
     TOTAL_NOTE_IRREGULARITY
-      sum( ARROW_COUNT * TIMING_IRREGULARITY / INTERVAL_MEASURES )
+      sum( ARROW_COUNT * TIMING_IRREGULARITY / INTERVAL_MEASURES ) for each row in the song
       an arbitrary measure of how closely packed notes with weird timings are
         (this is one of two components of CHAOS, along with BPM_CHANGE_AMOUNT)
         this value typically ranges from 0 to 6000
