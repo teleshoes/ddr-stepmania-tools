@@ -35,6 +35,7 @@ sub calculateNoteSetStats($$);
 sub getSMInfo($$$);
 sub readSMInfoCache($);
 sub writeSMInfoCache($$);
+sub songChecksum($$$);
 sub parseSMFile($);
 sub extractSongNameId($);
 sub convertValuesByBeatToValuesByRow($);
@@ -45,6 +46,7 @@ sub boingCompressString($);
 sub boingDecompressString($);
 sub pipeCmdData($$);
 sub readFile($);
+sub getChecksumStr($);
 sub getChecksumFile($);
 
 my $DEFAULT_MACHINE = "DDRA";
@@ -177,6 +179,10 @@ my $usage = "Usage:
       e.g.: \"#STOPS:149=0.167,149.5=0.167;\"
             =>
             7152=0.167,7176=0.167
+    CHECKSUM
+      checksum of the song arrow contents for one game/difficulty
+        concatenate NOTE_ROWS, BPM_ROWS, and STOP_ROWS, with a % character between
+        take the sha256sum of the result
     SONG_ROW_COUNT
       this is the total number of rows in NOTE_ROWS,
         with each row being 1/$ROWS_PER_MEASURE of a measure,
@@ -909,6 +915,7 @@ sub calculateNoteSetStats($$){
   $$s{NOTE_ROWS}                 = join ",", @$rows;
   $$s{BPM_ROWS}                  = join ",", map {"$_=$$bpmsByRow{$_}"} sort {$a <=> $b} keys %$bpmsByRow;
   $$s{STOP_ROWS}                 = join ",", map {"$_=$$stopsByRow{$_}"} sort {$a <=> $b} keys %$stopsByRow;
+  $$s{CHECKSUM}                  = songChecksum($$s{NOTE_ROWS}, $$s{BPM_ROWS}, $$s{STOP_ROWS});
   $$s{SONG_BEAT_COUNT}           = int($$s{SONG_ROW_COUNT}/$ROWS_PER_BEAT + 0.5);
   $$s{TOTAL_NOTES}               = $$s{COUNT_NOTE_ROWS} + $$s{COUNT_SHOCK_ROWS};
   $$s{TOTAL_JUMPS_SHOCKS}        = $$s{COUNT_JUMP_ROWS} + $$s{COUNT_SHOCK_ROWS};
@@ -1084,6 +1091,11 @@ sub writeSMInfoCache($$){
     close FH;
     system "gzip", "$cacheDir/expandedNoteRows-$gameDiffKey";
   }
+}
+
+sub songChecksum($$$){
+  my ($noteRows, $bpmRows, $stopRows) = @_;
+  return getChecksumStr("$noteRows\%$bpmRows\%$stopRows");
 }
 
 sub parseSMFile($){
@@ -1546,6 +1558,16 @@ sub readFile($){
   my $contents = join '', <FH>;
   close FH;
   return $contents;
+}
+
+sub getChecksumStr($){
+  my ($str) = @_;
+  my $checksum = pipeCmdData("sha256sum", $str);
+  if($checksum =~ /^([0-9a-f]{64})(?:\s.*)$/){
+    return $1;
+  }else{
+    die "ERROR: sha256sum failed\n";
+  }
 }
 
 sub getChecksumFile($){
