@@ -12,7 +12,7 @@ my $ROWS_PER_MEASURE = 192;
 my $BEATS_PER_MEASURE = 4;
 my $ROWS_PER_BEAT = int($ROWS_PER_MEASURE/$BEATS_PER_MEASURE); #48
 
-my $CACHE_BASE_DIR = "$ENV{HOME}/.cache/simfile-radar";
+my $CACHE_BASE_DIR_SUFFIX = ".cache/simfile-radar";
 
 my $SM_CHARS = '[01234MLFAKNHGOETU]';
 
@@ -1481,7 +1481,11 @@ sub getCacheDir($){
     $fileName = "unknown";
   }
 
-  return "$CACHE_BASE_DIR/$fileName-$checksum";
+  my $baseDir = defined $ENV{HOME} ? $ENV{HOME} : ".";
+
+  my $cacheDir = "$baseDir/$CACHE_BASE_DIR_SUFFIX";
+
+  return "$cacheDir/$fileName-$checksum";
 }
 
 sub formatTimeMSS($){
