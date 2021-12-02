@@ -48,6 +48,7 @@ sub pipeCmdData($$);
 sub readFile($);
 sub getChecksumStr($);
 sub getChecksumFile($);
+sub isExecAvailable($);
 
 my $DEFAULT_MACHINE = "DDRA";
 
@@ -1291,8 +1292,7 @@ sub extractSongNameId($){
   my ($title) = @_;
 
   my $songNameId;
-  system "type zenius-ddrsonglist >/dev/null 2>/dev/null";
-  if($? == 0){
+  if(isExecAvailable("zenius-ddrsonglist")){
     open CMD, "-|", "zenius-ddrsonglist", "--extract-name-id", $title;
     $songNameId = join '', <CMD>;
     close CMD;
@@ -1580,6 +1580,12 @@ sub getChecksumFile($){
   }else{
     die "ERROR: sha256sum failed for $file\n";
   }
+}
+
+sub isExecAvailable($){
+  my ($exec) = @_;
+  system "type \"$exec\" >/dev/null 2>/dev/null";
+  return $? == 0 ? 1 : 0;
 }
 
 &main(@ARGV);
