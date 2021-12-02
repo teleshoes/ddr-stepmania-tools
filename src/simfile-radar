@@ -1499,6 +1499,10 @@ sub boingCompressString($){
   my ($str) = @_;
   my @operations = qw(GZIP BASE64 BOING);
 
+  if(not isExecAvailable("gzip") or not isExecAvailable("base64")){
+    return $str;
+  }
+
   my $data = $str;
   for my $operation(@operations){
     if($operation =~ /^(GZIP)$/i){
