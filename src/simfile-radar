@@ -1096,7 +1096,12 @@ sub writeSMInfoCache($$){
 
 sub songChecksum($$$){
   my ($noteRows, $bpmRows, $stopRows) = @_;
-  return getChecksumStr("$noteRows\%$bpmRows\%$stopRows");
+
+  if(isExecAvailable("sha256sum")){
+    return getChecksumStr("$noteRows\%$bpmRows\%$stopRows");
+  }else{
+    return undef;
+  }
 }
 
 sub parseSMFile($){
