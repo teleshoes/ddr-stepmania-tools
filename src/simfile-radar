@@ -1607,6 +1607,7 @@ sub getChecksumFile($){
 
 sub isExecAvailable($){
   my ($exec) = @_;
+  return 0 if $^O =~ /win/i;
   system "type \"$exec\" >/dev/null 2>/dev/null";
   return $? == 0 ? 1 : 0;
 }
