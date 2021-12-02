@@ -1466,7 +1466,7 @@ sub getExpandedNoteRows($){
 
 sub getCacheDir($){
   my ($file) = @_;
-  my $checksum = getChecksumFile($file);
+  my $checksum = isExecAvailable("sha256sum") ? getChecksumFile($file) : "nochecksum";
   my $fileName = $file;
   $fileName =~ s/^.*\///;
   $fileName = lc $fileName;
