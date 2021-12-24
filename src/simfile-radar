@@ -26,7 +26,6 @@ sub getTotalFreezeRowCount($);
 sub getMaxMeasureDensity($);
 sub getTotalNoteIrregularity($);
 sub getBPMChangeAmount($$);
-sub formatDDRGame($);
 sub formatDDRDiff($);
 sub getNoteSetStats($$$$$);
 sub readNoteSetStatsCache($$);
@@ -96,10 +95,10 @@ my $usage = "Usage:
 
   VARIABLE
     GAME
-      game type in simfile, with replacements to match DDR:
-        dance-single => singles
-        dance-double => doubles
-      all other values are left as-is (e.g.: dance-couple, pump-single)
+      game type in simfile (e.g.: dance-single, dance-double, pump-single)
+      EXCEPT:
+        'dance-couple'  is split into 'dance-couple-p1'  and 'dance-couple-p2'
+        'dance-routine' is split into 'dance-routine-p1' and 'dance-routine-p2'
     DIFF
       difficulty level in simfile, with replacments to match DDR:
         Beginner  => beginner
@@ -363,9 +362,9 @@ my $usage = "Usage:
       skip writing to the cache (does not affect reading from the cache)
 
     --singles | singles | --single | single | --dance-single | dance-single
-      same as: --game='^singles\$'
+      same as: --game='^(dance-single|singles)\$'
     --doubles | doubles | --double | double | --dance-double | dance-double
-      same as: --game='^doubles\$'
+      same as: --game='^(dance-double|doubles)\$'
     --game=GAME_REGEX
       ignore (and skip calculations for) all note-sets where GAME does not match
       the regular expression GAME_REGEX (case-insensitive)
@@ -468,8 +467,8 @@ sub main(@){
       $readCache = 0;
     }elsif($arg =~ /^(-r|--no-write-cache|--read-only-cache)$/){
       $writeCache = 0;
-    }elsif($arg =~ /^(?:--)?(?:dance-)?(single|double)s$/){
-      $gameFilterRegex = "^$1s\$";
+    }elsif($arg =~ /^(?:--)?(?:dance-)?(single|double)s?$/){
+      $gameFilterRegex = "^(dance-$1|$1s)\$";
     }elsif($arg =~ /^--game=(.+)$/){
       $gameFilterRegex = $1;
     }elsif($arg =~ /^(?:--)?(beginner|basic|difficult|expert|challenge)$/){
@@ -500,8 +499,11 @@ sub main(@){
   my $stats = {};
   for my $gameDiffKey(@gameDiffKeys){
     my $noteSetInfo = $$smInfo{noteSetInfoByGameDiffKey}{$gameDiffKey};
-    next if defined $gameFilterRegex and $$noteSetInfo{ddrGame} !~ /$gameFilterRegex/i;
     next if defined $diffFilterRegex and $$noteSetInfo{ddrDiff} !~ /$diffFilterRegex/i;
+    if(defined $gameFilterRegex){
+      my $game = $$noteSetInfo{game};
+      next if $game !~ /$gameFilterRegex/i;
+    }
     $$stats{$gameDiffKey} = getNoteSetStats($smFile, $smInfo, $gameDiffKey, $readCache, $writeCache);
   }
 
@@ -810,14 +812,6 @@ sub getBPMChangeAmount($$){
   return $bpmChangeAmount;
 }
 
-sub formatDDRGame($){
-  my ($game) = @_;
-  if($game =~ /^dance-(single|double)s?$/i){
-    return lc "$1s";
-  }else{
-    return $game;
-  }
-}
 sub formatDDRDiff($){
   my ($diff) = @_;
   if($diff =~ /^(Beginner)$/i){
@@ -877,7 +871,7 @@ sub calculateNoteSetStats($$){
   my ($smInfo, $gameDiffKey) = @_;
   my $noteSetInfo = $$smInfo{noteSetInfoByGameDiffKey}{$gameDiffKey};
   my $s = {
-    GAME                      => $$noteSetInfo{ddrGame},
+    GAME                      => $$noteSetInfo{game},
     DIFF                      => $$noteSetInfo{ddrDiff},
     SM_FEET                   => $$noteSetInfo{smFeet},
     SONG_NAME                 => $$smInfo{songName},
@@ -930,8 +924,8 @@ sub calculateNoteSetStats($$){
   $$s{OVERALL_IRREGULARITY}      = $$s{TOTAL_NOTE_IRREGULARITY} * (1 + $$s{BPM_CHANGE_AMOUNT_PER_MIN}/1500);
   $$s{IRREG_PER_CENTISECOND}     = 100 * $$s{OVERALL_IRREGULARITY} / $$s{SONG_DUR};
 
-  my $singles = $$s{GAME} =~ /doubles/i ? 0 : 1;
-  my $doubles = $$s{GAME} =~ /doubles/i ? 1 : 0;
+  my $singles = $$s{GAME} =~ /double/i ? 0 : 1;
+  my $doubles = $$s{GAME} =~ /double/i ? 1 : 0;
   my $any = 1;
 
   my @radarPermutations = (
@@ -1023,7 +1017,6 @@ sub readSMInfoCache($){
     my $noteSetInfo = {};
     $$noteSetInfo{game} = $1    if $noteSetInfoTxt =~ /^game=(.+)$/m;
     $$noteSetInfo{diff} = $1    if $noteSetInfoTxt =~ /^diff=(.+)$/m;
-    $$noteSetInfo{ddrGame} = $1 if $noteSetInfoTxt =~ /^ddrGame=(.+)$/m;
     $$noteSetInfo{ddrDiff} = $1 if $noteSetInfoTxt =~ /^ddrDiff=(.+)$/m;
     $$noteSetInfo{smFeet} = $1  if $noteSetInfoTxt =~ /^smFeet=(.+)$/m;
     $$noteSetInfo{bpms} = $1    if $noteSetInfoTxt =~ /^bpms=(.+)$/m;
@@ -1086,7 +1079,6 @@ sub writeSMInfoCache($$){
     print FH ""
       . "game=$$noteSetInfo{game}\n"
       . "diff=$$noteSetInfo{diff}\n"
-      . "ddrGame=$$noteSetInfo{ddrGame}\n"
       . "ddrDiff=$$noteSetInfo{ddrDiff}\n"
       . "smFeet=$$noteSetInfo{smFeet}\n"
       ;
@@ -1270,7 +1262,6 @@ sub parseSMFile($){
     $$noteSetInfo{expandedNoteRows} = getExpandedNoteRows $$noteSetInfo{notes};
     $$noteSetInfo{bpmsByRow} = convertValuesByBeatToValuesByRow($$noteSetInfo{bpms});
     $$noteSetInfo{stopsByRow} = convertValuesByBeatToValuesByRow($$noteSetInfo{stops});
-    $$noteSetInfo{ddrGame} = formatDDRGame($$noteSetInfo{game});
     $$noteSetInfo{ddrDiff} = formatDDRDiff($$noteSetInfo{diff});
   }
 
