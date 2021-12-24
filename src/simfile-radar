@@ -98,6 +98,7 @@ my $usage = "Usage:
       game type in simfile (e.g.: dance-single, dance-double, pump-single)
       EXCEPT:
         'dance-couple'  is split into 'dance-couple-p1'  and 'dance-couple-p2'
+        'pump-couple'   is split into 'pump-couple-p1'   and 'pump-couple-p2'
         'dance-routine' is split into 'dance-routine-p1' and 'dance-routine-p2'
     DIFF
       difficulty level in simfile, with replacments to match DDR:
@@ -1225,6 +1226,21 @@ sub parseSMFile($){
       my $notesP2 = $notes;
       $notesP1 =~ s/(${SM_CHARS}{4})(${SM_CHARS}{4})/$1/g;
       $notesP2 =~ s/(${SM_CHARS}{4})(${SM_CHARS}{4})/$2/g;
+      push @playerNoteSetInfos, {
+        %$noteSetInfo,
+        game => "$$noteSetInfo{game}-p1",
+        notes => $notesP1,
+      };
+      push @playerNoteSetInfos, {
+        %$noteSetInfo,
+        game => "$$noteSetInfo{game}-p2",
+        notes => $notesP2,
+      };
+    }elsif($game =~ /^(pump-couple)$/i and $notes =~ /${SM_CHARS}{10}/){
+      my $notesP1 = $notes;
+      my $notesP2 = $notes;
+      $notesP1 =~ s/(${SM_CHARS}{5})(${SM_CHARS}{5})/$1/g;
+      $notesP2 =~ s/(${SM_CHARS}{5})(${SM_CHARS}{5})/$2/g;
       push @playerNoteSetInfos, {
         %$noteSetInfo,
         game => "$$noteSetInfo{game}-p1",
