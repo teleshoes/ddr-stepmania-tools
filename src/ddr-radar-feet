@@ -278,18 +278,18 @@ sub main(@){
 sub runNeuralNet($$$$$$$){
   my ($game, $diff, $s, $v, $a, $f, $c) = @_;
 
-  if(defined $$REPLACE_GAME_DIFF_KEYS{"$game-$diff"}){
-    my $oldGameDiffKey = $$REPLACE_GAME_DIFF_KEYS{"$game-$diff"};
-    if($oldGameDiffKey =~ /^(.+)-(.+)$/){
+  my $origGameDiffKey = "$game-$diff";
+  my $replaceGameDiffKey = $$REPLACE_GAME_DIFF_KEYS{$origGameDiffKey};
+  if(defined $replaceGameDiffKey){
+    print STDERR "WARNING: using '$replaceGameDiffKey' neuralnet instead of '$origGameDiffKey'\n";
+
+    if($replaceGameDiffKey !~ /^(\w+)-(\w+)$/){
+      die "ERROR: replacement game-diff key malformed \"$replaceGameDiffKey\"\n";
+    }else{
       ($game, $diff) = ($1, $2);
     }
-    my $gameDiffKey = "$game-$diff";
-    print STDERR "WARNING: $oldGameDiffKey neuralnet does not exist, using $gameDiffKey\n";
   }
 
-  if($game eq "doubles" and $diff eq "beginner"){
-    $diff = "basic";
-  }
   my $ann = loadNeuralNet($game, $diff);
   my $input = [
     getScaledValue($s, $$SCALE{S}),
