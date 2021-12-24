@@ -500,10 +500,13 @@ sub main(@){
   my $stats = {};
   for my $gameDiffKey(@gameDiffKeys){
     my $noteSetInfo = $$smInfo{noteSetInfoByGameDiffKey}{$gameDiffKey};
-    next if defined $diffFilterRegex and $$noteSetInfo{ddrDiff} !~ /$diffFilterRegex/i;
     if(defined $gameFilterRegex){
       my $game = $$noteSetInfo{game};
       next if $game !~ /$gameFilterRegex/i;
+    }
+    if(defined $diffFilterRegex){
+      my $diff = formatDDRDiff($$noteSetInfo{diff});
+      next if $diff !~ /$diffFilterRegex/i;
     }
     $$stats{$gameDiffKey} = getNoteSetStats($smFile, $smInfo, $gameDiffKey, $readCache, $writeCache);
   }
@@ -873,7 +876,7 @@ sub calculateNoteSetStats($$){
   my $noteSetInfo = $$smInfo{noteSetInfoByGameDiffKey}{$gameDiffKey};
   my $s = {
     GAME                      => $$noteSetInfo{game},
-    DIFF                      => $$noteSetInfo{ddrDiff},
+    DIFF                      => formatDDRDiff($$noteSetInfo{diff}),
     SM_FEET                   => $$noteSetInfo{smFeet},
     SONG_NAME                 => $$smInfo{songName},
     SONG_NAME_TRANSLIT        => $$smInfo{songNameTranslit},
@@ -1018,7 +1021,6 @@ sub readSMInfoCache($){
     my $noteSetInfo = {};
     $$noteSetInfo{game} = $1    if $noteSetInfoTxt =~ /^game=(.+)$/m;
     $$noteSetInfo{diff} = $1    if $noteSetInfoTxt =~ /^diff=(.+)$/m;
-    $$noteSetInfo{ddrDiff} = $1 if $noteSetInfoTxt =~ /^ddrDiff=(.+)$/m;
     $$noteSetInfo{smFeet} = $1  if $noteSetInfoTxt =~ /^smFeet=(.+)$/m;
     $$noteSetInfo{bpms} = $1    if $noteSetInfoTxt =~ /^bpms=(.+)$/m;
     $$noteSetInfo{stops} = $1   if $noteSetInfoTxt =~ /^stops=(.+)$/m;
@@ -1080,7 +1082,6 @@ sub writeSMInfoCache($$){
     print FH ""
       . "game=$$noteSetInfo{game}\n"
       . "diff=$$noteSetInfo{diff}\n"
-      . "ddrDiff=$$noteSetInfo{ddrDiff}\n"
       . "smFeet=$$noteSetInfo{smFeet}\n"
       ;
     print FH "bpms=$$noteSetInfo{bpms}\n" if defined $$noteSetInfo{bpms};
@@ -1278,7 +1279,6 @@ sub parseSMFile($){
     $$noteSetInfo{expandedNoteRows} = getExpandedNoteRows $$noteSetInfo{notes};
     $$noteSetInfo{bpmsByRow} = convertValuesByBeatToValuesByRow($$noteSetInfo{bpms});
     $$noteSetInfo{stopsByRow} = convertValuesByBeatToValuesByRow($$noteSetInfo{stops});
-    $$noteSetInfo{ddrDiff} = formatDDRDiff($$noteSetInfo{diff});
   }
 
 
