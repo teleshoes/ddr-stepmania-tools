@@ -481,8 +481,9 @@ my $usage = "Usage:
     --doubles | doubles | --double | double | --dance-double | dance-double
       same as: --game='^(dance-double|doubles)\$'
     --game=GAME_REGEX
-      ignore (and skip calculations for) all note-sets where GAME does not match
-      the regular expression GAME_REGEX (case-insensitive)
+      ignore (and skip calculations for) all note-sets where
+        both GAME and GAME_ABBREV do not match (case-insensitive)
+        the regular expression GAME_REGEX
 
     --beginner | beginner
       same as: --difficulty='^beginner\$'
@@ -495,8 +496,9 @@ my $usage = "Usage:
     --challenge | challenge
       same as: --difficulty='^challenge\$'
     --diff=DIFFICULTY_REGEX --difficulty=DIFFICULTY_REGEX
-      ignore (and skip calculations for) all note-sets where DIFF does not match
-      the regular expression DIFFICULTY_REGEX (case-insensitive)
+      ignore (and skip calculations for) all note-sets where
+        both DIFF and DIFF_ABBREV does not match (case-insensitive)
+        the regular expression DIFFICULTY_REGEX
 
     --machine=MACHINE
       MACHINE is one of the following values (case-insensitive):
@@ -616,11 +618,13 @@ sub main(@){
     my $noteSetInfo = $$smInfo{noteSetInfoByGameDiffKey}{$gameDiffKey};
     if(defined $gameFilterRegex){
       my $game = $$noteSetInfo{game};
-      next if $game !~ /$gameFilterRegex/i;
+      my $gameAbbrev = abbrevGame($$noteSetInfo{game});
+      next if $game !~ /$gameFilterRegex/i and $gameAbbrev !~ /$gameFilterRegex/i;
     }
     if(defined $diffFilterRegex){
       my $diff = formatDDRDiff($$noteSetInfo{diff});
-      next if $diff !~ /$diffFilterRegex/i;
+      my $diffAbbrev = abbrevDiff($diff);
+      next if $diff !~ /$diffFilterRegex/i and $diffAbbrev !~ /$diffFilterRegex/i;
     }
     $$stats{$gameDiffKey} = getNoteSetStats($smFile, $smInfo, $gameDiffKey, $readCache, $writeCache);
   }
