@@ -254,6 +254,8 @@ sub main(@){
     my @radars = map {parseRadarLine($_)} runSimfileRadar($simfile);
     for my $r(@radars){
       my ($game, $diff) = ($$r{GAME}, $$r{DIFF});
+      $game = "singles" if $game =~ /^(dance-single)$/;
+      $game = "doubles" if $game =~ /^(dance-double)$/;
 
       my $neuralnetGame = $game =~ /^($okGames)$/ ? $game : $FORCE_NEURAL_NET_GAME;
       my $neuralnetDiff = $diff =~ /^($okDiffs)$/ ? $diff : $FORCE_NEURAL_NET_DIFF;
