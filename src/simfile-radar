@@ -18,6 +18,71 @@ my $SM_CHARS = '[01234MLFAKNHGOETU]';
 
 my @COMPRESSED_VARIABLE_NAMES = qw( NOTE_ROWS );
 
+my @GAME_ABBREV_ARR = (
+  ["dance-single"      => "singles"],
+  ["dance-double"      => "doubles"],
+
+  ["dance-solo"        => "ddrsolo"],
+  ["dance-threepanel"  => "3-panel"],
+  ["dance-couple-p1"   => "couple1"],
+  ["dance-couple-p2"   => "couple2"],
+  ["dance-routine-p1"  => "routin1"],
+  ["dance-routine-p2"  => "routin2"],
+
+  ["pump-single"       => "piu-sng"],
+  ["pump-double"       => "piu-dbl"],
+  ["pump-halfdouble"   => "piu-hdb"],
+
+  ["pump-couple-p1"    => "piu-cp1"],
+  ["pump-couple-p2"    => "piu-cp2"],
+
+  ["gddm-new"          => "gddmnew"],
+  ["gh-bass"           => "gh-bass"],
+  ["gh-solo"           => "gh-solo"],
+  ["guitar-five"       => "guitar5"],
+  ["guitar-six"        => "guitar6"],
+  ["pnm-five"          => "popnm-5"],
+  ["pnm-four"          => "popnm-4"],
+  ["pnm-nine"          => "popnm-9"],
+  ["techno-single4"    => "tech-s4"],
+  ["techno-single5"    => "tech-s5"],
+  ["techno-single8"    => "tech-s8"],
+  ["techno-single9"    => "tech-s9"],
+  ["techno-double4"    => "tech-d4"],
+  ["techno-double5"    => "tech-d5"],
+  ["techno-double8"    => "tech-d8"],
+  ["techno-double9"    => "tech-d9"],
+
+  ["ez2-single"        => "ez2-sng"],
+  ["ez2-double"        => "ez2-dbl"],
+  ["ez2-real"          => "ez2-rel"],
+  ["para-single"       => "parasng"],
+  ["para-versus"       => "paravss"],
+  ["ds3ddx-single"     => "ds3ddxs"],
+
+  ["bm-single5"        => "bm-sng5"],
+  ["bm-double5"        => "bm-dbl5"],
+  ["bm-single7"        => "bm-sng7"],
+  ["bm-double7"        => "bm-dbl7"],
+
+  ["maniax-single"     => "dncmnxs"],
+  ["maniax-double"     => "dncmnxd"],
+
+  ["lights-cabinet"    => "lightsc"],
+);
+my @GAME_ABBREV_NAMES = map {$$_[0]} @GAME_ABBREV_ARR;
+my %GAME_ABBREVS = map {$$_[0] => $$_[1]} @GAME_ABBREV_ARR;
+
+my @DIFF_ABBREV_ARR = (
+  ["beginner"  => "bEGNR"],
+  ["basic"     => "BASIC"],
+  ["difficult" => "DFCLT"],
+  ["expert"    => "EXPRT"],
+  ["challenge" => "CHLNG"],
+);
+my @DIFF_ABBREV_NAMES = map {$$_[0]} @DIFF_ABBREV_ARR;
+my %DIFF_ABBREVS = map {$$_[0] => $$_[1]} @DIFF_ABBREV_ARR;
+
 sub formatStats($$$);
 sub getSongRowCount($);
 sub getSongDuration($$$);
@@ -40,6 +105,9 @@ sub extractSongNameId($);
 sub convertValuesByBeatToValuesByRow($);
 sub generateGameDiffKey($$);
 sub getExpandedNoteRows($);
+sub abbrevGame($);
+sub abbrevDiff($);
+sub removeMiddleChar($);
 sub formatTimeMSS($);
 sub boingCompressString($);
 sub boingDecompressString($);
@@ -111,6 +179,50 @@ my $usage = "Usage:
         Expert    => challenge
         Challenge => challenge
       all other values are the same as DIFF_SM (e.g.: Edit, Fingers)
+    GAME_ABBREV
+      exactly 7-letter abbreviation of GAME
+      for known game types:"
+        . join('', map {
+            sprintf("\n        %-16s => %7s", $_, $GAME_ABBREVS{$_})
+          } @GAME_ABBREV_NAMES)
+        . "
+      otherwise:
+        -if GAME contains exactly two sections separated by '-':
+          -split into two sections: \"LEFT-RIGHT\" => <LEFT>, <RIGHT>
+          -until the sum of the length of each section is <= 7 chars:
+            -remove the middle character (rounded up) from one of the sections
+              -shorten <RIGHT>  by 1 char unless it has <= 4 chars
+              -shorten <LEFT>   by 1 char unless it has <= 3 chars
+          -concatenate the sections (without '-'s): <GAME_ABBREV> = <LEFT><RIGHT>
+        -if GAME contains exactly three sections separated by '-':
+          -split into three sections: \"LEFT-MIDDLE-RIGHT\" => <LEFT>, <MIDDLE>, <RIGHT>
+          -until the sum of the length of each section is <= 7 chars:
+            -remove the middle character from one of the sections
+              -shorten <RIGHT>  by 1 char unless it has <= 4 chars
+              -shorten <MIDDLE> by 1 char unless it has <= 2 chars
+              -shorten <LEFT>   by 1 char unless it has <= 1 chars
+          -concatenate the sections (without '-'s): <GAME_ABBREV> = <LEFT><MIDDLE><RIGHT>
+        -take the first 7 chars of <GAME_ABBREV>
+        -append '_'s until <GAME_ABBREV> is exactly 7 chars
+      e.g.:
+        dance-12panelgame => dan12me
+        a-bbbb-c          => abbbbc_
+        daaance8          => daaance
+    DIFF_ABBREV
+      exactly 5-letter abbreviation of DIFF
+      for known difficulties:"
+        . join('', map {
+            sprintf("\n        %-16s => %5s", $_, $DIFF_ABBREVS{$_})
+          } @DIFF_ABBREV_NAMES)
+        . "
+      otherwise:
+        -<DIFF_ABBREV> = lowercase <DIFF>
+        -take the first 5 chars of <DIFF_ABBREV>
+        -append '_'s until <DIFF_ABBREV> is exactly 5 chars
+      e.g.:
+        Edit    => edit_
+        Fingers => finge
+        Easy2   => easy2
     SONG_NAME
       parsed out of '#TITLE' in simfile
     SONG_NAME_TRANSLIT
@@ -863,6 +975,11 @@ sub readNoteSetStatsCache($$){
       $$stats{$1} = $2;
     }
   }
+
+  #recalculate game/diff abbreviations
+  $$stats{GAME_ABBREV} = abbrevGame($$stats{GAME});
+  $$stats{DIFF_ABBREV} = abbrevDiff($$stats{DIFF});
+
   return $stats;
 }
 sub writeNoteSetStatsCache($$$){
@@ -885,6 +1002,8 @@ sub calculateNoteSetStats($$){
     SONG_NAME_ID              => $$smInfo{songNameId},
   };
   $$s{DIFF} = formatDDRDiff($$s{DIFF_SM});
+  $$s{GAME_ABBREV} = abbrevGame($$s{GAME});
+  $$s{DIFF_ABBREV} = abbrevDiff($$s{DIFF});
 
   my $rows = $$noteSetInfo{expandedNoteRows};
 
@@ -1506,6 +1625,64 @@ sub getCacheDir($){
   my $cacheDir = "$baseDir/$CACHE_BASE_DIR_SUFFIX";
 
   return "$cacheDir/$fileName-$checksum";
+}
+
+sub abbrevGame($){
+  my ($game) = @_;
+
+  if(defined $GAME_ABBREVS{$game}){
+    $game = $GAME_ABBREVS{$game};
+  }elsif($game =~ /^([^-]*)-([^-]*)$/){
+    my ($left, $right) = ($1, $2);
+    while(length "$left$right" > 7){
+      if(length $right > 4 or (length $left <= 1)){
+        $right = removeMiddleChar($right);
+      }else{
+        $left = removeMiddleChar($left);
+      }
+    }
+    $game = "$left$right";
+  }elsif($game =~ /^([^-]*)-([^-]*)-([^-]*)$/){
+    my ($left, $middle, $right) = ($1, $2, $3);
+    while(length "$left$middle$right" > 7){
+      if(length $right > 2 or (length $left <= 1 and length $middle <= 1)){
+        $right = removeMiddleChar($right);
+      }elsif(length $middle > 4 or (length $left <= 1)){
+        $middle = removeMiddleChar($middle);
+      }else{
+        $left = removeMiddleChar($left);
+      }
+    }
+    $game = "$left$middle$right";
+  }
+
+  $game = substr $game, 0, 7;
+  return $game . ("_" x (7 - length $game));
+}
+
+sub abbrevDiff($){
+  my ($diff) = @_;
+
+  if(defined $DIFF_ABBREVS{$diff}){
+    $diff = $DIFF_ABBREVS{$diff};
+  }
+
+  $diff = substr $diff, 0, 5;
+  return $diff . ("_" x (5 - length $diff));
+}
+
+#ab => a, abc => ac, abcd => abd, abcde => abde, abcdef => abcef
+sub removeMiddleChar($){
+  my ($str) = @_;
+  return "" if length $str == 0;
+
+  my $len = length $str;
+  my $target = int($len/2);
+
+  $target = 0 if $target < 0;
+  $target = $len - 1 if $target >= $len;
+
+  return substr($str, 0, $target) . substr($str, $target+1, $len-$target-1);
 }
 
 sub formatTimeMSS($){
