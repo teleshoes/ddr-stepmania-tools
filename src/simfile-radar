@@ -127,6 +127,7 @@ my $DEFAULT_FORMAT_SPEC = ""
   . " | A%-3d-AIR"
   . " | F%-3d-FREEZE"
   . " | C%-3d-CHAOS"
+  . " | %-s-SONG_NAME_ID"
   . " |%n"
 ;
 
