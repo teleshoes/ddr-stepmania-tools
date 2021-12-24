@@ -120,8 +120,8 @@ sub isExecAvailable($);
 my $DEFAULT_MACHINE = "DDRA";
 
 my $DEFAULT_FORMAT_SPEC = ""
-  . "%-7s-GAME"
-  . " | %-10s-DIFF"
+  . "%-7s-GAME_ABBREV"
+  . " | %-5s-DIFF_ABBREV"
   . " | S%-3d-STREAM"
   . " | V%-3d-VOLTAGE"
   . " | A%-3d-AIR"
