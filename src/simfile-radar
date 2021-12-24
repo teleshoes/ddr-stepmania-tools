@@ -100,15 +100,17 @@ my $usage = "Usage:
         'dance-couple'  is split into 'dance-couple-p1'  and 'dance-couple-p2'
         'pump-couple'   is split into 'pump-couple-p1'   and 'pump-couple-p2'
         'dance-routine' is split into 'dance-routine-p1' and 'dance-routine-p2'
+    DIFF_SM
+      difficulty level in simfile (e.g.: Easy, Expert)
     DIFF
-      difficulty level in simfile, with replacments to match DDR:
+      same as DIFF, with DDR-like replacements when matched:
         Beginner  => beginner
         Easy      => basic
         Medium    => difficult
         Hard      => expert
         Expert    => challenge
         Challenge => challenge
-      all other values are left as-is (e.g.: Edit, Fingers)
+      all other values are the same as DIFF_SM (e.g.: Edit, Fingers)
     SONG_NAME
       parsed out of '#TITLE' in simfile
     SONG_NAME_TRANSLIT
@@ -876,12 +878,13 @@ sub calculateNoteSetStats($$){
   my $noteSetInfo = $$smInfo{noteSetInfoByGameDiffKey}{$gameDiffKey};
   my $s = {
     GAME                      => $$noteSetInfo{game},
-    DIFF                      => formatDDRDiff($$noteSetInfo{diff}),
+    DIFF_SM                   => $$noteSetInfo{diff},
     SM_FEET                   => $$noteSetInfo{smFeet},
     SONG_NAME                 => $$smInfo{songName},
     SONG_NAME_TRANSLIT        => $$smInfo{songNameTranslit},
     SONG_NAME_ID              => $$smInfo{songNameId},
   };
+  $$s{DIFF} = formatDDRDiff($$s{DIFF_SM});
 
   my $rows = $$noteSetInfo{expandedNoteRows};
 
