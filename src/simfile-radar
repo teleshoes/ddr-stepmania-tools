@@ -83,6 +83,7 @@ my @DIFF_ABBREV_ARR = (
 my @DIFF_ABBREV_NAMES = map {$$_[0]} @DIFF_ABBREV_ARR;
 my %DIFF_ABBREVS = map {$$_[0] => $$_[1]} @DIFF_ABBREV_ARR;
 
+sub handleSimfile($$$$$$$$$);
 sub formatStats($$$);
 sub getSongRowCount($);
 sub getSongDuration($$$);
@@ -135,8 +136,8 @@ my $usage = "Usage:
   $0 -h|--help
     show this message
 
-  $0 [OPTS] SM_FILE
-    analyze SM_FILE (NOTES, BPMS, and STOPS),
+  $0 [OPTS] SM_FILE [SM_FILE SM_FILE ..]
+    analyze each SM_FILE (NOTES, BPMS, and STOPS),
       gather statistics for each VARIABLE below,
       and print the result using FORMAT_SPEC
 
@@ -564,7 +565,7 @@ my $usage = "Usage:
 ";
 
 sub main(@){
-  my $smFile;
+  my @smFiles;
   my $gameFilterRegex;
   my $diffFilterRegex;
   my $defaultVarsMachine = $DEFAULT_MACHINE;
@@ -602,13 +603,40 @@ sub main(@){
     }elsif($arg =~ /^(-n|--no-force-newlines)$/){
       $forceNewlines = 0;
     }elsif(-f $arg){
-      die "$usage\nERROR: multiple SM_FILE args \"$arg\" + \"$smFile\"\n" if defined $smFile;
-      $smFile = $arg;
+      push @smFiles, $arg;
     }else{
       die "$usage\nERROR: unknown arg $arg\n";
     }
   }
-  die "$usage\nERROR: missing SM_FILE\n" if not defined $smFile;
+  die "$usage\nERROR: missing SM_FILE\n" if @smFiles == 0;
+
+  for my $smFile(@smFiles){
+    handleSimfile(
+      $smFile,
+      $gameFilterRegex,
+      $diffFilterRegex,
+      $defaultVarsMachine,
+      $dump,
+      $formatSpec,
+      $forceNewlines,
+      $readCache,
+      $writeCache,
+    );
+  }
+}
+
+sub handleSimfile($$$$$$$$$){
+  my (
+    $smFile,
+    $gameFilterRegex,
+    $diffFilterRegex,
+    $defaultVarsMachine,
+    $dump,
+    $formatSpec,
+    $forceNewlines,
+    $readCache,
+    $writeCache,
+  ) = @_;
 
   my $smInfo = getSMInfo($smFile, $readCache, $writeCache);
 
