@@ -184,6 +184,10 @@ my $usage = "Usage:
       (redundant special chars, too short or confusing, too long, etc)
     -print SONG_NAME_ID
 
+  $0 --abbrev SONG_NAME_ID [ARTIST [GENRE]]
+    take a SONG_NAME_ID and output a $ABBREV_LEN character abbrev
+    optionally include ARTIST or ARTIST and GENRE if abbrev is too short
+
   $0 --banners SONG_NAME_ID
     print banner image file paths for given song name ID (e.g.: max-300)
 
@@ -257,6 +261,12 @@ sub main(@){
       $songNameId = $cleanupSongNameIdBySongNameId{$songNameId};
     }
     print "$songNameId\n";
+  }elsif($cmd =~ /^(--abbrev)$/ and (@_ >= 1 and @_ <= 3)){
+    my ($songNameId, $artist, $genre) = @_;
+    $artist = '' if not defined $artist;
+    $genre = '' if not defined $genre;
+    my $abbrev = abbrevNameId $ABBREV_LEN, $songNameId, $artist, $genre;
+    print "$abbrev\n";
   }elsif($cmd =~ /^(--banners)$/ and @_ == 1){
     my ($songNameId) = @_;
     my $songsByNameId = getCachedSongsBySongNameId();
