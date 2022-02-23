@@ -57,6 +57,7 @@ sub loadNeuralNet($$);
 sub loadNeuralNetTrainingData($$);
 sub getScaledValue($$);
 sub getUnscaledValue($$);
+sub roundFeetFormat($);
 
 sub run(@);
 sub readProcLine(@);
@@ -103,6 +104,16 @@ my $usage = "Usage:
       -calculate FEET (same as: $EXEC --run-inputs GAME DIFF STREAM VOLTAGE AIR FREEZE CHAOS)
       -format FEET as %04.1f
       -print \"GAME-DIFF FEET\" (e.g.: singles-expert 15.3)
+
+  $EXEC --ddrsonglist SIMFILE
+    -calculate FEET for each GAME-DIFF as in `$EXEC --run-simfile-all SIMFILE`
+    -get FEET values for each of the following 9 GAME-DIFFs:
+      singles-beginner singles-basic singles-difficult singles-expert singles-challenge
+                       doubles-basic doubles-difficult doubles-expert doubles-challenge
+    -round each to the nearest integer half-up, format as two digits (as in `printf '%02d'`)
+    -fill in missing values with '--'
+    -print the 9 values in a single line, formatted as:
+      | ##| ##| ##| ##| ##|  | ##| ##| ##| ##|
 
   $EXEC --calculate-training-radar-data
     -remove cached radar training data
@@ -151,6 +162,7 @@ my $CMD_ENSURE = "ensure";
 my $CMD_RUN_INPUTS = "run-inputs";
 my $CMD_RUN_SIMFILE = "run-simfile";
 my $CMD_RUN_SIMFILE_ALL = "run-simfile-all";
+my $CMD_DDRSONGLIST = "ddrsonglist";
 my $CMD_CALCULATE_TRAINING_RADAR_DATA = "calculate-training-radar-data";
 my $CMD_ENSURE_TRAINING_RADAR_DATA = "ensure-training-radar-data";
 my $CMD_BUILD_NEURAL_NET = "build-neuralnet";
@@ -160,6 +172,7 @@ my @ALL_CMDS = (
   $CMD_RUN_INPUTS,
   $CMD_RUN_SIMFILE,
   $CMD_RUN_SIMFILE_ALL,
+  $CMD_DDRSONGLIST,
   $CMD_CALCULATE_TRAINING_RADAR_DATA,
   $CMD_ENSURE_TRAINING_RADAR_DATA,
   $CMD_BUILD_NEURAL_NET,
@@ -256,6 +269,25 @@ sub main(@){
     for my $entry(@entries){
       printf "%-17s %05.2f\n", "$$entry{game}-$$entry{diff}", $$entry{feet};
     }
+  }elsif($cmd eq $CMD_DDRSONGLIST){
+    die "ERROR: SIMFILE is required for $cmd\n" if not defined $simfile;
+
+    my @entries = runAllGameDiffs($simfile);
+    my %feetByGameDiff = map {$$_{game} . "-" . $$_{diff} => $$_{feet}} @entries;
+
+    my $fmt = sprintf("| %s| %s| %s| %s| %s|  | %s| %s| %s| %s|",
+      roundFeetFormat($feetByGameDiff{"singles-beginner"}),
+      roundFeetFormat($feetByGameDiff{"singles-basic"}),
+      roundFeetFormat($feetByGameDiff{"singles-difficult"}),
+      roundFeetFormat($feetByGameDiff{"singles-expert"}),
+      roundFeetFormat($feetByGameDiff{"singles-challenge"}),
+      roundFeetFormat($feetByGameDiff{"doubles-basic"}),
+      roundFeetFormat($feetByGameDiff{"doubles-difficult"}),
+      roundFeetFormat($feetByGameDiff{"doubles-expert"}),
+      roundFeetFormat($feetByGameDiff{"doubles-challenge"}),
+    );
+
+    print "$fmt\n";
   }else{
     die "ERROR: unknown cmd \"$cmd\"\n";
   }
@@ -528,6 +560,11 @@ sub getUnscaledValue($$){
   my $high = $$valScale{high};
 
   return ($scaledVal*($high-$low)) + $low;
+}
+
+sub roundFeetFormat($){
+  my ($feet) = @_;
+  return defined $feet ? sprintf("%02d", int($feet + 0.5)) : "--";
 }
 
 sub run(@){
