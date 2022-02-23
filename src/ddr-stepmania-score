@@ -76,6 +76,8 @@ my $SONG_NAME_IDS_BY_SONG_DIR_SUFFIX = {
     => "v-for-extreme-king-of-light",
   "otakus_dream_pad_mix_02/(Huzure) Hacking to the Gate (Steins Gate)",
     => "hacking-to-the-gate-huzure",
+  "Shpadoinkle #10/Memories"
+    => "memories-shpadoinkle",
   "test7/let_it_go_frozen_winter_vivaldi_piano_guys"
     => "let-it-go-winter-vivaldi-piano-guys",
   "test7/[Qualifier Singles] - A Thousand Leagues Below (MMX Remix)"
