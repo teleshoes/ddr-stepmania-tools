@@ -41,6 +41,7 @@ my $FMT_REPLACE_GAME_DIFF_KEYS = join "\n      ",
   map {"$_ => $$REPLACE_GAME_DIFF_KEYS{$_}"} sort keys %$REPLACE_GAME_DIFF_KEYS;
 my $FMT_SKIP_GAME_DIFF_KEYS = join " ", sort keys %$REPLACE_GAME_DIFF_KEYS;
 
+sub runAllGameDiffs($);
 sub runNeuralNet($$$$$$$);
 sub ensureRadarCache();
 sub generateRadarCache();
@@ -251,28 +252,44 @@ sub main(@){
   }elsif($cmd eq $CMD_RUN_SIMFILE_ALL){
     die "ERROR: SIMFILE is required for $cmd\n" if not defined $simfile;
 
-    my @radars = map {parseRadarLine($_)} runSimfileRadar($simfile);
-    for my $r(@radars){
-      my ($game, $diff) = ($$r{GAME}, $$r{DIFF});
-      $game = "singles" if $game =~ /^(dance-single)$/;
-      $game = "doubles" if $game =~ /^(dance-double)$/;
-
-      my $neuralnetGame = $game =~ /^($OK_GAMES)$/ ? $game : $FORCE_NEURAL_NET_GAME;
-      my $neuralnetDiff = $diff =~ /^($OK_DIFFS)$/ ? $diff : $FORCE_NEURAL_NET_DIFF;
-
-      if($game ne $neuralnetGame or $diff ne $neuralnetDiff){
-        my $actual = "$game-$diff";
-        my $replacement = "$neuralnetGame-$neuralnetDiff";
-        print STDERR "  WARNING: forced neuralnet \"$replacement\" for unknown \"$actual\"\n";
-      }
-
-      my $feet = runNeuralNet($neuralnetGame, $neuralnetDiff,
-        $$r{S}, $$r{V}, $$r{A}, $$r{F}, $$r{C});
-      printf "%-17s %05.2f\n", "$game-$diff", $feet;
+    my @entries = runAllGameDiffs($simfile);
+    for my $entry(@entries){
+      printf "%-17s %05.2f\n", "$$entry{game}-$$entry{diff}", $$entry{feet};
     }
   }else{
     die "ERROR: unknown cmd \"$cmd\"\n";
   }
+}
+
+sub runAllGameDiffs($){
+  my ($simfile) = @_;
+  my @radars = map {parseRadarLine($_)} runSimfileRadar($simfile);
+  my @entries;
+  for my $r(@radars){
+    my ($game, $diff) = ($$r{GAME}, $$r{DIFF});
+    $game = "singles" if $game =~ /^(dance-single)$/;
+    $game = "doubles" if $game =~ /^(dance-double)$/;
+
+    my $neuralnetGame = $game =~ /^($OK_GAMES)$/ ? $game : $FORCE_NEURAL_NET_GAME;
+    my $neuralnetDiff = $diff =~ /^($OK_DIFFS)$/ ? $diff : $FORCE_NEURAL_NET_DIFF;
+
+    if($game ne $neuralnetGame or $diff ne $neuralnetDiff){
+      my $actual = "$game-$diff";
+      my $replacement = "$neuralnetGame-$neuralnetDiff";
+      print STDERR "  WARNING: forced neuralnet \"$replacement\" for unknown \"$actual\"\n";
+    }
+
+    my $feet = runNeuralNet($neuralnetGame, $neuralnetDiff,
+      $$r{S}, $$r{V}, $$r{A}, $$r{F}, $$r{C});
+
+    push @entries, {
+      game  => $game,
+      diff  => $diff,
+      radar => $r,
+      feet  => $feet,
+    };
+  }
+  return @entries;
 }
 
 sub runNeuralNet($$$$$$$){
