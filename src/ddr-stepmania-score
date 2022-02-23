@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 use strict;
 use warnings;
-use File::Basename qw(basename);
+use File::Basename qw(basename dirname);
 
 sub getScoreDataByXmlFile($$$);
 sub readScoreDataCache($);
@@ -31,11 +31,13 @@ sub mtimeFmt($);
 sub allFilesExist(@);
 sub chunkArr($@);
 sub md5sum($);
+sub readProc(@);
 
 my $XML_FILE_PATTERN = "$ENV{HOME}/.stepmania-*/Save/Upload/*.xml";
 my $SONGS_PARENT_DIR = "$ENV{HOME}/.stepmania-5.0";
 my $CACHE_BASE_DIR = "$ENV{HOME}/.cache/ddr-stepmania-score";
 
+my $DDR_RADAR_FEET_TOOL = "ddr-radar-feet";
 my $ZENIUS_TOOL = "zenius-ddrsonglist";
 
 my $DDRNAME_TOOL = "ddrname";
@@ -112,6 +114,7 @@ my $SEP = "="x50;
 
 my $COMMAND_PRINT = "print";
 my $COMMAND_DDRNAME = "ddrname";
+my $COMMAND_DDRSONGLIST = "ddrsonglist";
 
 my $SCORE_FILE_MODE_BY_FILE_EXT = "by-file-ext";
 my $SCORE_FILE_MODE_DIRECT_XML = "direct-xml";
@@ -262,6 +265,17 @@ my $usage = "Usage:
       (this is the default if no command is given)
     --ddrname
       call `$DDRNAME_TOOL` with SCORE_DATA info on each FILE passed in
+    --ddrsonglist
+      for each FILE passed in:
+        extract SONG_NAME out of SONG_DIR with `$ZENIUS_TOOL`
+        use SONG_DIR parent dir as ARTIST
+        get SONG_ABBREV from SONG_NAME + ARTIST with `$ZENIUS_TOOL`
+        extract SIMFILE from SONG_DIR
+        get DDRSONGLIST_FEET with `$DDR_RADAR_FEET_TOOL --ddrsonglist SIMFILE`
+        pad SONG_NAME to 40 characters
+        print: 'SONG_NAME |SONG_ABBREV DDRSONGLIST_FEET'
+      e.g.:
+        better-tomorrow                          |bttrTmr | --| 04| 07| 11| 14|  | --| --| --| --|
 
   SEPARATOR
     the string: $SEP
@@ -343,6 +357,8 @@ sub main(@){
       $cmd = $COMMAND_PRINT;
     }elsif($arg =~ /^(--ddrname)$/i){
       $cmd = $COMMAND_DDRNAME;
+    }elsif($arg =~ /^(--ddrsonglist)$/i){
+      $cmd = $COMMAND_DDRSONGLIST;
     }elsif($arg =~ /^--ddrname-opt=(.+)$/i){
       push @ddrnamePassedInOpts, $1;
     }elsif($arg =~ /^(--xml)$/i){
@@ -449,6 +465,24 @@ sub main(@){
           . "sm: $smFile\n"
           ;
       }
+    }elsif($cmd eq $COMMAND_DDRSONGLIST){
+      my $songDir = $$sd{SONG_DIR};
+      my $song = $$sd{SONG_NAME};
+      my $smFile = getSMFileFromSongDir $songDir;
+
+      my $songParentDir = dirname $$sd{SONG_DIR};
+      my $artist = basename $songParentDir;
+
+      my $abbrev = readProc("$ZENIUS_TOOL", "--abbrev", $song, $artist);
+      chomp $abbrev;
+      if($abbrev !~ /^[a-zA-Z0-9]{7}$/){
+        die "ERROR: could not obtain abbrev for song=$song\n";
+      }
+
+      my $songlistFeet = readProc($DDR_RADAR_FEET_TOOL, "--ddrsonglist", $smFile);
+      chomp $songlistFeet;
+
+      printf "%-40s |%s %s\n", $song, $abbrev, $songlistFeet;
     }else{
       die "$usage\nERROR: unknown command $cmd\n";
     }
@@ -948,6 +982,13 @@ sub md5sum($){
   }else{
     return undef;
   }
+}
+
+sub readProc(@){
+  open CMD, "-|", @_ or die "ERROR: could not run \"@_\"\n$!\n";
+  my $out = join '', <CMD>;
+  close CMD;
+  return $out;
 }
 
 &main(@ARGV);
