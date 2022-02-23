@@ -1,5 +1,6 @@
 #----------------------------------------|--------|------SINGLES------|--|----DOUBLES----|
 #SONG_NAME_ID----------------------------|ABBREV--|BEG|BAS|DIF|EXP|CHA|--|BAS|DIF|EXP|CHA|
+a-thousand-leagues-below-mmx-remix       |aTLBMxR | --| 07| 07| 08| --|  | --| --| --| --|
 an-underlying-problem                    |undrPrb | --| --| --| --| 15|  | --| --| --| --|
 anti-gravity                             |antiGrv | --| --| --| 16| 17|  | --| --| --| --|
 ascent                                   |ascentS | --| --| --| --| 15|  | --| --| --| --|
@@ -25,14 +26,14 @@ flashmans-glass-prison-robbumon          |flsMnGP | --| 13| 15| 16| 18|  | --| -
 flirt-flirt-oh-it-hurts                  |flFlOIH | --| --| --| --| 16|  | --| --| --| --|
 god-diva-trueancestor                    |godDiva | --| --| --| 14| --|  | --| --| --| --|
 grasstown-hard                           |grsTwnH | --| --| --| 17| --|  | --| --| --| --|
-history-maker                            |histMak | --| --| --| --| 12|  | --| --| --| --|
 hacking-to-the-gate-huzure               |hcknGtH | --| --| --| --| 13|  | --| --| --| --|
+history-maker                            |histMak | --| --| --| --| 12|  | --| --| --| --|
 hyrule-overworld-princess-z-trigger-mix  |hyrlPZT | --| --| --| 14| --|  | --| --| --| --|
 i-love-it-tyler                          |iLovItT | --| 14| 16| 19| 20|  | --| --| --| --|
 ill-fly-with-you-9                       |iFlyWYo | --| --| --| --| 13|  | --| --| --| --|
 in-the-halls-of-the-usurper              |hlsUsrp | --| --| --| --| 15|  | --| --| --| --|
-jai-ho-original-mix                      |jaiHoOM | 02| 05| 10| 14| --|  | --| --| --| --|
 jack-russel                              |jckRuss | --| --| --| --| 14|  | --| --| --| --|
+jai-ho-original-mix                      |jaiHoOM | 02| 05| 10| 14| --|  | --| --| --| --|
 last-battle-cave-story                   |lstBtCS | --| --| --| 13| --|  | --| --| --| --|
 leaving-leafwood-forest                  |lvngLWF | --| --| --| --| 14|  | --| --| --| --|
 less-talk-more-rokk-freezepop            |lesTkMR | --| --| --| --| 15|  | --| --| --| --|
@@ -40,8 +41,8 @@ let-it-go-sudzi781                       |letItGo | --| --| --| 16| 18|  | --| -
 let-it-go-winter-vivaldi-piano-guys      |lIGWiPG | --| --| --| 14| --|  | --| --| --| --|
 let-there-be-light                       |letTBLi | --| --| --| 15| --|  | --| --| --| --|
 life-is-beautiful-sm-9                   |lfIBSM9 | --| --| 12| --| --|  | --| --| --| --|
-lone-digger-coweye-ver                   |loneDig | --| --| --| --| 15|  | --| --| --| --|
 lisztomania-phoenix-009                  |lsztmni | --| --| --| --| 13|  | --| --| --| --|
+lone-digger-coweye-ver                   |loneDig | --| --| --| --| 15|  | --| --| --| --|
 mario-djbouche-cpubasic13                |mrioDJB | --| --| --| 14| --|  | --| --| --| --|
 maze-of-mayonnaise                       |mazMayo | --| --| --| --| 14|  | --| --| --| --|
 mint                                     |mintShp | --| --| --| --| 14|  | --| --| --| --|
@@ -49,7 +50,6 @@ mr-saxobeat-valex-and-tylr               |mrSaxob | --| --| --| 12| 17|  | --| -
 pingpong                                 |pingPng | --| --| --| --| 15|  | --| --| --| --|
 plains-of-passage                        |plnsPsg | --| --| --| --| 17|  | --| --| --| --|
 prism                                    |prsmLSt | --| --| --| 14| 15|  | --| --| --| --|
-a-thousand-leagues-below-mmx-remix       |aTLBMxR | --| 07| 07| 08| --|  | --| --| --| --|
 rise-up                                  |riseUpS | --| --| --| --| 15|  | --| --| --| --|
 rockman-ii-intro                         |rckMnII | --| --| --| 15| 17|  | --| --| --| --|
 rolling-in-the-deep-gazebo               |rlnITDp | --| --| --| 16| 17|  | --| --| --| --|
@@ -57,10 +57,10 @@ satellite                                |satllit | --| --| --| 10| --|  | --| -
 set-fire-to-the-rain-gazebo              |stFrTTR | --| 14| 16| 18| 19|  | --| --| --| --|
 son-of-flynn                             |snOFlyn | --| --| --| --| 13|  | --| --| --| --|
 spider-dance                             |spdrDnc | --| --| --| --| 15|  | --| --| --| --|
-springtime                               |sprngtm | --| --| --| 16| 17|  | --| --| --| --|
 spooky-scary-skeletons                   |spScSkl | --| --| --| --| 15|  | --| --| --| --|
-still-more-fighting-black-mages          |stMFBlM | --| --| --| --| 16|  | --| --| --| --|
+springtime                               |sprngtm | --| --| --| 16| 17|  | --| --| --| --|
 still-more-fighting                      |stiMoFi | --| --| --| 15| --|  | --| --| --| --|
+still-more-fighting-black-mages          |stMFBlM | --| --| --| --| 16|  | --| --| --| --|
 still-more-fighting-nes                  |stMFNes | --| --| --| 18| --|  | --| --| --| --|
 super-mario-bros-2-techno                |smb2Tcn | --| --| --| 13| --|  | --| --| --| --|
 super-mario-bros-behemoth                |smbBhmt | --| --| --| --| 14|  | --| --| --| --|
