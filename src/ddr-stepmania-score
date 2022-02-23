@@ -124,6 +124,7 @@ my $FILENAME_PRINT_MODE_NEVER = "never";
 my $DEFAULT_FORMAT_SPEC = ""
   . "%SEP\n"
   . "XML_FILE:        %XML_FILE\n"
+  . "SIMFILE:         %SIMFILE\n"
   . "SONG_DIR:        %SONG_DIR\n"
   . "SONG_NAME:       %SONG_NAME\n"
   . "PASS_FAIL:       %PASS_FAIL\n"
@@ -233,6 +234,7 @@ my $usage = "Usage:
         -FC_MAYBE = FC otherwise
     (9) include the following SCORE_DATA_ITEM items in SCORE_DATA:
         -XML_FILE
+        -SIMFILE
         -DATETIME
         -SONG_DIR
         -SONG_NAME
@@ -485,6 +487,10 @@ sub readScoreDataCache($){
     }
   }
 
+  if(not defined $$sd{SIMFILE}){
+    $$sd{SIMFILE} = getSMFileFromSongDir $$sd{SONG_DIR};
+  }
+
   $$sd{XML_FILE} = $xmlFile;
   $$sd{DATETIME} = mtimeFmt($xmlFile);
 
@@ -531,6 +537,7 @@ sub calculateScoreDataCache($){
 
   return {
     XML_FILE        => $xmlFile,
+    SIMFILE         => $smFile,
     DATETIME        => mtimeFmt($xmlFile),
     SONG_DIR        => $songDir,
     SONG_NAME       => $songName,
