@@ -165,11 +165,11 @@ my @ALL_CMDS = (
   $CMD_ENSURE_NEURAL_NET,
 );
 
-sub main(@){
-  my $okCmds = join "|", @ALL_CMDS;
-  my $okGames = join "|", @ALL_GAMES;
-  my $okDiffs = join "|", @ALL_DIFFS;
+my $OK_CMDS = join "|", @ALL_CMDS;
+my $OK_GAMES = join "|", @ALL_GAMES;
+my $OK_DIFFS = join "|", @ALL_DIFFS;
 
+sub main(@){
   my $cmd = undef;
   my $game = undef;
   my $diff = undef;
@@ -180,13 +180,13 @@ sub main(@){
     if($arg =~ /^(-h|--help)$/){
       print $usage;
       exit 0;
-    }elsif($arg =~ /^--($okCmds)$/){
+    }elsif($arg =~ /^--($OK_CMDS)$/){
       $cmd = $1
     }elsif($arg =~ /^(--cache)$/){
       $cmd = $CMD_ENSURE;
-    }elsif($arg =~ /^($okGames)$/){
+    }elsif($arg =~ /^($OK_GAMES)$/){
       $game = $1;
-    }elsif($arg =~ /^($okDiffs)$/){
+    }elsif($arg =~ /^($OK_DIFFS)$/){
       $diff = $1;
     }elsif($arg =~ /^(\d+|\d*\.\d+)$/){
       push @inputVals, $1;
@@ -257,8 +257,8 @@ sub main(@){
       $game = "singles" if $game =~ /^(dance-single)$/;
       $game = "doubles" if $game =~ /^(dance-double)$/;
 
-      my $neuralnetGame = $game =~ /^($okGames)$/ ? $game : $FORCE_NEURAL_NET_GAME;
-      my $neuralnetDiff = $diff =~ /^($okDiffs)$/ ? $diff : $FORCE_NEURAL_NET_DIFF;
+      my $neuralnetGame = $game =~ /^($OK_GAMES)$/ ? $game : $FORCE_NEURAL_NET_GAME;
+      my $neuralnetDiff = $diff =~ /^($OK_DIFFS)$/ ? $diff : $FORCE_NEURAL_NET_DIFF;
 
       if($game ne $neuralnetGame or $diff ne $neuralnetDiff){
         my $actual = "$game-$diff";
