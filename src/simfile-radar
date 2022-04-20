@@ -83,7 +83,7 @@ my @DIFF_ABBREV_ARR = (
 my @DIFF_ABBREV_NAMES = map {$$_[0]} @DIFF_ABBREV_ARR;
 my %DIFF_ABBREVS = map {$$_[0] => $$_[1]} @DIFF_ABBREV_ARR;
 
-sub handleSimfile($$$$$$$$$);
+sub handleSimfile($$$$$$$$$$);
 sub formatStats($$$);
 sub getSongRowCount($);
 sub getSongDuration($$$);
@@ -502,6 +502,11 @@ my $usage = "Usage:
         both DIFF and DIFF_ABBREV does not match (case-insensitive)
         the regular expression DIFFICULTY_REGEX
 
+    --diff-sm=DIFF_SM_REGEX
+      ignore (and skip calculations for) all note-sets where
+        DIFF_SM does not match (case-insensitive)
+        the regular expression DIFF_SM_REGEX
+
     --machine=MACHINE
       MACHINE is one of the following values (case-insensitive):
         DDRA DDRSN2
@@ -568,6 +573,7 @@ sub main(@){
   my @smFiles;
   my $gameFilterRegex;
   my $diffFilterRegex;
+  my $diffSMFilterRegex;
   my $defaultVarsMachine = $DEFAULT_MACHINE;
   my $dump = 0;
   my $formatSpec = $DEFAULT_FORMAT_SPEC;
@@ -594,6 +600,8 @@ sub main(@){
       $diffFilterRegex = "^$1\$";
     }elsif($arg =~ /^--(?:diff|-difficulty)=(.+)$/){
       $diffFilterRegex = $1;
+    }elsif($arg =~ /^--(?:diff-sm)=(.+)$/){
+      $diffSMFilterRegex = $1;
     }elsif($arg =~ /^--machine=(DDRA|DDRSN2)$/i){
       $defaultVarsMachine = uc $1;
     }elsif($arg =~ /^--dump$/){
@@ -615,6 +623,7 @@ sub main(@){
       $smFile,
       $gameFilterRegex,
       $diffFilterRegex,
+      $diffSMFilterRegex,
       $defaultVarsMachine,
       $dump,
       $formatSpec,
@@ -625,11 +634,12 @@ sub main(@){
   }
 }
 
-sub handleSimfile($$$$$$$$$){
+sub handleSimfile($$$$$$$$$$){
   my (
     $smFile,
     $gameFilterRegex,
     $diffFilterRegex,
+    $diffSMFilterRegex,
     $defaultVarsMachine,
     $dump,
     $formatSpec,
@@ -654,6 +664,10 @@ sub handleSimfile($$$$$$$$$){
       my $diff = formatDDRDiff($$noteSetInfo{diff});
       my $diffAbbrev = abbrevDiff($diff);
       next if $diff !~ /$diffFilterRegex/i and $diffAbbrev !~ /$diffFilterRegex/i;
+    }
+    if(defined $diffSMFilterRegex){
+      my $diffSM = $$noteSetInfo{diff};
+      next if $diffSM !~ /$diffSMFilterRegex/i;
     }
     $$stats{$gameDiffKey} = getNoteSetStats($smFile, $smInfo, $gameDiffKey, $readCache, $writeCache);
   }
