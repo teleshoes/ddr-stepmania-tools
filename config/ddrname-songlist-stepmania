@@ -32,6 +32,8 @@ feelings                                 |feeling | --| 04| 07| 13| 14|  | --| -
 flash-man                                |flshMan | --| 06| 09| 13| --|  | --| --| --| --|
 flashmans-glass-prison-robbumon          |flsMnGP | --| 13| 15| 16| 18|  | --| --| --| --|
 flirt-flirt-oh-it-hurts                  |flFlOIH | --| --| --| --| 16|  | --| --| --| --|
+gangnam-style-gazebo                     |gnStyGz | 07| --| --| 14| 15|  | --| --| --| --|
+gee                                      |geeAOfH | 02| 03| 08| 11| 15|  | --| --| --| --|
 get-together                             |gtTgthr | --| 04| 08| 13| 14|  | --| --| --| --|
 give-it-up                               |givItUp | --| 05| 08| 11| 15|  | --| --| --| --|
 god-diva-trueancestor                    |godDiva | --| --| --| 14| --|  | --| --| --| --|
@@ -70,6 +72,7 @@ mr-saxobeat-valex-and-tylr               |mrSaxob | --| --| --| 12| 17|  | --| -
 new-kids                                 |newKids | --| 04| 07| 12| 14|  | --| --| --| --|
 next-level                               |nextLev | --| 06| 09| 13| 14|  | --| --| --| --|
 obscure                                  |obscure | --| 04| 07| 13| 15|  | --| --| --| --|
+overall                                  |overall | 03| 04| 09| 14| 16|  | --| --| --| --|
 pingpong                                 |pingPng | --| --| --| --| 15|  | --| --| --| --|
 plains-of-passage                        |plnsPsg | --| --| --| --| 17|  | --| --| --| --|
 power                                    |powerSh | --| 04| 09| 15| 16|  | --| --| --| --|
@@ -86,9 +89,11 @@ spooky-scary-skeletons                   |spScSkl | --| --| --| --| 15|  | --| -
 springtime                               |sprngtm | --| --| --| 16| 17|  | --| --| --| --|
 still-more-fighting                      |stiMoFi | --| --| --| 15| --|  | --| --| --| --|
 still-more-fighting-black-mages          |stMFBlM | --| --| --| --| 16|  | --| --| --| --|
+still-more-fighting-black-mages-short    |sMFBMgS | --| 06| 10| 14| --|  | --| --| --| --|
 still-more-fighting-nes                  |stMFNes | --| --| --| 18| --|  | --| --| --| --|
 super-mario-bros-2-techno                |smb2Tcn | --| --| --| 13| --|  | --| --| --| --|
 super-mario-bros-behemoth                |smbBhmt | --| --| --| --| 14|  | --| --| --| --|
+super-mario-world-boss-battle            |sMrWBsB | --| 08| 09| 12| 15|  | 07| 09| 11| 15|
 super-mario-world-level2                 |smbLvl2 | --| --| --| 14| 17|  | --| --| --| --|
 super-spice-bros-2                       |spSpBr2 | --| --| --| 15| --|  | --| --| --| --|
 temperature                              |temprtr | --| --| --| --| 14|  | --| --| --| --|
