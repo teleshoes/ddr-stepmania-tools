@@ -598,7 +598,7 @@ sub main(@){
       $gameFilterRegex = $1;
     }elsif($arg =~ /^(?:--)?(beginner|basic|difficult|expert|challenge)$/){
       $diffFilterRegex = "^$1\$";
-    }elsif($arg =~ /^--(?:diff|-difficulty)=(.+)$/){
+    }elsif($arg =~ /^--(?:diff|difficulty)=(.+)$/){
       $diffFilterRegex = $1;
     }elsif($arg =~ /^--(?:diff-sm)=(.+)$/){
       $diffSMFilterRegex = $1;
