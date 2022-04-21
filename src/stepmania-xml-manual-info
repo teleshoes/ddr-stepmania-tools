@@ -1,0 +1,244 @@
+#!/usr/bin/perl
+use strict;
+use warnings;
+
+sub formatXml($);
+sub readProc(@);
+
+my $SRC_MANUAL_INFO_DIR = "$ENV{HOME}/.stepmania/Save/ManualInfo";
+my $TARGET_XML_DIR = "$ENV{HOME}/.stepmania/Save/Upload";
+
+my $USAGE = "Usage:
+  $0
+    convert info files in $SRC_MANUAL_INFO_DIR
+    to xml files in $TARGET_XML_DIR
+";
+
+sub main(@){
+  die $USAGE if @_ > 0;
+
+  my @manualInfoFiles = glob "$SRC_MANUAL_INFO_DIR/*.info";
+  for my $manualInfoFile(@manualInfoFiles){
+    createXmlFromManualInfoFile($manualInfoFile);
+  }
+}
+
+sub createXmlFromManualInfoFile($){
+  my ($manualInfoFile) = @_;
+  if($manualInfoFile !~ /^(?:.*\/)?(\d\d\d\d)(\d\d)(\d\d)_(\d\d)(\d\d)(\d\d)\.info$/){
+    die "ERROR: manual info file must be named YYYYMMDD_HHMMSS.info\n$manualInfoFile\n";
+  }
+  my ($y, $m, $d, $hh, $mm, $ss) = ($1, $2, $3, $4, $5, $6);
+  my $dtmFmt = "$y-$m-$d $hh:$mm:$ss";
+
+  my $targetXmlFile = "$TARGET_XML_DIR/${y}-${m}-${d}_manual_info_$hh$mm$ss.xml";
+
+  my $info = parseManualInfoFile($manualInfoFile);
+  $$info{DATETIME} = $dtmFmt;
+
+  my $xml = formatXml($info);
+
+  print "converting $manualInfoFile ($$info{SM_FILE})\n";
+  open FH, "> $targetXmlFile" or die "ERROR: could not write $targetXmlFile\n$!\n";
+  print FH $xml;
+  close FH;
+
+  system "touch", $targetXmlFile, "--date=$dtmFmt";
+}
+
+sub parseManualInfoFile($){
+  my ($manualInfoFile) = @_;
+
+  my $infoText = `cat $manualInfoFile`;
+
+  if($infoText =~ /^
+    \s* (?<SM_FILE> .+)
+    \s* (?<SM_GAME> \S+)  \s+  (?<SM_DIFF> \S+)
+    \s*
+    \s* (?<FEET> \d+)  \s+  (?<DIFF> \w+)  \s+  (?<STAGE> 1st|2nd|3rd|4th)
+    \s*
+    \s* (?<SM_SCORE>\d+|\d*\.\d+)  \s*  (?<FAILED>  (?:FAILED)?  )
+    \s*
+    \s* (?<HOLDS_OK> \d+) \s* \/ \s* (?<HOLDS_TOTAL> \d+)
+    \s* (?<MINES_OK> \d+) \s* \/ \s* (?<MINES_TOTAL> \d+)
+    \s* (?<HANDS_OK> \d+) \s* \/ \s* (?<HANDS_TOTAL> \d+)
+    \s* (?<ROLLS_OK> \d+) \s* \/ \s* (?<ROLLS_TOTAL> \d+)
+    \s*
+    \s* (?<W1>   \d+)
+    \s* (?<W2>   \d+)
+    \s* (?<W3>   \d+)
+    \s* (?<W4>   \d+)
+    \s* (?<W5>   \d+)
+    \s* (?<MISS> \d+)
+    \s*
+    \s* (?<MODS>  (?:.*)? )
+    $/x
+  ){
+    my $info = {%+};
+
+    if($$info{SM_SCORE} < 0 or $$info{SM_SCORE} > 100){
+      die "ERROR: invalid SM_SCORE $$info{SM_SCORE}\n";
+    }
+
+    $$info{HOLDS_BAD} = $$info{HOLDS_TOTAL} - $$info{HOLDS_OK};
+    $$info{MINES_BAD} = $$info{MINES_TOTAL} - $$info{MINES_OK};
+    $$info{HANDS_BAD} = $$info{HANDS_TOTAL} - $$info{HANDS_OK};
+    $$info{ROLLS_BAD} = $$info{ROLLS_TOTAL} - $$info{ROLLS_OK};
+
+    $$info{TAP_TOTAL} = 0
+      + $$info{W1}
+      + $$info{W2}
+      + $$info{W3}
+      + $$info{W4}
+      + $$info{W5}
+      + $$info{MISS}
+    ;
+
+    return $info;
+  }else{
+    die "ERROR: malformed manual info file $manualInfoFile\n";
+  }
+}
+
+sub getSongDur($$$){
+  my ($smFile, $smGame, $smDiff) = @_;
+
+  my $songDur = readProc "simfile-radar",
+    '--format=%SONG_DUR',
+    "--game=$smGame",
+    "--diff-sm=$smDiff",
+    $smFile,
+  ;
+
+  if($songDur !~ /^(\d+|\d*\.\d+)$/ or $songDur < 30){
+    die "ERROR: invalid song duration from simfile-radar \"$songDur\"\n"
+      . "  (for $smFile $smGame $smDiff)\n";
+  }
+
+  return $songDur;
+}
+
+sub formatXml($){
+  my ($info) = @_;
+
+  my $smFileRel = $$info{SM_FILE};
+  $smFileRel =~ s/^(\.\/|Songs)//;
+  $smFileRel = "Songs/$smFileRel";
+
+  my $songDir = $smFileRel;
+  if($songDir !~ s/\/[^\/]+\.(dwi|sm|ssc)$/\//i){
+    die "ERROR: could not parse song dir for $$info{SM_FILE}\n";
+  }
+
+  my $smFileAbs = "$ENV{HOME}/.stepmania/$smFileRel";
+  if(not -e $smFileAbs){
+    die "ERROR: could not find $smFileAbs\n";
+  }
+
+  my $songDur = getSongDur $smFileAbs, $$info{SM_GAME}, $$info{SM_DIFF};
+
+  my $surviveSeconds = $$info{FAILED} =~ /FAILED/i ? 0 : $songDur;
+  $surviveSeconds = sprintf "%.6f", $surviveSeconds;
+
+  my $percentDP = $$info{SM_SCORE}/100.0;
+  $percentDP = sprintf "%.6f", $percentDP;
+
+  my @gradeTiers = qw(100 99 98 96 94 92 89 86 83 80 76 72 68 64 60 55 0);
+
+  my $tierIndex = 0;
+  while($gradeTiers[$tierIndex] > $$info{SM_SCORE}){
+    $tierIndex++;
+  }
+  my $tierFmt = "Tier" . sprintf "%02d", ($tierIndex+1);
+
+  my $grade = $$info{FAILED} =~ /FAILED/i ? 'Failed' : $tierFmt;
+
+  my $holdsOk = $$info{HOLDS_OK} + $$info{ROLLS_OK};
+  my $holdsBad = $$info{HOLDS_BAD} + $$info{ROLLS_BAD};
+
+  my $xml = '';
+  $xml .= "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>
+
+    <Stats>
+      <MachineGuid>MANUAL_INFO</MachineGuid>
+      <RecentSongScores>
+        <HighScoreForASongAndSteps>
+          <Song Dir='$songDir'/>
+          <Steps Difficulty='$$info{SM_DIFF}' StepsType='$$info{SM_GAME}'/>
+          <HighScore>
+            <Name></Name>
+            <Grade>$grade</Grade>
+            <Score></Score>
+            <PercentDP>$percentDP</PercentDP>
+            <SurviveSeconds>$surviveSeconds</SurviveSeconds
+            <MaxCombo>0</MaxCombo>
+            <StageAward></StageAward>
+            <PeakComboAward></PeakComboAward>
+            <Modifiers></Modifiers>
+            <DateTime>$$info{DATETIME}</DateTime>
+            <PlayerGuid></PlayerGuid>
+            <MachineGuid></MachineGuid>
+            <ProductID></ProductID>
+            <TapNoteScores>
+              <HitMine>$$info{MINES_BAD}</HitMine>
+              <AvoidMine>$$info{MINES_OK}</AvoidMine>
+              <CheckpointMiss></CheckpointMiss>
+              <Miss>$$info{MISS}</Miss>
+              <W5>$$info{W5}</W5>
+              <W4>$$info{W4}</W4>
+              <W3>$$info{W3}</W3>
+              <W2>$$info{W2}</W2>
+              <W1>$$info{W1}</W1>
+              <ProW5>0</ProW5>
+              <ProW4>0</ProW4>
+              <ProW3>0</ProW3>
+              <ProW2>0</ProW2>
+              <ProW1>0</ProW1>
+              <MaxScore>0</MaxScore>
+              <CheckpointHit>0</CheckpointHit>
+            </TapNoteScores>
+            <HoldNoteScores>
+              <LetGo>$holdsBad</LetGo>
+              <Held>$holdsOk</Held>
+              <MissedHold>0</MissedHold>
+            </HoldNoteScores>
+            <RadarValues>
+              <Stream></Stream>
+              <Voltage></Voltage>
+              <Air></Air>
+              <Freeze></Freeze>
+              <Chaos></Chaos>
+              <Notes></Notes>
+              <TapsAndHolds></TapsAndHolds>
+              <Jumps></Jumps>
+              <Holds></Holds>
+              <Mines></Mines>
+              <Hands></Hands>
+              <Rolls></Rolls>
+              <Lifts></Lifts>
+              <Fakes></Fakes>
+            </RadarValues>
+            <LifeRemainingSeconds>0.000000</LifeRemainingSeconds>
+            <Disqualified>0</Disqualified>
+            <Pad></Pad>
+            <StageGuid></StageGuid>
+            <Guid></Guid>
+          </HighScore>
+        </HighScoreForASongAndSteps>
+      </RecentSongScores>
+    </Stats>
+  ";
+
+  $xml =~ s/^ *//mg;
+
+  return $xml;
+}
+
+sub readProc(@){
+  open CMD, "-|", @_ or die "ERROR: failed to run \"@_\"\n$!\n";
+  my $out = join '', <CMD>;
+  close CMD;
+  return $out;
+}
+
+&main(@ARGV);
