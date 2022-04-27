@@ -73,7 +73,7 @@ sub getSongInfo($$$);
 sub ddrnameBestScore($$$);
 sub simfileRadar($$$);
 sub calculateRadarFeet($$$);
-sub getDDRStepmaniaScoreAtts($@);
+sub getDDRStepmaniaScoreAtts($$);
 sub findXmlFiles($$$);
 sub findRecentXmlFiles();
 sub maybeBig($$);
@@ -83,6 +83,7 @@ sub red($$);
 sub colorText($$$);
 sub md5sum($);
 sub writeFile($$);
+sub readProc(@);
 sub readProcLine(@);
 
 sub main(@){
@@ -304,11 +305,7 @@ sub getSongInfo($$$){
     @xmlFiles = @xmlFiles[0..($XML_SCORE_LIMIT-1)];
   }
 
-  my $xmlScores = [];
-  for my $xmlFile(@xmlFiles){
-    my $scoreAtts = getDDRStepmaniaScoreAtts($xmlFile, @ATTS);
-    push @$xmlScores, $scoreAtts;
-  }
+  my $xmlScores = getDDRStepmaniaScoreAtts([@ATTS], [@xmlFiles]);
 
   $$info{xmlScores} = $xmlScores;
 
@@ -381,24 +378,28 @@ sub calculateRadarFeet($$$){
   );
 }
 
-sub getDDRStepmaniaScoreAtts($@){
-  my ($xmlFile, @atts) = @_;
+sub getDDRStepmaniaScoreAtts($$){
+  my ($atts, $xmlFiles) = @_;
 
-  my $format = join("###", map {"%$_"} @atts) . "%n";
-  my $out = readProcLine("ddr-stepmania-score", "--no-filename", $xmlFile, "--format=$format");
-
-  my @vals = split /###/, $out;
-  if(@vals == @atts - 1){
-    push @vals, "";
+  my $format = join("###", map {"%$_"} @$atts) . "%n";
+  my @lines = readProc("ddr-stepmania-score", "--no-filename", "--format=$format", @$xmlFiles);
+  my $xmlScores = [];
+  for my $line(@lines){
+    chomp $line;
+    my @vals = split /###/, $line;
+    if(@vals == @$atts - 1){
+      push @vals, "";
+    }
+    if(@vals != @$atts){
+      die "ERROR: could not parse \"ddr-stepmania-score\" output: \"$line\"\n";
+    }
+    my $attVals = {};
+    for(my $i=0; $i<@$atts; $i++){
+      $$attVals{$$atts[$i]} = $vals[$i];
+    }
+    push @$xmlScores, $attVals;
   }
-  if(@vals != @atts){
-    die "ERROR: could not parse \"ddr-stepmania-score\" output: \"$out\"\n";
-  }
-  my $attVals = {};
-  for(my $i=0; $i<@atts; $i++){
-    $$attVals{$atts[$i]} = $vals[$i];
-  }
-  return $attVals;
+  return $xmlScores;
 }
 
 sub findXmlFiles($$$){
@@ -508,13 +509,18 @@ sub writeFile($$){
   close FH;
 }
 
-sub readProcLine(@){
+sub readProc(@){
   my @cmd = @_;
   open CMD, "-|", @cmd or die "ERROR: \"@cmd\" failed\n$!\n";
-  my $out = join '', <CMD>;
+  my @lines = <CMD>;
   close CMD;
-  chomp $out;
-  return $out;
+  return @lines;
+}
+
+sub readProcLine(@){
+  my $line = join '', readProc(@_);
+  chomp $line;
+  return $line;
 }
 
 &main(@ARGV);
