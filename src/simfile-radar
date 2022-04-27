@@ -83,7 +83,7 @@ my @DIFF_ABBREV_ARR = (
 my @DIFF_ABBREV_NAMES = map {$$_[0]} @DIFF_ABBREV_ARR;
 my %DIFF_ABBREVS = map {$$_[0] => $$_[1]} @DIFF_ABBREV_ARR;
 
-sub handleSimfile($$$$$$$$$$);
+sub handleSimfile($$$$$$$$);
 sub formatStats($$$);
 sub getSongRowCount($);
 sub getSongDuration($$$);
@@ -105,6 +105,7 @@ sub parseSMFile($);
 sub extractSongNameId($);
 sub convertValuesByBeatToValuesByRow($);
 sub generateGameDiffKey($$);
+sub isGameDiffSkipped($$);
 sub getExpandedNoteRows($);
 sub abbrevGame($);
 sub abbrevDiff($);
@@ -571,9 +572,11 @@ my $usage = "Usage:
 
 sub main(@){
   my @smFiles;
-  my $gameFilterRegex;
-  my $diffFilterRegex;
-  my $diffSMFilterRegex;
+  my $gameDiffFilters = {
+    gameFilterRegex => undef,
+    diffDDRFilterRegex => undef,
+    diffSMFilterRegex => undef,
+  };
   my $defaultVarsMachine = $DEFAULT_MACHINE;
   my $dump = 0;
   my $formatSpec = $DEFAULT_FORMAT_SPEC;
@@ -593,15 +596,15 @@ sub main(@){
     }elsif($arg =~ /^(-r|--no-write-cache|--read-only-cache)$/){
       $writeCache = 0;
     }elsif($arg =~ /^(?:--)?(?:dance-)?(single|double)s?$/){
-      $gameFilterRegex = "^(dance-$1|$1s)\$";
+      $$gameDiffFilters{gameFilterRegex} = "^(dance-$1|$1s)\$";
     }elsif($arg =~ /^--game=(.+)$/){
-      $gameFilterRegex = $1;
+      $$gameDiffFilters{gameFilterRegex} = $1;
     }elsif($arg =~ /^(?:--)?(beginner|basic|difficult|expert|challenge)$/){
-      $diffFilterRegex = "^$1\$";
+      $$gameDiffFilters{diffDDRFilterRegex} = "^$1\$";
     }elsif($arg =~ /^--(?:diff|difficulty)=(.+)$/){
-      $diffFilterRegex = $1;
+      $$gameDiffFilters{diffDDRFilterRegex} = $1;
     }elsif($arg =~ /^--(?:diff-sm)=(.+)$/){
-      $diffSMFilterRegex = $1;
+      $$gameDiffFilters{diffSMFilterRegex} = $1;
     }elsif($arg =~ /^--machine=(DDRA|DDRSN2)$/i){
       $defaultVarsMachine = uc $1;
     }elsif($arg =~ /^--dump$/){
@@ -621,9 +624,7 @@ sub main(@){
   for my $smFile(@smFiles){
     handleSimfile(
       $smFile,
-      $gameFilterRegex,
-      $diffFilterRegex,
-      $diffSMFilterRegex,
+      $gameDiffFilters,
       $defaultVarsMachine,
       $dump,
       $formatSpec,
@@ -634,12 +635,10 @@ sub main(@){
   }
 }
 
-sub handleSimfile($$$$$$$$$$){
+sub handleSimfile($$$$$$$$){
   my (
     $smFile,
-    $gameFilterRegex,
-    $diffFilterRegex,
-    $diffSMFilterRegex,
+    $gameDiffFilters,
     $defaultVarsMachine,
     $dump,
     $formatSpec,
@@ -654,21 +653,7 @@ sub handleSimfile($$$$$$$$$$){
 
   my $stats = {};
   for my $gameDiffKey(@gameDiffKeys){
-    my $noteSetInfo = $$smInfo{noteSetInfoByGameDiffKey}{$gameDiffKey};
-    if(defined $gameFilterRegex){
-      my $game = $$noteSetInfo{game};
-      my $gameAbbrev = abbrevGame($$noteSetInfo{game});
-      next if $game !~ /$gameFilterRegex/i and $gameAbbrev !~ /$gameFilterRegex/i;
-    }
-    if(defined $diffFilterRegex){
-      my $diff = formatDDRDiff($$noteSetInfo{diff});
-      my $diffAbbrev = abbrevDiff($diff);
-      next if $diff !~ /$diffFilterRegex/i and $diffAbbrev !~ /$diffFilterRegex/i;
-    }
-    if(defined $diffSMFilterRegex){
-      my $diffSM = $$noteSetInfo{diff};
-      next if $diffSM !~ /$diffSMFilterRegex/i;
-    }
+    next if isGameDiffSkipped($gameDiffFilters, $gameDiffKey);
     $$stats{$gameDiffKey} = getNoteSetStats($smFile, $smInfo, $gameDiffKey, $readCache, $writeCache);
   }
 
@@ -1551,6 +1536,43 @@ sub convertValuesByBeatToValuesByRow($){
 sub generateGameDiffKey($$){
   my ($game, $diff) = @_;
   return lc "$game-$diff";
+}
+
+sub isGameDiffSkipped($$){
+  my ($gameDiffFilters, $gameDiffKey) = @_;
+
+  my $gameFilterRegex = $$gameDiffFilters{gameFilterRegex};
+  my $diffDDRFilterRegex = $$gameDiffFilters{diffDDRFilterRegex};
+  my $diffSMFilterRegex = $$gameDiffFilters{diffSMFilterRegex};
+
+  my ($game, $diff);
+  if($gameDiffKey =~ /^(.+)-([^-]+)$/){
+    ($game, $diff) = ($1, $2);
+  }else{
+    die "ERROR: invalid gameDiffKey $gameDiffKey\n";
+  }
+
+  if(defined $gameFilterRegex){
+    my $game = $game;
+    my $gameAbbrev = abbrevGame($game);
+    if($game !~ /$gameFilterRegex/i and $gameAbbrev !~ /$gameFilterRegex/i){
+      return 1;
+    }
+  }
+  if(defined $diffDDRFilterRegex){
+    my $diffDDR = formatDDRDiff($diff);
+    my $diffDDRAbbrev = abbrevDiff($diff);
+    if($diffDDR !~ /$diffDDRFilterRegex/i and $diffDDRAbbrev !~ /$diffDDRFilterRegex/i){
+      return 1;
+    }
+  }
+  if(defined $diffSMFilterRegex){
+    my $diffSM = $diff;
+    if($diffSM !~ /$diffSMFilterRegex/i){
+      return 1;
+    }
+  }
+  return 0;
 }
 
 #SM files contain a list of MEASUREs for each game-difficulty pair
