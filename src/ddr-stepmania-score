@@ -23,6 +23,8 @@ sub assertMtimesCloseEnough($$$$);
 sub getDDRAGame($);
 sub getDDRADiff($);
 sub getSongNameWithZeniusTool($);
+sub readZeniusNameIdCache();
+sub appendZeniusNameIdCache($$);
 
 sub readFile($);
 sub listDirFiles($);
@@ -36,6 +38,7 @@ sub readProc(@);
 my $XML_FILE_PATTERN = "$ENV{HOME}/.stepmania-*/Save/Upload/*.xml";
 my $SONGS_PARENT_DIR = "$ENV{HOME}/.stepmania-5.0";
 my $CACHE_BASE_DIR = "$ENV{HOME}/.cache/ddr-stepmania-score";
+my $ZENIUS_NAME_ID_CACHE_FILE = "$ENV{HOME}/.cache/ddr-zenius-name-id-cache";
 
 my $DDR_RADAR_FEET_TOOL = "ddr-radar-feet";
 my $ZENIUS_TOOL = "zenius-ddrsonglist";
@@ -909,15 +912,50 @@ sub getSongNameWithZeniusTool($){
   my $subDir = $songDir;
   $subDir =~ s/\/+$//g;
   $subDir =~ s/.*\///;
+
+  my $cache = readZeniusNameIdCache();
+  if(defined $$cache{$subDir}){
+    return $$cache{$subDir};
+  }
+
   open CMD, "-|", $ZENIUS_TOOL, "--extract-name-id", $subDir;
   my $songName = join '', <CMD>;
   close CMD;
   chomp $songName;
   if($songName =~ /^[a-z0-9\-]+$/){
+    appendZeniusNameIdCache($songName, $subDir);
     return $songName;
   }else{
     die "ERROR: could not extract song name from song dir: $songDir\n";
   }
+}
+sub readZeniusNameIdCache(){
+  my $cache = {};
+
+  my @lines;
+  if(-f $ZENIUS_NAME_ID_CACHE_FILE){
+    open FH, "< $ZENIUS_NAME_ID_CACHE_FILE"
+      or die "ERROR: could not read $ZENIUS_NAME_ID_CACHE_FILE\n$!\n";
+    @lines = <FH>;
+    close FH;
+  }
+
+  for my $line(@lines){
+    if($line =~ /^([a-z0-9\-]+):(.+)$/){
+      $$cache{$2} = $1;
+    }else{
+      die "ERROR: malformed line in $ZENIUS_NAME_ID_CACHE_FILE\n$line";
+    }
+  }
+
+  return $cache;
+}
+sub appendZeniusNameIdCache($$){
+  my ($songName, $query) = @_;
+  open FH, ">> $ZENIUS_NAME_ID_CACHE_FILE"
+    or die "ERROR: could not append $ZENIUS_NAME_ID_CACHE_FILE\n$!\n";
+  print FH "$songName:$query\n";
+  close FH;
 }
 
 sub readFile($){
