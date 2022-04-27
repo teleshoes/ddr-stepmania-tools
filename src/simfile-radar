@@ -97,8 +97,8 @@ sub getNoteSetStats($$$$$);
 sub readNoteSetStatsCache($$);
 sub writeNoteSetStatsCache($$$);
 sub calculateNoteSetStats($$);
-sub getSMInfo($$$);
-sub readSMInfoCache($);
+sub getSMInfo($$$$);
+sub readSMInfoCache($$);
 sub writeSMInfoCache($$);
 sub songChecksum($$$);
 sub parseSMFile($);
@@ -647,7 +647,7 @@ sub handleSimfile($$$$$$$$){
     $writeCache,
   ) = @_;
 
-  my $smInfo = getSMInfo($smFile, $readCache, $writeCache);
+  my $smInfo = getSMInfo($smFile, $gameDiffFilters, $readCache, $writeCache);
 
   my @gameDiffKeys = @{$$smInfo{gameDiffKeyOrder}};
 
@@ -1138,10 +1138,10 @@ sub calculateNoteSetStats($$){
   return $s;
 }
 
-sub getSMInfo($$$){
-  my ($smFile, $readCache, $writeCache) = @_;
+sub getSMInfo($$$$){
+  my ($smFile, $gameDiffFilters, $readCache, $writeCache) = @_;
   my $smInfo = undef;
-  $smInfo = readSMInfoCache $smFile if $readCache;
+  $smInfo = readSMInfoCache $smFile, $gameDiffFilters if $readCache;
   if(not defined $smInfo){
     $smInfo = parseSMFile $smFile;
     writeSMInfoCache($smFile, $smInfo) if $writeCache;
@@ -1149,8 +1149,8 @@ sub getSMInfo($$$){
   return $smInfo;
 }
 
-sub readSMInfoCache($){
-  my ($smFile) = @_;
+sub readSMInfoCache($$){
+  my ($smFile, $gameDiffFilters) = @_;
   my $cacheDir = getCacheDir($smFile);
   if(not -f "$cacheDir/smInfo"){
     return undef;
@@ -1196,9 +1196,11 @@ sub readSMInfoCache($){
 
     my $noteRowsCacheFilePrefix = "$cacheDir/expandedNoteRows-$gameDiffKey";
 
-    my $skipExpandedNoteRowsCache = 0;
+    my $skipExpandedNoteRowsCache =
+      isGameDiffSkipped($gameDiffFilters, $gameDiffKey);
 
     if($skipExpandedNoteRowsCache){
+      #skip reading note rows if game-diff is skipped
       $$noteSetInfo{expandedNoteRows} = undef;
     }else{
       my @expandedNoteRows;
