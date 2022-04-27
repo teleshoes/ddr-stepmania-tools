@@ -654,27 +654,30 @@ sub handleSimfile($$$$$$$$){
   my $stats = {};
   for my $gameDiffKey(@gameDiffKeys){
     next if isGameDiffSkipped($gameDiffFilters, $gameDiffKey);
-    $$stats{$gameDiffKey} = getNoteSetStats($smFile, $smInfo, $gameDiffKey, $readCache, $writeCache);
+    my $s = getNoteSetStats($smFile, $smInfo, $gameDiffKey, $readCache, $writeCache);
+
+    #copy default machine values into plain radar variables
+    for my $radarStat(qw(STREAM VOLTAGE AIR FREEZE CHAOS)){
+      my $machineVal = $$s{"${radarStat}_${defaultVarsMachine}"};
+      $$s{$radarStat} = $machineVal;
+    }
+
+    $$stats{$gameDiffKey} = $s;
   }
 
   for my $gameDiffKey(@gameDiffKeys){
     my $s = $$stats{$gameDiffKey};
-    if(defined $s){
-      #copy default machine values into plain radar variables
-      for my $radarStat(qw(STREAM VOLTAGE AIR FREEZE CHAOS)){
-        my $machineVal = $$s{"${radarStat}_${defaultVarsMachine}"};
-        $$s{$radarStat} = $machineVal;
-      }
+    next if isGameDiffSkipped($gameDiffFilters, $gameDiffKey);
+    next if not defined $s;
 
-      if($dump){
-        $formatSpec = "";
-        for my $varName(sort keys %{$$stats{$gameDiffKey}}){
-          $formatSpec .= "%GAME.%DIFF.$varName=%$varName%n";
-        }
+    if($dump){
+      $formatSpec = "";
+      for my $varName(sort keys %$s){
+        $formatSpec .= "%GAME.%DIFF.$varName=%$varName%n";
       }
-
-      print formatStats($formatSpec, $forceNewlines, $s);
     }
+
+    print formatStats($formatSpec, $forceNewlines, $s);
   }
 }
 
