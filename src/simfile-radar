@@ -94,6 +94,7 @@ sub getTotalNoteIrregularity($);
 sub getBPMChangeAmount($$);
 sub formatDDRDiff($);
 sub getNoteSetStats($$$$$);
+sub isNoteSetStatsCached($$);
 sub readNoteSetStatsCache($$);
 sub writeNoteSetStatsCache($$$);
 sub calculateNoteSetStats($$);
@@ -995,6 +996,15 @@ sub getNoteSetStats($$$$$){
   return $stats;
 }
 
+sub isNoteSetStatsCached($$){
+  my ($smFile, $gameDiffKey) = @_;
+  my $cacheDir = getCacheDir($smFile);
+  if(-f "$cacheDir/stats-$gameDiffKey"){
+    return 1;
+  }else{
+    return 0;
+  }
+}
 sub readNoteSetStatsCache($$){
   my ($smFile, $gameDiffKey) = @_;
   my $cacheDir = getCacheDir($smFile);
@@ -1197,10 +1207,12 @@ sub readSMInfoCache($$){
     my $noteRowsCacheFilePrefix = "$cacheDir/expandedNoteRows-$gameDiffKey";
 
     my $skipExpandedNoteRowsCache =
-      isGameDiffSkipped($gameDiffFilters, $gameDiffKey);
+      isGameDiffSkipped($gameDiffFilters, $gameDiffKey)
+        or isNoteSetStatsCached($smFile, $gameDiffKey);
 
     if($skipExpandedNoteRowsCache){
-      #skip reading note rows if game-diff is skipped
+      #skip reading note rows if game-diff is skipped,
+      #  or if note-set-stats calculated+cached
       $$noteSetInfo{expandedNoteRows} = undef;
     }else{
       my @expandedNoteRows;
