@@ -4,7 +4,6 @@ use warnings;
 use Time::HiRes qw(time);
 
 my $execDir = "$ENV{HOME}/Games/stepmania/latest/";
-my $exec = "$execDir/stepmania";
 my $confDir = "$ENV{HOME}/.stepmania-5.3";
 my $songsDir = "$execDir/Songs";
 
@@ -337,6 +336,15 @@ sub main(@){
 
   if($openMonitorTerm){
     system "term-window", "--right", "--size=25", "stepmania-cursong-info --monitor";
+  }
+
+  my $exec;
+  if(-e "$execDir/stepmania"){
+    $exec = "$execDir/stepmania";
+  }elsif(-e "$execDir/OutFox"){
+    $exec = "$execDir/OutFox";
+  }else{
+    die "ERROR: could not find stepmania exec in $execDir\n";
   }
 
   my $fullscreen = $$prefs{Options}{Windowed} == 0;
