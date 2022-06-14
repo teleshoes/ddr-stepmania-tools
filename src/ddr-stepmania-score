@@ -490,6 +490,7 @@ sub main(@){
       if(not $isOk){
         print "$songDir\n";
         printf "%-40s |%s %s\n", $song, $abbrev, $songlistFeet;
+        print "\n";
       }
     }else{
       die "$usage\nERROR: unknown command $cmd\n";
