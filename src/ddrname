@@ -153,6 +153,7 @@ sub bannerFlash($);
 sub bashComplete($$);
 sub warnMsg($);
 sub run(@);
+sub runQuiet(@);
 
 my @songArr = readSongLists();
 
@@ -659,6 +660,12 @@ sub getUsage(;$){
      OPT
        -s | -n | --simulate | --dry-run | --no-act
          do not perform the rename
+       -q | --quiet
+         when renaming, do NOT print:
+           -bucket+feet
+           -mv command
+           -skipped files
+         DO still print warnings/etc
        --banner-flash
          show song banners on rename (this is the default)
        --no-banner-flash
@@ -1288,8 +1295,8 @@ sub nameFile($$$$){
   bannerFlash $$info{song} if $$opts{bannerFlash};
 
   my $bucketName = getBucketName $info, 0, @DEFAULT_BUCKET_FIELDS;
-  print "BUCKET: $bucketName\n";
-  print "FEET: $$info{feet}\n";
+  print "BUCKET: $bucketName\n" unless $$opts{quiet};
+  print "FEET: $$info{feet}\n" unless $$opts{quiet};
 
   my $orient = undef;
   $orient = getImageOrientation $file if $$opts{checkOrientation};
@@ -1381,12 +1388,16 @@ sub nameFile($$$$){
 
   my @cmd = ("mv", "--no-clobber", $file, $newFileName);
   if($file eq $newFileName){
-    print "SKIPPING: $file is unchanged\n";
+    print "SKIPPING: $file is unchanged\n" unless $$opts{quiet};
   }else{
     if($$opts{simulate}){
-      print "#@cmd\n";
+      print "#@cmd\n" unless $$opts{quiet};
     }else{
-      run @cmd;
+      if($$opts{quiet}){
+        runQuiet @cmd;
+      }else{
+        run @cmd;
+      }
     }
   }
 }
@@ -1415,6 +1426,7 @@ sub editNames($$@){
 sub parseOptsAndInfoArgs(@){
   my $opts = {
     simulate => 0,
+    quiet => 0,
     bannerFlash => 1,
     checkOrientation => 1,
   };
@@ -1423,6 +1435,9 @@ sub parseOptsAndInfoArgs(@){
   for my $arg(@_){
     if($arg =~ /^(-s|-n|--simulate|--dry-run|--no-act)$/){
       $$opts{simulate} = 1;
+      next;
+    }elsif($arg =~ /^(-q|--quiet)$/){
+      $$opts{quiet} = 1;
       next;
     }elsif($arg =~ /^(--banner-flash)$/){
       $$opts{bannerFlash} = 1;
@@ -2457,6 +2472,10 @@ sub warnMsg($){
 
 sub run(@){
   print "@_\n";
+  system @_;
+}
+
+sub runQuiet(@){
   system @_;
 }
 
