@@ -201,6 +201,7 @@ my $usage = "Usage:
                 -extract SIMFILE from SONG_DIR
                 -get DDRSONGLIST_FEET with `$DDR_RADAR_FEET_TOOL --ddrsonglist SIMFILE`
                 -pad SONG_NAME to 40 characters
+                -print: SONG_DIR
                 -print: 'SONG_NAME |SONG_ABBREV DDRSONGLIST_FEET'
                    e.g.:
                    better-tomorrow                          |bttrTmr | --| 04| 07| 11| 14|  | --| --| --| --|
@@ -487,6 +488,7 @@ sub main(@){
 
       my $isOk = checkDDRNAME($file, $sd, [@ddrnamePassedInOpts]);
       if(not $isOk){
+        print "$songDir\n";
         printf "%-40s |%s %s\n", $song, $abbrev, $songlistFeet;
       }
     }else{
