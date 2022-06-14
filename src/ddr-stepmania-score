@@ -3,6 +3,7 @@ use strict;
 use warnings;
 use File::Basename qw(basename dirname);
 
+sub getDDRNAMECommand($$$);
 sub getScoreDataByXmlFile($$$);
 sub readScoreDataCache($);
 sub writeScoreDataCache($$);
@@ -444,26 +445,15 @@ sub main(@){
       }
       print formatScoreData($formatSpec, $sd);
     }elsif($cmd eq $COMMAND_DDRNAME){
-      my @cmd = ($DDRNAME_TOOL,
-        $file,
-        @DDRNAME_OPTS,
-        $DDRNAME_MACHINE,
-        $DDRNAME_STAGE,
-        $DDRNAME_BAR,
-        $DDRNAME_TW,
-        $$sd{SONG_NAME},
-        $$sd{PASS_FAIL},
-        sprintf("%06d", $$sd{DDRA_SCORE}),
-        $$sd{FC},
-        $$sd{DDRA_GAME},
-        $$sd{DDRA_DIFFICULTY},
-        @ddrnamePassedInOpts,
-      );
+      my @cmd = getDDRNAMECommand($file, $sd, [@ddrnamePassedInOpts]);
       print "$SEP\n";
       print "@cmd\n";
+
       system @cmd;
       my $exitCode = $?;
+
       print "$SEP\n";
+
       if($exitCode != 0){
         my $songDir = $$sd{SONG_DIR};
         my $smFile = getSMFileFromSongDir $songDir;
@@ -496,6 +486,25 @@ sub main(@){
       die "$usage\nERROR: unknown command $cmd\n";
     }
   }
+}
+
+sub getDDRNAMECommand($$$){
+  my ($file, $sd, $ddrnameExtraOpts) = @_;
+  return ($DDRNAME_TOOL,
+    $file,
+    @DDRNAME_OPTS,
+    $DDRNAME_MACHINE,
+    $DDRNAME_STAGE,
+    $DDRNAME_BAR,
+    $DDRNAME_TW,
+    $$sd{SONG_NAME},
+    $$sd{PASS_FAIL},
+    sprintf("%06d", $$sd{DDRA_SCORE}),
+    $$sd{FC},
+    $$sd{DDRA_GAME},
+    $$sd{DDRA_DIFFICULTY},
+    @$ddrnameExtraOpts,
+  );
 }
 
 sub getScoreDataByXmlFile($$$){
