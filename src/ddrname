@@ -657,6 +657,8 @@ sub getUsage(;$){
        if 'failed', name will start with \"reminder_failed\"
 
      OPT
+       -s | -n | --simulate | --dry-run | --no-act
+         do not perform the rename
        --banner-flash
          show song banners on rename (this is the default)
        --no-banner-flash
@@ -1381,7 +1383,11 @@ sub nameFile($$$$){
   if($file eq $newFileName){
     print "SKIPPING: $file is unchanged\n";
   }else{
-    run @cmd;
+    if($$opts{simulate}){
+      print "#@cmd\n";
+    }else{
+      run @cmd;
+    }
   }
 }
 
@@ -1408,13 +1414,17 @@ sub editNames($$@){
 
 sub parseOptsAndInfoArgs(@){
   my $opts = {
+    simulate => 0,
     bannerFlash => 1,
     checkOrientation => 1,
   };
   my $info = {};
 
   for my $arg(@_){
-    if($arg =~ /^(--banner-flash)$/){
+    if($arg =~ /^(-s|-n|--simulate|--dry-run|--no-act)$/){
+      $$opts{simulate} = 1;
+      next;
+    }elsif($arg =~ /^(--banner-flash)$/){
       $$opts{bannerFlash} = 1;
       next;
     }elsif($arg =~ /^(--no-banner-flash)$/){
