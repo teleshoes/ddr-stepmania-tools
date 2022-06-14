@@ -159,24 +159,24 @@ my $usage = "Usage:
     for each FILE:
       (A) print FILE, if more than one FILE is given (or --filenames is given)
       (B) obtain XML_SCORE_FILE
-        (i) if FILE ends in .xml (or --xml is gven)
-            -use FILE as XML_SCORE_FILE
-            -obtain SCORE_DATA from XML_SCORE_FILE
-        (ii) if FILE ends in .png/jpg/.jpeg/.mkv/.mp4 (or --img is given):
-             -use FILE as IMG_FILE
-             -take all XML score file matching $XML_FILE_PATTERN
-             -ignore any XML files with mtime after IMG_FILE mtime
-             -of the remaining, select the oldest file as XML_SCORE_FILE
+        (1) if FILE ends in .xml (or --xml is gven)
+              -use FILE as XML_SCORE_FILE
+              -obtain SCORE_DATA from XML_SCORE_FILE
+        (2) if FILE ends in .png/jpg/.jpeg/.mkv/.mp4 (or --img is given):
+              -use FILE as IMG_FILE
+              -take all XML score file matching $XML_FILE_PATTERN
+              -ignore any XML files with mtime after IMG_FILE mtime
+              -of the remaining, select the oldest file as XML_SCORE_FILE
       (C) obtain SCORE_DATA from XML_SCORE_FILE (see SCORE_DATA)
       (D) perform COMMAND
-        (i) if COMMAND is --print (this is the default):
-            -print SEPARATOR line
-            -print each SCORE_DATA item, one per line
-              -formatted: 'ITEM_NAME:   ITEM_VALUE'
-              -align ITEM_VALUE whitespace
-            -print SEPARATOR line
-        (ii) if COMMAND is --ddrname:
-             -make system call:
+        (1) if COMMAND is --print (this is the default):
+              -print SEPARATOR line
+              -print each SCORE_DATA item, one per line
+                -formatted: 'ITEM_NAME:   ITEM_VALUE'
+                -align ITEM_VALUE whitespace
+              -print SEPARATOR line
+        (2) if COMMAND is --ddrname:
+              -make system call:
                  $DDRNAME_TOOL \\
                    IMG_SCORE_FILE \\
                    @DDRNAME_OPTS \\
@@ -189,16 +189,16 @@ my $usage = "Usage:
                    DDRA_GAME \\
                    DDRA_DIFFICULTY \\
                  ;
-        (iii) if COMMAND is --ddrsonglist:
-             -extract SONG_NAME out of SONG_DIR with `$ZENIUS_TOOL`
-             -use SONG_DIR parent dir as ARTIST
-             -get SONG_ABBREV from SONG_NAME + ARTIST with `$ZENIUS_TOOL`
-             -extract SIMFILE from SONG_DIR
-             -get DDRSONGLIST_FEET with `$DDR_RADAR_FEET_TOOL --ddrsonglist SIMFILE`
-             -pad SONG_NAME to 40 characters
-             -print: 'SONG_NAME |SONG_ABBREV DDRSONGLIST_FEET'
-                e.g.:
-                better-tomorrow                          |bttrTmr | --| 04| 07| 11| 14|  | --| --| --| --|
+        (3) if COMMAND is --ddrsonglist:
+              -extract SONG_NAME out of SONG_DIR with `$ZENIUS_TOOL`
+              -use SONG_DIR parent dir as ARTIST
+              -get SONG_ABBREV from SONG_NAME + ARTIST with `$ZENIUS_TOOL`
+              -extract SIMFILE from SONG_DIR
+              -get DDRSONGLIST_FEET with `$DDR_RADAR_FEET_TOOL --ddrsonglist SIMFILE`
+              -pad SONG_NAME to 40 characters
+              -print: 'SONG_NAME |SONG_ABBREV DDRSONGLIST_FEET'
+                 e.g.:
+                 better-tomorrow                          |bttrTmr | --| 04| 07| 11| 14|  | --| --| --| --|
 
   SCORE_DATA
     (1) parse stepmania XML_SCORE_FILE, and obtain:
