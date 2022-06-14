@@ -520,9 +520,11 @@ sub getDDRNAMECommand($$$){
 sub checkDDRNAME($$$){
   my ($file, $sd, $ddrnameExtraOpts) = @_;
   push @$ddrnameExtraOpts, "--simulate";
+  push @$ddrnameExtraOpts, "--quiet";
+  push @$ddrnameExtraOpts, "--quiet-no-warn";
 
   my @cmd = getDDRNAMECommand($file, $sd, $ddrnameExtraOpts);
-  system "@cmd >/dev/null 2>/dev/null";
+  system @cmd;
   my $exitCode = $?;
 
   if($exitCode == 0){
