@@ -666,6 +666,8 @@ sub getUsage(;$){
            -mv command
            -skipped files
          DO still print warnings/etc
+       --quiet-no-warn | --no-warn
+         do not print warnings before renaming
        --banner-flash
          show song banners on rename (this is the default)
        --no-banner-flash
@@ -1287,7 +1289,7 @@ sub nameFile($$$$){
     if($$info{game} =~ /^(nonstop|nonstopdoubles)$/){
       $feet = 0;
     }else{
-      warnMsg "NO FEET DIFFICULTY FOUND FOR: $file\n";
+      warnMsg "NO FEET DIFFICULTY FOUND FOR: $file\n" unless $$opts{quietNoWarn};
     }
   }
   $$info{feet} = $feet;
@@ -1302,26 +1304,31 @@ sub nameFile($$$$){
   $orient = getImageOrientation $file if $$opts{checkOrientation};
 
   my $game = $$info{game};
-  if(not defined $orient){
-    warnMsg("unknown orientation") if $$opts{checkOrientation};
-  }elsif($orient eq "landscape" and $game =~ /^(singles|nonstop)$/){
-    warnMsg("image orientation is $orient, which is unusual for game=$game");
-  }elsif($orient eq "portrait" and $game =~ /^(doubles|nonstopdoubles)$/){
-    warnMsg("image orientation is $orient, which is unusual for game=$game");
+
+  if(not $$opts{quietNoWarn}){
+    if(not defined $orient){
+      warnMsg("unknown orientation") if $$opts{checkOrientation};
+    }elsif($orient eq "landscape" and $game =~ /^(singles|nonstop)$/){
+      warnMsg("image orientation is $orient, which is unusual for game=$game");
+    }elsif($orient eq "portrait" and $game =~ /^(doubles|nonstopdoubles)$/){
+      warnMsg("image orientation is $orient, which is unusual for game=$game");
+    }
   }
 
   my $isHardSong = $$info{feet} >= $HARD_SONG_FEET;
 
   if(not defined $$buckets{$bucketName}){
-    warnMsg("no existing scores found for $bucketName");
+    warnMsg("no existing scores found for $bucketName") unless $$opts{quietNoWarn};
     if($$info{bar} eq $avgbarArg){
       $$info{bar} = $isHardSong ? $yesbarArg : $nobarArg;
     }
 
-    if($$info{bar} eq $nobarArg and $$info{feet} >= $HARD_SONG_FEET){
-      warnMsg("$bucketName is new, has feet=$$info{feet} and '$nobarArg'");
-    }elsif($$info{bar} eq $yesbarArg and $$info{feet} < $HARD_SONG_FEET){
-      warnMsg("$bucketName is new, has feet=$$info{feet} and '$yesbarArg'");
+    if(not $$opts{quietNoWarn}){
+      if($$info{bar} eq $nobarArg and $$info{feet} >= $HARD_SONG_FEET){
+        warnMsg("$bucketName is new, has feet=$$info{feet} and '$nobarArg'");
+      }elsif($$info{bar} eq $yesbarArg and $$info{feet} < $HARD_SONG_FEET){
+        warnMsg("$bucketName is new, has feet=$$info{feet} and '$yesbarArg'");
+      }
     }
   }else{
     my $minScore = 0;
@@ -1330,10 +1337,13 @@ sub nameFile($$$$){
       $minScore = $$score{score} if $$score{score} < $minScore;
       $maxScore = $$score{score} if $$score{score} > $maxScore;
     }
-    if($$info{score} < $minScore){
-      warnMsg("new LOW score $minScore => $$info{score}");
-    }elsif($$info{score} > $maxScore){
-      warnMsg("new HIGH score $maxScore => $$info{score}");
+
+    if(not $$opts{quietNoWarn}){
+      if($$info{score} < $minScore){
+        warnMsg("new LOW score $minScore => $$info{score}");
+      }elsif($$info{score} > $maxScore){
+        warnMsg("new HIGH score $maxScore => $$info{score}");
+      }
     }
 
     my $bucketBarCounts = getBucketBarCounts $buckets;
@@ -1349,10 +1359,12 @@ sub nameFile($$$$){
       }
     }
 
-    if($$info{bar} eq $yesbarArg and $yesbarCount < $nobarCount){
-      warnMsg("$bucketName is usually '$nobarArg'");
-    }elsif($$info{bar} eq $nobarArg and $nobarCount < $yesbarCount){
-      warnMsg("$bucketName is usually '$yesbarArg'");
+    if(not $$opts{quietNoWarn}){
+      if($$info{bar} eq $yesbarArg and $yesbarCount < $nobarCount){
+        warnMsg("$bucketName is usually '$nobarArg'");
+      }elsif($$info{bar} eq $nobarArg and $nobarCount < $yesbarCount){
+        warnMsg("$bucketName is usually '$yesbarArg'");
+      }
     }
   }
 
@@ -1427,6 +1439,7 @@ sub parseOptsAndInfoArgs(@){
   my $opts = {
     simulate => 0,
     quiet => 0,
+    quietNoWarn => 0,
     bannerFlash => 1,
     checkOrientation => 1,
   };
@@ -1438,6 +1451,9 @@ sub parseOptsAndInfoArgs(@){
       next;
     }elsif($arg =~ /^(-q|--quiet)$/){
       $$opts{quiet} = 1;
+      next;
+    }elsif($arg =~ /^(--quiet-no-warn|--no-warn)$/){
+      $$opts{quietNoWarn} = 1;
       next;
     }elsif($arg =~ /^(--banner-flash)$/){
       $$opts{bannerFlash} = 1;
