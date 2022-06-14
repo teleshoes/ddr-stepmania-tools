@@ -189,6 +189,16 @@ my $usage = "Usage:
                    DDRA_GAME \\
                    DDRA_DIFFICULTY \\
                  ;
+        (iii) if COMMAND is --ddrsonglist:
+             -extract SONG_NAME out of SONG_DIR with `$ZENIUS_TOOL`
+             -use SONG_DIR parent dir as ARTIST
+             -get SONG_ABBREV from SONG_NAME + ARTIST with `$ZENIUS_TOOL`
+             -extract SIMFILE from SONG_DIR
+             -get DDRSONGLIST_FEET with `$DDR_RADAR_FEET_TOOL --ddrsonglist SIMFILE`
+             -pad SONG_NAME to 40 characters
+             -print: 'SONG_NAME |SONG_ABBREV DDRSONGLIST_FEET'
+                e.g.:
+                better-tomorrow                          |bttrTmr | --| 04| 07| 11| 14|  | --| --| --| --|
 
   SCORE_DATA
     (1) parse stepmania XML_SCORE_FILE, and obtain:
@@ -273,16 +283,8 @@ my $usage = "Usage:
     --ddrname
       call `$DDRNAME_TOOL` with SCORE_DATA info on each FILE passed in
     --ddrsonglist
-      for each FILE passed in:
-        extract SONG_NAME out of SONG_DIR with `$ZENIUS_TOOL`
-        use SONG_DIR parent dir as ARTIST
-        get SONG_ABBREV from SONG_NAME + ARTIST with `$ZENIUS_TOOL`
-        extract SIMFILE from SONG_DIR
-        get DDRSONGLIST_FEET with `$DDR_RADAR_FEET_TOOL --ddrsonglist SIMFILE`
-        pad SONG_NAME to 40 characters
-        print: 'SONG_NAME |SONG_ABBREV DDRSONGLIST_FEET'
-      e.g.:
-        better-tomorrow                          |bttrTmr | --| 04| 07| 11| 14|  | --| --| --| --|
+      extract SIMFILE, analyze it with `$ZENIUS_TOOL` and `$DDR_RADAR_FEET_TOOL`,
+      and format+print info for inserting into ddrname-songlist-stepmania
 
   SEPARATOR
     the string: $SEP
