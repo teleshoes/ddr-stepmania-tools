@@ -8,6 +8,9 @@ my $UPLOAD_DIR = "$ENV{HOME}/.stepmania/Save/Upload";
 my $RENAMES = {
   'Songs/test7/born_to_be_wild_fanfare_ciocarlia/'
     => 'Songs/test7/Born to Be Wild - Fanfare Ciocarlia - Borat/',
+
+  'Songs/test7/let_it_go_frozen_winter_vivaldi_piano_guys/'
+    => 'Songs/test7/Let It Go [Frozen] + Winter [Vivaldi] - The Piano Guys/',
 };
 
 sub editFileRegex($$$);
