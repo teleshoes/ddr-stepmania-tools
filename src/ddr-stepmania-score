@@ -85,6 +85,8 @@ my $SONG_NAME_IDS_BY_SONG_DIR_SUFFIX = {
     => "hacking-to-the-gate-huzure",
   "Shpadoinkle #10/Memories"
     => "memories-shpadoinkle",
+  "test7/Born to Be Wild - Fanfare Ciocarlia - Borat"
+    => "born-to-be-wild-fanfare-ciocarlia",
   "test7/let_it_go_frozen_winter_vivaldi_piano_guys"
     => "let-it-go-winter-vivaldi-piano-guys",
   "test7/[Qualifier Singles] - A Thousand Leagues Below (MMX Remix)"
