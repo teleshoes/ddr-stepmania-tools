@@ -1,0 +1,150 @@
+#!/usr/bin/perl
+use strict;
+use warnings;
+use Time::HiRes qw(time);
+
+my $UPLOAD_DIR = "$ENV{HOME}/.stepmania/Save/Upload";
+
+my $RENAMES = {
+};
+
+sub editFileRegex($$$);
+sub fileMatchesRegex($$);
+sub nowMillis();
+sub run(@);
+
+sub main(@){
+  my @allXmlFiles = glob "$UPLOAD_DIR/*.xml";
+  for my $oldName(sort keys %$RENAMES){
+    my $newName = $$RENAMES{$oldName};
+
+    my $oldRegex = "<Song Dir='$oldName'/>";
+    my $newRegex = "<Song Dir='$newName'/>";
+
+    my $startCountOld = grep {fileMatchesRegex($oldRegex, $_)} @allXmlFiles;
+    my $startCountNew = grep {fileMatchesRegex($newRegex, $_)} @allXmlFiles;
+
+    my @xmlFiles = grep {fileMatchesRegex($oldRegex, $_)} @allXmlFiles;
+
+    if(@xmlFiles == 0){
+      print "skipping $oldName (old=$startCountOld, new=$startCountNew)\n";
+      next;
+    }
+
+    my $origDir = lc $oldName;
+    $origDir =~ s/\/$//;
+    $origDir =~ s/[^a-zA-Z0-9_\-]/_/g;
+    $origDir = "orig-$origDir";
+    $origDir = "$UPLOAD_DIR/renames/$origDir";
+
+    run "rmdir", $origDir;
+    if(-e $origDir){
+      die "ERROR: $origDir already exists\n";
+    }
+
+    run "mkdir -p $origDir";
+
+    if(not -d $origDir){
+      die "ERROR: $origDir is not a dir\n";
+    }
+
+    for my $xmlFile(@xmlFiles){
+      my $xmlFileName = $xmlFile;
+      $xmlFileName =~ s/.*\///;
+      if($xmlFileName !~ /^\d\d\d\d-\d\d-\d\d \d\d\d\d\d\.xml$/){
+        die "ERROR: malformed xml file name $xmlFileName\n";
+      }
+      my $origXmlFile = "$origDir/$xmlFileName";
+
+      if(not -f $xmlFile){
+        die "ERROR: $xmlFile is not a file\n";
+      }
+      if(-e $origXmlFile){
+        die "ERROR: $origXmlFile already exists\n";
+      }
+
+      run "mv", "--no-clobber", $xmlFile, $origXmlFile;
+
+      if(-e $xmlFile){
+        die "ERROR: $xmlFile still exists\n";
+      }
+      if(not -f $origXmlFile){
+        die "ERROR: $origXmlFile is not a file\n";
+      }
+
+      run "cp", "--no-clobber", "-ar", $origXmlFile, $xmlFile;
+
+      if(not -f $xmlFile){
+        die "ERROR: $xmlFile is not a file\n";
+      }
+
+      editFileRegex($xmlFile, $oldName, $newName);
+    }
+
+    my $endCountOld = grep {fileMatchesRegex($oldRegex, $_)} @allXmlFiles;
+    my $endCountNew = grep {fileMatchesRegex($newRegex, $_)} @allXmlFiles;
+
+    print "old: $startCountOld => $endCountOld\n";
+    print "new: $startCountNew => $endCountNew\n";
+    if($endCountOld > 0){
+      die "ERROR: old names still match xml files\n";
+    }
+    if($endCountOld+$endCountNew != $startCountOld+$startCountNew){
+      die "ERROR: file counts are off, some xml files disappeared\n";
+    }
+  }
+}
+
+sub fileMatchesRegex($$){
+  my ($regex, $file) = @_;
+  my $matches = 0;
+  open FH, "<", $file or die "ERROR: could not read $file\n$!\n";
+  while (my $line = <FH>) {
+    if ($line =~ /$regex/) {
+      $matches = 1;
+      last;
+    }
+  }
+  close FH;
+  return $matches;
+}
+
+sub editFileRegex($$$){
+  my ($file, $regex, $replacement) = @_;
+  my @lines;
+  my $editedLines = 0;
+  open FH, "<", $file or die "ERROR: could not read $file\n$!\n";
+  while (my $line = <FH>) {
+    if ($line =~ s/$regex/$replacement/) {
+      $editedLines++;
+    }
+    push @lines, $line;
+  }
+  close FH;
+
+  if($editedLines == 0){
+    die "ERROR: could not find $regex in $file\n";
+  }elsif($editedLines > 1){
+    die "ERROR: too many matches for $regex in $file\n";
+  }
+
+  my $tmpFile = "/tmp/sm-xml-renames-" . nowMillis();
+  open FH, "> $tmpFile" or die "ERROR: could not write $tmpFile\n$!\n";
+  print FH $_ foreach @lines;
+  close FH;
+
+  run "touch", $tmpFile, "-r", $file;
+  run "rm", $file;
+  run "mv", $tmpFile, $file;
+}
+
+sub nowMillis(){
+  return int(time * 1000.0 + 0.5);
+}
+
+sub run(@){
+  print "@_\n";
+  system @_;
+}
+
+&main(@ARGV);
