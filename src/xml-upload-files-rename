@@ -6,6 +6,8 @@ use Time::HiRes qw(time);
 my $UPLOAD_DIR = "$ENV{HOME}/.stepmania/Save/Upload";
 
 my $RENAMES = {
+  'Songs/test7/born_to_be_wild_fanfare_ciocarlia/'
+    => 'Songs/test7/Born to Be Wild - Fanfare Ciocarlia - Borat/',
 };
 
 sub editFileRegex($$$);
