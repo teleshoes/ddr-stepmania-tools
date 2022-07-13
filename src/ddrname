@@ -433,16 +433,16 @@ sub getUsage(;$){
         include only scores where DIFFICULTY is beginner OR not defined
         {overrides --basic and --difficult and --expert and --challenge}
       --basic
-        include only scores where DIFFICULTY is beginner OR not defined
+        include only scores where DIFFICULTY is basic OR not defined
         {overrides --beginner and --difficult and --expert and --challenge}
       --difficult
-        include only scores where DIFFICULTY is beginner OR not defined
+        include only scores where DIFFICULTY is difficult OR not defined
         {overrides --beginner and --basic and --expert and --challenge}
       --expert
-        include only scores where DIFFICULTY is beginner OR not defined
+        include only scores where DIFFICULTY is expert OR not defined
         {overrides --beginner and --basic and --difficult and --challenge}
       --challenge
-        include only scores where DIFFICULTY is beginner OR not defined
+        include only scores where DIFFICULTY is challenge OR not defined
         {overrides --beginner and --basic and --difficult and --expert}
 
     FILTER: MACHINE
