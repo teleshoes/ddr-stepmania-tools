@@ -431,19 +431,19 @@ sub getUsage(;$){
     FILTER: DIFFICULTY
       --beginner
         include only scores where DIFFICULTY is beginner OR not defined
-        {overrides --basic and --difficult and --expert and --challenge}
+        {overrides --basic|--difficult|--expert|--challenge}
       --basic
         include only scores where DIFFICULTY is basic OR not defined
-        {overrides --beginner and --difficult and --expert and --challenge}
+        {overrides --beginner|--difficult|--expert|--challenge}
       --difficult
         include only scores where DIFFICULTY is difficult OR not defined
-        {overrides --beginner and --basic and --expert and --challenge}
+        {overrides --beginner|--basic|--expert|--challenge}
       --expert
         include only scores where DIFFICULTY is expert OR not defined
-        {overrides --beginner and --basic and --difficult and --challenge}
+        {overrides --beginner|--basic|--difficult|--challenge}
       --challenge
         include only scores where DIFFICULTY is challenge OR not defined
-        {overrides --beginner and --basic and --difficult and --expert}
+        {overrides --beginner|--basic|--difficult|--expert}
 
     FILTER: MACHINE
       --machine MACHINE_CSV
