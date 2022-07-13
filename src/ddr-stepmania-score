@@ -83,6 +83,14 @@ my $SONG_NAME_IDS_BY_SONG_DIR_SUFFIX = {
     => "gee-koreyja",
   "otakus_dream_pad_mix_02/(Huzure) Hacking to the Gate (Steins Gate)",
     => "hacking-to-the-gate-huzure",
+  "Shpadoinkle #1/Bam bam bam!! [9]"
+    => "bam-bam-bam",
+  "Shpadoinkle #1/Banana Bay [10]"
+    => "banana-bay",
+  "Shpadoinkle #1/Bang Bang! [9]"
+    => "bang-bang",
+  "Shpadoinkle #1/Biggest show on earth [10]"
+    => "biggest-show-on-earth",
   "Shpadoinkle #10/Memories"
     => "memories-shpadoinkle",
   "test7/Born to Be Wild - Fanfare Ciocarlia - Borat"
