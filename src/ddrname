@@ -112,7 +112,6 @@ my $HARD_SONG_FEET = 14;
 sub getUsage(;$);
 sub readSongLists();
 sub readSongListFromFile($);
-sub parseFeetDifficulties(@);
 sub fehterm($@);
 sub orientation($@);
 sub dateStats($@);
@@ -798,55 +797,54 @@ sub readSongListFromFile($){
   while(my $line = <FH>){
     $line =~ s/#.*//;
     next if $line =~ /^\s*$/;
-    $line =~ s/\|/ /g;
-    if($line =~ /^\s*([a-zA-Z0-9\-]+)\s+([a-zA-Z0-9]+)((?:\s+(?:\d+|-+)){9})\s*$/){
-      my ($song, $abbrev, $feet) = ($1, $2, $3);
-      my @feetArr = $feet =~ /\s+(\d+|-+)/g;
-      if(@feetArr != 9){
-        die getUsage("ERROR: Malformed feet in line in $file: $line");
-      }
-      push @songs, [$song, $abbrev, parseFeetDifficulties(@feetArr)];
-    }else{
-      die getUsage("ERROR: Malformed line in $file: $line");
+    chomp $line;
+
+    my @segments = split /[ \|]+/, $line;
+    die "ERROR: malformed line in $file:\n$line\n" if @segments != 11;
+
+    my $i=0;
+    my $song = $segments[$i++];
+    my $abbrev = $segments[$i++];
+    my $feet = {
+      singles => {
+        beginner  => $segments[$i++],
+        basic     => $segments[$i++],
+        difficult => $segments[$i++],
+        expert    => $segments[$i++],
+        challenge => $segments[$i++],
+      },
+      doubles => {
+        basic     => $segments[$i++],
+        difficult => $segments[$i++],
+        expert    => $segments[$i++],
+        challenge => $segments[$i++],
+      },
+    };
+
+    if($song !~ /^[a-zA-Z0-9\-]+$/){
+      die "ERROR: malformed song '$song' in $file\n$line\n";
     }
+    if($abbrev !~ /^[a-zA-Z0-9]{7}$/){
+      die "ERROR: malformed abbrev '$abbrev' in $file\n$line\n";
+    }
+
+    for my $game(sort keys %$feet){
+      for my $diff(sort keys %{$$feet{$game}}){
+        my $val = $$feet{$game}{$diff};
+        if(not defined $val or $val =~ /^-+$/){
+          $val = "-";
+        }elsif($val =~ /^\d+$/){
+          $val = sprintf "%02d", $val;
+        }else{
+          die "ERROR: malformed feet '$val' for $game-$diff in $file:\n$line\n";
+        }
+        $$feet{$game}{$diff} = $val;
+      }
+    }
+
+    push @songs, [$song, $abbrev, $feet];
   }
   return @songs;
-}
-
-sub parseFeetDifficulties(@){
-  my @feetArr = @_;
-  if(@feetArr != 9){
-    die "ERROR: invalid feet list (should be 9 entries): @feetArr\n";
-  }
-
-  my @parsedFeetArr;
-  for my $feet(@feetArr){
-    if($feet =~ /^-+$/){
-      push @parsedFeetArr, "-";
-    }elsif($feet =~ /^\d+$/){
-      push @parsedFeetArr, 0+$feet;
-    }else{
-      die "ERROR: could not parse feet \"$feet\"\n";
-    }
-  }
-
-  my $i=0;
-
-  return {
-    singles => {
-      beginner  => $parsedFeetArr[$i++],
-      basic     => $parsedFeetArr[$i++],
-      difficult => $parsedFeetArr[$i++],
-      expert    => $parsedFeetArr[$i++],
-      challenge => $parsedFeetArr[$i++],
-    },
-    doubles => {
-      basic     => $parsedFeetArr[$i++],
-      difficult => $parsedFeetArr[$i++],
-      expert    => $parsedFeetArr[$i++],
-      challenge => $parsedFeetArr[$i++],
-    },
-  };
 }
 
 
