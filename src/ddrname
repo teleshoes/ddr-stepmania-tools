@@ -45,7 +45,7 @@ my @okFilters = qw(
   --song
   --hard --nothard --feet --minfeet --maxfeet
   --singles --doubles --nonstop --nonstopdoubles
-  --beginner --basic --difficult --expert --challenge
+  --beginner --basic --difficult --expert --challenge --edit
   --machine --sn2 --2013 --x3 --a --sm --default-machine
   --tw
   --score --minscore --maxscore --monotonic --increasing --records
@@ -173,7 +173,7 @@ my %gameAbbrevs = (
   nonstopdoubles => 'NDB',
 );
 
-my @difficultyArgs = qw(beginner basic difficult expert challenge);
+my @difficultyArgs = qw(beginner basic difficult expert challenge edit);
 my $okDifficultyArgs = join '|', @difficultyArgs;
 
 my %difficultyAbbrevs = (
@@ -182,6 +182,7 @@ my %difficultyAbbrevs = (
   difficult => 'dif',
   expert => 'exp',
   challenge => 'cha',
+  edit => 'edi',
 );
 
 my @machineArgs = qw(sn2 2013 x3 a itg2 sm50pdp sm53pdp sm53ltek sm53ltekp sm53ltekpa);
@@ -430,19 +431,22 @@ sub getUsage(;$){
     FILTER: DIFFICULTY
       --beginner
         include only scores where DIFFICULTY is beginner OR not defined
-        {overrides --basic|--difficult|--expert|--challenge}
+        {overrides --basic|--difficult|--expert|--challenge|--edit}
       --basic
         include only scores where DIFFICULTY is basic OR not defined
-        {overrides --beginner|--difficult|--expert|--challenge}
+        {overrides --beginner|--difficult|--expert|--challenge|--edit}
       --difficult
         include only scores where DIFFICULTY is difficult OR not defined
-        {overrides --beginner|--basic|--expert|--challenge}
+        {overrides --beginner|--basic|--expert|--challenge|--edit}
       --expert
         include only scores where DIFFICULTY is expert OR not defined
-        {overrides --beginner|--basic|--difficult|--challenge}
+        {overrides --beginner|--basic|--difficult|--challenge|--edit}
       --challenge
         include only scores where DIFFICULTY is challenge OR not defined
-        {overrides --beginner|--basic|--difficult|--expert}
+        {overrides --beginner|--basic|--difficult|--expert|--edit}
+      --edit
+        include only scores where DIFFICULTY is edit OR not defined
+        {overrides --beginner|--basic|--difficult|--expert|--challenge}
 
     FILTER: MACHINE
       --machine MACHINE_CSV
@@ -1198,7 +1202,7 @@ sub parseFilterOptions($){
       $$filters{game} = {singles => 0, doubles => 0, nonstop => 1, nonstopdoubles => 0};
     }elsif($opt =~ /^(--nonstopdoubles)$/){
       $$filters{game} = {singles => 0, doubles => 0, nonstop => 0, nonstopdoubles => 1};
-    }elsif($opt =~ /^--(beginner|basic|difficult|expert|challenge)$/){
+    }elsif($opt =~ /^--(beginner|basic|difficult|expert|challenge|edit)$/){
       my $difficulty = $1;
       $$filters{difficulty} = {map {$_ => 0} @difficultyArgs};
       $$filters{difficulty}{$difficulty} = 1;
