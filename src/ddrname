@@ -605,16 +605,26 @@ sub getUsage(;$){
        song name from $SONG_LIST_FILE
          (or $SONG_LIST_FILE_STEPMANIA)
 
-       each non-empty line in the song list must be formatted like this:
-       \"SONG   ABBREV   FEET FEET FEET FEET FEET    FEET FEET FEET FEET\"
+       each non-empty line in the song list must have the following segments,
+         in order, separated by at least one space or '|' character:
+       \"SONG  ABBREV  BEG_FT BAS_FT DIF_FT EXP_FT CHA_FT  D_BAS_FT D_DIF_FT D_EXP_FT D_CHA_FT\"
 
-         SONG is the song name
-           if consists only of lower-case letters, numbers, and dashes (e.g.: max-300)
-         ABBREV is the abbreviation for the SONG
-         FEET is the song's feet difficulty. it must be an integer or one-or-more dashes '--'
-           they are listed in the song list in the following order:
-           singles (beginner, basic, difficult, expert, challenge)
-           doubles (basic, difficult, expert, challenge)
+         SONG       song name: only lower-case letters, numbers and dashes (e.g.: 'max-300')
+         ABBREV     abbreviation of song: exactly 7-chars, upper/lower case letters and numbers only
+         BEG_FT     singles beginner  feet-difficulty: positive integer or one-or-more dashes (e.g.: '13' or '--')
+         BAS_FT     singles basic     feet-difficulty: positive integer or one-or-more dashes (e.g.: '13' or '--')
+         DIF_FT     singles difficult feet-difficulty: positive integer or one-or-more dashes (e.g.: '13' or '--')
+         EXP_FT     singles expert    feet-difficulty: positive integer or one-or-more dashes (e.g.: '13' or '--')
+         CHA_FT     singles challenge feet-difficulty: positive integer or one-or-more dashes (e.g.: '13' or '--')
+         D_BAS_FT   doubles basic     feet-difficulty: positive integer or one-or-more dashes (e.g.: '13' or '--')
+         D_DIF_FT   doubles difficult feet-difficulty: positive integer or one-or-more dashes (e.g.: '13' or '--')
+         D_EXP_FT   doubles expert    feet-difficulty: positive integer or one-or-more dashes (e.g.: '13' or '--')
+         D_CHA_FT   doubles challenge feet-difficulty: positive integer or one-or-more dashes (e.g.: '13' or '--')
+
+       e.g.:
+         paranoia-survivor-max   prSrvMx   |05|09|11|15|16|   |09|11|15|16|
+         my-summer-love          mySmmLv   |03|04|09|12|--|   |05|08|11|--|
+         my-summer-love mySmmLv 03 04 09 12 - 05 08 11 -
 
      GAME            {optional, '$emptyGameArg' is the same as no GAME arg}
        one of [$okGameArgs]
