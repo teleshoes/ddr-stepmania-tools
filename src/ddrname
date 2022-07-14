@@ -158,7 +158,7 @@ sub runQuiet(@);
 my @songArr = readSongLists();
 
 my %songAbbrevs = map { $$_[0] => $$_[1] } @songArr;
-my %songFeetDifficulties = map { $$_[0] => parseFeetDifficulties(@{$$_[2]}) } @songArr;
+my %songFeetDifficulties = map { $$_[0] => $$_[2] } @songArr;
 
 my @songArgs = sort {$a cmp $b} map { $$_[0] } @songArr;
 my $okSongArgs = join '|', @songArgs;
@@ -805,7 +805,7 @@ sub readSongListFromFile($){
       if(@feetArr != 9){
         die getUsage("ERROR: Malformed feet in line in $file: $line");
       }
-      push @songs, [$song, $abbrev, [@feetArr]];
+      push @songs, [$song, $abbrev, parseFeetDifficulties(@feetArr)];
     }else{
       die getUsage("ERROR: Malformed line in $file: $line");
     }
