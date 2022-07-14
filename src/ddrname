@@ -842,7 +842,7 @@ sub readSongListFromFile($){
       for my $diff(sort keys %{$$feet{$game}}){
         my $val = $$feet{$game}{$diff};
         if(not defined $val or $val =~ /^-+$/){
-          $val = "-";
+          $val = undef;
         }elsif($val =~ /^\d+$/){
           $val = sprintf "%02d", $val;
         }else{
