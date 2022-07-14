@@ -114,6 +114,7 @@ my $SM_DDRA_DIFF_ARR = [
   ["Hard"      => "expert"],
   ["Expert"    => "challenge"],
   ["Challenge" => "challenge"],
+  ["Edit"      => "edit"],
 ];
 my $DDRA_DIFFICULTIES_BY_STEPMANIA_DIFFICULTY = {map {$$_[0] => $$_[1]} @$SM_DDRA_DIFF_ARR};
 my @STEPMANIA_DIFFICULTIES = map {$$_[0]} @$SM_DDRA_DIFF_ARR;
