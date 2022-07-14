@@ -611,7 +611,7 @@ sub getUsage(;$){
 
        each non-empty line in the song list must have the following segments,
          in order, separated by at least one space or '|' character:
-       \"SONG  ABBREV  BEG_FT BAS_FT DIF_FT EXP_FT CHA_FT  D_BAS_FT D_DIF_FT D_EXP_FT D_CHA_FT\"
+       \"SONG  ABBREV  BEG_FT BAS_FT DIF_FT EXP_FT CHA_FT  D_BAS_FT D_DIF_FT D_EXP_FT D_CHA_FT  EDIT_FT D_EDIT_FT\"
 
          SONG       song name: only lower-case letters, numbers and dashes (e.g.: 'max-300')
          ABBREV     abbreviation of song: exactly 7-chars, upper/lower case letters and numbers only
@@ -624,11 +624,15 @@ sub getUsage(;$){
          D_DIF_FT   doubles difficult feet-difficulty: positive integer or one-or-more dashes (e.g.: '13' or '--')
          D_EXP_FT   doubles expert    feet-difficulty: positive integer or one-or-more dashes (e.g.: '13' or '--')
          D_CHA_FT   doubles challenge feet-difficulty: positive integer or one-or-more dashes (e.g.: '13' or '--')
+         EDIT_FT    OPTIONAL singles edit feet-difficulty: missing, or 'singles-edit-' followed by a positive integer
+         D_EDIT_FT  OPTIONAL doubles edit feet-difficulty: missing, or 'doubles-edit-' followed by a positive integer
 
        e.g.:
          paranoia-survivor-max   prSrvMx   |05|09|11|15|16|   |09|11|15|16|
          my-summer-love          mySmmLv   |03|04|09|12|--|   |05|08|11|--|
+         floral-fury             florFur   |02|06|10|13|15|   |--|--|--|--|  singles-edit-15
          my-summer-love mySmmLv 03 04 09 12 - 05 08 11 -
+         random-made-up-song randMUS   - - - - 15   - - - 17 doubles-edit-18
 
      GAME            {optional, '$emptyGameArg' is the same as no GAME arg}
        one of [$okGameArgs]
@@ -814,7 +818,7 @@ sub readSongListFromFile($){
     chomp $line;
 
     my @segments = split /[ \|]+/, $line;
-    die "ERROR: malformed line in $file:\n$line\n" if @segments != 11;
+    die "ERROR: malformed line in $file:\n$line\n" if @segments < 11;
 
     my $i=0;
     my $song = $segments[$i++];
@@ -826,14 +830,27 @@ sub readSongListFromFile($){
         difficult => $segments[$i++],
         expert    => $segments[$i++],
         challenge => $segments[$i++],
+        edit      => undef,
       },
       doubles => {
         basic     => $segments[$i++],
         difficult => $segments[$i++],
         expert    => $segments[$i++],
         challenge => $segments[$i++],
+        edit      => undef,
       },
     };
+
+    while($i < @segments){
+      my $extraSeg = $segments[$i++];
+      if($extraSeg =~ /^singles-edit-(\d+)$/i){
+        $$feet{singles}{edit} = $1;
+      }elsif($extraSeg =~ /^doubles-edit-(\d+)$/i){
+        $$feet{doubles}{edit} = $1;
+      }else{
+        die "ERROR: malformed extra segment '$extraSeg' in $file:\n$line\n";
+      }
+    }
 
     if($song !~ /^[a-zA-Z0-9\-]+$/){
       die "ERROR: malformed song '$song' in $file\n$line\n";
