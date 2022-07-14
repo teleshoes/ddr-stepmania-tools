@@ -112,6 +112,7 @@ my $HARD_SONG_FEET = 14;
 sub getUsage(;$);
 sub readSongLists();
 sub readSongListFromFile($);
+sub parseFeetDifficulties(@);
 sub fehterm($@);
 sub orientation($@);
 sub dateStats($@);
@@ -147,7 +148,6 @@ sub gnuplot($$);
 sub combine(@);
 sub mtime($);
 sub getImageOrientation($);
-sub parseFeetDifficulties(@);
 sub checkUnique(@);
 sub bannerFlash($);
 sub bashComplete($$);
@@ -812,6 +812,43 @@ sub readSongListFromFile($){
   }
   return @songs;
 }
+
+sub parseFeetDifficulties(@){
+  my @feetArr = @_;
+  if(@feetArr != 9){
+    die "ERROR: invalid feet list (should be 9 entries): @feetArr\n";
+  }
+
+  my @parsedFeetArr;
+  for my $feet(@feetArr){
+    if($feet =~ /^-+$/){
+      push @parsedFeetArr, "-";
+    }elsif($feet =~ /^\d+$/){
+      push @parsedFeetArr, 0+$feet;
+    }else{
+      die "ERROR: could not parse feet \"$feet\"\n";
+    }
+  }
+
+  my $i=0;
+
+  return {
+    singles => {
+      beginner  => $parsedFeetArr[$i++],
+      basic     => $parsedFeetArr[$i++],
+      difficult => $parsedFeetArr[$i++],
+      expert    => $parsedFeetArr[$i++],
+      challenge => $parsedFeetArr[$i++],
+    },
+    doubles => {
+      basic     => $parsedFeetArr[$i++],
+      difficult => $parsedFeetArr[$i++],
+      expert    => $parsedFeetArr[$i++],
+      challenge => $parsedFeetArr[$i++],
+    },
+  };
+}
+
 
 sub orientation($@){
   my $cmd = shift;
@@ -2284,42 +2321,6 @@ sub getImageOrientation($){
   }else{
     return "landscape";
   }
-}
-
-sub parseFeetDifficulties(@){
-  my @feetArr = @_;
-  if(@feetArr != 9){
-    die "ERROR: invalid feet list (should be 9 entries): @feetArr\n";
-  }
-
-  my @parsedFeetArr;
-  for my $feet(@feetArr){
-    if($feet =~ /^-+$/){
-      push @parsedFeetArr, "-";
-    }elsif($feet =~ /^\d+$/){
-      push @parsedFeetArr, 0+$feet;
-    }else{
-      die "ERROR: could not parse feet \"$feet\"\n";
-    }
-  }
-
-  my $i=0;
-
-  return {
-    singles => {
-      beginner  => $parsedFeetArr[$i++],
-      basic     => $parsedFeetArr[$i++],
-      difficult => $parsedFeetArr[$i++],
-      expert    => $parsedFeetArr[$i++],
-      challenge => $parsedFeetArr[$i++],
-    },
-    doubles => {
-      basic     => $parsedFeetArr[$i++],
-      difficult => $parsedFeetArr[$i++],
-      expert    => $parsedFeetArr[$i++],
-      challenge => $parsedFeetArr[$i++],
-    },
-  };
 }
 
 sub checkUnique(@){
