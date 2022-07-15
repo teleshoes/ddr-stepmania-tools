@@ -11,7 +11,7 @@ $scoreDir = "/home/user/pixmirror/xddr" if not -d $scoreDir;
 
 my $EXIFTOOL_EXEC = "exiftool";
 my $PIX_EXEC = "pix";
-my @EXTS = qw(png jpg mp4 mkv);
+my @EXTS = qw(png jpg mp4 mkv webm);
 my $EXT_REGEX = join "|", @EXTS;
 
 my $gnuplotDefaultPngSize = "1920,1080";
