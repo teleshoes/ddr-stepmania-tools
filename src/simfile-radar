@@ -83,7 +83,7 @@ my @DIFF_ABBREV_ARR = (
 my @DIFF_ABBREV_NAMES = map {$$_[0]} @DIFF_ABBREV_ARR;
 my %DIFF_ABBREVS = map {$$_[0] => $$_[1]} @DIFF_ABBREV_ARR;
 
-sub handleSimfile($$$$$$$$);
+sub handleSimfile($$$$$$$$$);
 sub formatStats($$$);
 sub getSongRowCount($);
 sub getSongDuration($$$);
@@ -527,6 +527,10 @@ my $usage = "Usage:
         %GAME.%DIFF.<VARIABLE>=%<VARIABLE>%n
       for each VARIABLE (one per line, sorted asciibetically)
 
+    --skip-note-rows
+      when formatting stats for printing, use the empty string for 'NOTE_ROWS' variable
+      (NOTE_ROWS are still calculated and cached, only printing is affected)
+
     --format=FORMAT_SPEC
       FORMAT_SPEC can be any string, with the following printf-like replacements:
         %%                       = a literal % character
@@ -580,6 +584,7 @@ sub main(@){
   };
   my $defaultVarsMachine = $DEFAULT_MACHINE;
   my $dump = 0;
+  my $skipNoteRowsPrinting = 0;
   my $formatSpec = $DEFAULT_FORMAT_SPEC;
   my $forceNewlines = 1;
   my $readCache = 1;
@@ -610,6 +615,8 @@ sub main(@){
       $defaultVarsMachine = uc $1;
     }elsif($arg =~ /^--dump$/){
       $dump = 1;
+    }elsif($arg =~ /^--skip-note-rows$/){
+      $skipNoteRowsPrinting = 1;
     }elsif($arg =~ /^--format=(.+)$/){
       $formatSpec = $1;
     }elsif($arg =~ /^(-n|--no-force-newlines)$/){
@@ -628,6 +635,7 @@ sub main(@){
       $gameDiffFilters,
       $defaultVarsMachine,
       $dump,
+      $skipNoteRowsPrinting,
       $formatSpec,
       $forceNewlines,
       $readCache,
@@ -636,12 +644,13 @@ sub main(@){
   }
 }
 
-sub handleSimfile($$$$$$$$){
+sub handleSimfile($$$$$$$$$){
   my (
     $smFile,
     $gameDiffFilters,
     $defaultVarsMachine,
     $dump,
+    $skipNoteRowsPrinting,
     $formatSpec,
     $forceNewlines,
     $readCache,
@@ -677,6 +686,8 @@ sub handleSimfile($$$$$$$$){
         $formatSpec .= "%GAME.%DIFF.$varName=%$varName%n";
       }
     }
+
+    $$s{NOTE_ROWS} = '' if $skipNoteRowsPrinting;
 
     print formatStats($formatSpec, $forceNewlines, $s);
   }
