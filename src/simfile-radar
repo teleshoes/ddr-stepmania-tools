@@ -573,6 +573,9 @@ my $usage = "Usage:
       do not append newlines automatically
       without this option, if FORMAT_SPEC results in output that does not end in a newline,
         a newline is appended to each formatted output
+
+    -d
+      same as: --dump --skip-note-rows --no-cache
 ";
 
 sub main(@){
@@ -621,6 +624,11 @@ sub main(@){
       $formatSpec = $1;
     }elsif($arg =~ /^(-n|--no-force-newlines)$/){
       $forceNewlines = 0;
+    }elsif($arg =~ /^(-d)$/){
+      $dump = 1;
+      $skipNoteRowsPrinting = 1;
+      $readCache = 0;
+      $writeCache = 0;
     }elsif(-f $arg){
       push @smFiles, $arg;
     }else{
