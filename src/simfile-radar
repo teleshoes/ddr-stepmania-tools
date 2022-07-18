@@ -133,6 +133,16 @@ my $DEFAULT_FORMAT_SPEC = ""
   . " | "  . "%-s-SONG_NAME_ID"
   . " |%n"
 ;
+my $INFO_FORMAT_SPEC = ""
+  . ""    . "%-7s-GAME_ABBREV"
+  . " | " . "%-9s-DIFF_SM"
+  . " | " . "%2d-SM_FEET"
+  . " | " . "%4d-COUNT_TAPS taps"
+  . " | " . "%4d-COUNT_HOLDS holds"
+  . " | " . "%4d-COUNT_MINES mines"
+  . " | " . "%4d-COUNT_ROLLS rolls"
+  . " |%n"
+;
 
 my $usage = "Usage:
   $0 -h|--help
@@ -569,6 +579,9 @@ my $usage = "Usage:
           exactly one of: d i u o x X f F e E g G a A c s
           e.g.: f
 
+    --info
+      same as: --format=\"$DEFAULT_FORMAT_SPEC\"
+
     -n | --no-force-newline
       do not append newlines automatically
       without this option, if FORMAT_SPEC results in output that does not end in a newline,
@@ -622,6 +635,8 @@ sub main(@){
       $skipNoteRowsPrinting = 1;
     }elsif($arg =~ /^--format=(.+)$/){
       $formatSpec = $1;
+    }elsif($arg =~ /^(--info)$/){
+      $formatSpec = $INFO_FORMAT_SPEC;
     }elsif($arg =~ /^(-n|--no-force-newlines)$/){
       $forceNewlines = 0;
     }elsif($arg =~ /^(-d)$/){
