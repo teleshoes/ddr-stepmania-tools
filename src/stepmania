@@ -117,8 +117,28 @@ my %okScreensHash = map {$_ => 1} @okScreens;
 my $patches = {
   # print songtype, difficulty, and SM file on ScreenSelectMusic
   "$execDir/Appearance/Themes/default/BGAnimations/ScreenSelectMusic decorations/panels.lua" => ''
-    . '136a137' . "\n"
-    . '> 						print(pn .. "%%%" .. st .. "%%%" .. diff .. "%%%" .. song:GetSongFilePath());' . "\n"
+    . '*** panels.lua.orig	2021-04-26 20:41:49.196864485 -0400' . "\n"
+    . '--- panels.lua	2021-08-25 14:13:44.515302724 -0400' . "\n"
+    . '***************' . "\n"
+    . '*** 128,143 ****' . "\n"
+    . '--- 128,144 ----' . "\n"
+    . '  				if song then' . "\n"
+    . '  					if stepsData ~= nil then' . "\n"
+    . '  						local st = stepsData:GetStepsType();' . "\n"
+    . '  						local diff = stepsData:GetDifficulty();' . "\n"
+    . '  						local courseType = GAMESTATE:IsCourseMode() and SongOrCourse:GetCourseType() or nil;' . "\n"
+    . '  						local cd = GetCustomDifficulty(st, diff, courseType);' . "\n"
+    . '  						self:finishtweening():linear(0.2)' . "\n"
+    . '  						self:diffuse(ColorMidTone(CustomDifficultyToColor(cd))):diffuseleftedge(BoostColor(ColorMidTone(CustomDifficultyToColor(cd)),1.2)):diffusealpha(0.5);' . "\n"
+    . '+ 						print(pn .. "%%%" .. st .. "%%%" .. diff .. "%%%" .. song:GetSongFilePath());' . "\n"
+    . '  					else' . "\n"
+    . '  					end' . "\n"
+    . '  				else' . "\n"
+    . '  				end' . "\n"
+    . '  			end' . "\n"
+    . '  		};' . "\n"
+    . '  		-- Difficulty underlay' . "\n"
+    . '  		Def.Quad {' . "\n"
   ,
   #screen filter 0 => 0.5
   "$execDir/Appearance/Themes/default/Modules/Options.Prefs.lua" => ''
