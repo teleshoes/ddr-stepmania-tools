@@ -525,6 +525,7 @@ sub patchFile($$){
   print FH $patch;
   close FH;
 
+  print "patching: $file $patchFile\n";
   system "patch",
     "--silent",
     "--force",         #dont ask questions, just fail
