@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 use strict;
 use warnings;
-use File::Basename qw(dirname);
+use File::Basename qw(basename dirname);
 
 my $XML_SCORE_LIMIT = 10;
 my $MAX_SONG_NAME_LEN = 38;
@@ -28,11 +28,13 @@ my $FORMAT_DEFAULT = "default";
 my $FORMAT_SHORT = "short";
 my $FORMAT_QML = "qml";
 
-my $usage = "Usage:
-  $0 -h|--help
+my $EXEC = basename $0;
+
+my $USAGE = "Usage:
+  $EXEC -h|--help
     show this message
 
-  $0 [OPTS]
+  $EXEC [OPTS]
     read current song from $CURSONG_FILE_P1
       (set by hack in stepmania theme)
     extract+print info with `ddr-stepmania-score`, `ddrname`, and `simfile-radar`
@@ -43,7 +45,7 @@ my $usage = "Usage:
         $CURSONG_FILE_P1
         $XML_UPLOAD_DIR/
       when either is written to (current song changes or new XML score appears),
-        do the same as `$0`
+        do the same as `$EXEC`
       also, if the number of XML files is different after I/O write, run the command:
         $EXEC_DDR_NEW_SCORE &
 
@@ -97,7 +99,7 @@ sub main(@){
   while(@_ > 0){
     my $arg = shift;
     if($arg =~ /^(-h|--help)$/){
-      print $usage;
+      print $USAGE;
       exit 0;
     }elsif($arg =~ /^(-m|--monitor)$/){
       $$opts{monitor} = 1;
@@ -116,7 +118,7 @@ sub main(@){
     }elsif($arg =~ /^--file=(.+)$/){
       $$opts{outputFile} = $1;
     }else{
-      die "$usage\nERROR: unknown arg $arg\n";
+      die "$USAGE\nERROR: unknown arg $arg\n";
     }
   }
 
