@@ -48,6 +48,11 @@ my $USAGE = "Usage:
         do the same as `$EXEC`
       also, if the number of XML files is different after I/O write, run the command:
         $EXEC_DDR_NEW_SCORE &
+    --kill
+      -find all monitoring instances and kill them
+        pkill -f 'stepmania-cursong-info.*(-m|--monitor)'
+      -find all inotifywait instances and kill them
+        pkill -f 'inotifywait.*$CURSONG_FILE_P1'
 
     --file=OUTPUT_FILE
       write output to OUTPUT_FILE, once per run, instead of STDOUT
@@ -91,6 +96,7 @@ sub readProcLine(@);
 sub main(@){
   my $opts = {
     monitor => 0,
+    killMonitor => 0,
     useTermColor => $DEFAULT_USE_TERM_COLOR,
     useQMLColor => 1,
     format => $FORMAT_DEFAULT,
@@ -103,6 +109,8 @@ sub main(@){
       exit 0;
     }elsif($arg =~ /^(-m|--monitor)$/){
       $$opts{monitor} = 1;
+    }elsif($arg =~ /^(--kill)$/){
+      $$opts{killMonitor} = 1;
     }elsif($arg =~ /^(--color)$/){
       $$opts{useTermColor} = 1;
       $$opts{useQMLColor} = 1;
@@ -151,6 +159,9 @@ sub main(@){
         system "$EXEC_DDR_NEW_SCORE &";
       }
     }
+  }elsif($$opts{killMonitor}){
+    system "pkill -f '$EXEC.*(-m|--monitor)'";
+    system "pkill -f 'inotifywait.*$CURSONG_FILE_P1'";
   }else{
     my $fmt = formatCurSongInfo($opts, getCurSongInfo());
     if(defined $$opts{outputFile}){
