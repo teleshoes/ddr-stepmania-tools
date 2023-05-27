@@ -141,6 +141,7 @@ my $INFO_FORMAT_SPEC = ""
   . " | " . "%4d-COUNT_HOLDS holds"
   . " | " . "%4d-COUNT_MINES mines"
   . " | " . "%4d-COUNT_ROLLS rolls"
+  . " | " . "%4d-COUNT_JUMP_ROWS jumps"
   . " |%n"
 ;
 
