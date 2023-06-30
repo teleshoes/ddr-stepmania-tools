@@ -31,6 +31,8 @@ my $prefs = {
     ShowNativeLanguage        => 0,
     UseOldJoystickMapping     => 1,
 
+    DefaultModifiers          => "\"$defaultModifiers\"",
+
     SoundDrivers              => 'Pulse',
 
     Windowed                  => 1,
@@ -47,6 +49,7 @@ my $prefs = {
   },
   'Game-dance' => {
     Announcer                 => '', #MAX2
+    DefaultModifiers          => "\"$defaultModifiers\"",
   },
 };
 
