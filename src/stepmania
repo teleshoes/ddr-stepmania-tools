@@ -31,6 +31,9 @@ my $prefs = {
     ShowNativeLanguage        => 0,
     UseOldJoystickMapping     => 1,
 
+    FailOffForFirstStageEasy  => 0,
+    FailOffInBeginner         => 0,
+
     DefaultModifiers          => "\"$defaultModifiers\"",
 
     SoundDrivers              => 'Pulse',
