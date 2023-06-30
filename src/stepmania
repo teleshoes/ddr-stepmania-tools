@@ -13,7 +13,7 @@ my $machineProfileDir = "$confDir/Save/MachineProfile";
 my $defaultSpeedMod = "m650";
 my $defaultScreen = 'ScreenSelectMusic';
 
-my $defaultModifiers = "$defaultSpeedMod";
+my $defaultModifiers = "$defaultSpeedMod,FailImmediate";
 
 my $selectedSongCacheFilePrefix = "$ENV{HOME}/.cache/stepmania-selected-song-p";
 
