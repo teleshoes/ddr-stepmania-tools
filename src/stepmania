@@ -13,6 +13,8 @@ my $machineProfileDir = "$confDir/Save/MachineProfile";
 my $defaultSpeedMod = "m650";
 my $defaultScreen = 'ScreenSelectMusic';
 
+my $defaultModifiers = "$defaultSpeedMod";
+
 my $selectedSongCacheFilePrefix = "$ENV{HOME}/.cache/stepmania-selected-song-p";
 
 my $prefs = {
@@ -55,7 +57,7 @@ my $outfoxPrefs = {
 
 my $fallbackMetricsPrefs = {
   'Common' => {
-    DefaultModifiers          => "\"$defaultSpeedMod\"",
+    DefaultModifiers          => "\"$defaultModifiers\"",
   },
 };
 
