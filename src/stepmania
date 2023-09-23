@@ -19,7 +19,7 @@ my $selectedSongCacheFilePrefix = "$ENV{HOME}/.cache/stepmania-selected-song-p";
 
 my $prefs = {
   'Options' => {
-    GlobalOffsetSeconds       => "-0.055",
+    GlobalOffsetSeconds       => "-0.155",
     AutoMapOnJoyChange        => 0,
     OnlyDedicatedMenuButtons  => 1,
     Center1Player             => 1,
