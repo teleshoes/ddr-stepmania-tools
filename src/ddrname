@@ -46,7 +46,7 @@ my @okFilters = qw(
   --hard --nothard --feet --minfeet --maxfeet
   --singles --doubles --nonstop --nonstopdoubles
   --beginner --basic --difficult --expert --challenge --edit
-  --machine --sn2 --2013 --x3 --a --sm --default-machine
+  --machine --sn2 --2013 --itg2 --x3 --a --sm --default-machine
   --tw
   --score --minscore --maxscore --monotonic --increasing --records
   --date --mindate --maxdate --dailybest
@@ -185,7 +185,7 @@ my %difficultyAbbrevs = (
   edit => 'edi',
 );
 
-my @machineArgs = qw(sn2 2013 x3 a itg2 sm50pdp sm53pdp sm53ltek sm53ltekp sm53ltekpa);
+my @machineArgs = qw(sn2 2013 itg2 x3 a sm50pdp sm53pdp sm53ltek sm53ltekp sm53ltekpa);
 my $defaultMachineArg = "sm53ltekpa";
 my $okMachineArgs = join '|', @machineArgs;
 
@@ -458,6 +458,8 @@ sub getUsage(;$){
         include only scores where MACHINE is sn2 (same as: --machine sn2)
       --2013
         include only scores where MACHINE is 2013 (same as: --machine 2013)
+      --itg2
+        include only scores where MACHINE is itg2 (same as: --machine itg2)
       --x3
         include only scores where MACHINE is x3 (same as: --machine x3)
       --a
@@ -1229,6 +1231,9 @@ sub parseFilterOptions($){
     }elsif($opt =~ /^(--2013)$/){
       $$filters{machine} = {map {$_ => 0} @machineArgs};
       $$filters{machine}{2013} = 1;
+    }elsif($opt =~ /^(--itg2)$/){
+      $$filters{machine} = {map {$_ => 0} @machineArgs};
+      $$filters{machine}{itg2} = 1;
     }elsif($opt =~ /^(--x3)$/){
       $$filters{machine} = {map {$_ => 0} @machineArgs};
       $$filters{machine}{x3} = 1;
