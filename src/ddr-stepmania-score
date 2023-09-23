@@ -683,7 +683,7 @@ sub getSongAbsDir($){
 
 sub getSMFileFromSongDir($){
   my ($songDir) = @_;
-  my @smFiles = grep {$_ =~ /\.(ssc|sm)$/} listDirFiles $songDir;
+  my @smFiles = grep {$_ =~ /\.(ssc|sm)$/i} listDirFiles $songDir;
   die "ERROR: could not find SSC or SM file in $songDir\n" if @smFiles == 0;
   return $smFiles[0];
 }
