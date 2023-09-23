@@ -391,9 +391,9 @@ sub main(@){
       $scoreFileMode = $SCORE_FILE_MODE_DIRECT_XML;
     }elsif($arg =~ /^(--img|--image|--closest-by-mtime)$/i){
       $scoreFileMode = $SCORE_FILE_MODE_CLOSEST_XML_BY_MTIME;
-    }elsif($arg =~ /^(--check-mtimes)$/i){
+    }elsif($arg =~ /^(--check-mtimes?)$/i){
       $checkMtimes = 1;
-    }elsif($arg =~ /^(--no-check-mtimes|--force-mtimes|--force)$/i){
+    }elsif($arg =~ /^(--no-check-mtimes?|--force-mtimes?|--force)$/i){
       $checkMtimes = 0;
     }elsif($arg =~ /^(-c|--no-cache)$/){
       $readCache = 0;
