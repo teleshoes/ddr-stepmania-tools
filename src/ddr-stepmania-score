@@ -13,6 +13,7 @@ sub calculateScoreDataCache($);
 sub formatScoreData($$);
 sub getSongAbsDir($);
 sub getSMFileFromSongDir($);
+sub getDDRSonglistLine($$$);
 sub parseXmlFile($);
 sub parseSMFile($);
 sub parseNoteSetStats($);
@@ -481,26 +482,15 @@ sub main(@){
           ;
       }
     }elsif($cmd eq $COMMAND_DDRSONGLIST){
-      my $songDir = $$sd{SONG_DIR};
-      my $song = $$sd{SONG_NAME};
-      my $smFile = getSMFileFromSongDir $songDir;
-
-      my $songParentDir = dirname $$sd{SONG_DIR};
-      my $artist = basename $songParentDir;
-
-      my $abbrev = readProc("$ZENIUS_TOOL", "--abbrev", $song, $artist);
-      chomp $abbrev;
-      if($abbrev !~ /^[a-zA-Z0-9]{7}$/){
-        die "ERROR: could not obtain abbrev for song=$song\n";
-      }
-
-      my $songlistFeet = readProc($DDR_RADAR_FEET_TOOL, "--ddrsonglist", $smFile);
-      chomp $songlistFeet;
-
       my $isOk = checkDDRNAME($file, $sd, [@ddrnamePassedInOpts]);
       if(not $isOk){
+        my $songDir = $$sd{SONG_DIR};
+        my $song = $$sd{SONG_NAME};
+        my $smFile = getSMFileFromSongDir $songDir;
+
+        my $songlistLine = getDDRSonglistLine($songDir, $song, $smFile);
         print "$songDir\n";
-        printf "%-40s |%s %s\n", $song, $abbrev, $songlistFeet;
+        print "$songlistLine\n";
         print "\n";
       }
     }else{
@@ -686,6 +676,24 @@ sub getSMFileFromSongDir($){
   my @smFiles = grep {$_ =~ /\.(ssc|sm)$/i} listDirFiles $songDir;
   die "ERROR: could not find SSC or SM file in $songDir\n" if @smFiles == 0;
   return $smFiles[0];
+}
+
+sub getDDRSonglistLine($$$){
+  my ($songDir, $song, $smFile) = @_;
+
+  my $songParentDir = dirname $songDir;
+  my $artist = basename $songParentDir;
+
+  my $abbrev = readProc("$ZENIUS_TOOL", "--abbrev", $song, $artist);
+  chomp $abbrev;
+  if($abbrev !~ /^[a-zA-Z0-9]{7}$/){
+    die "ERROR: could not obtain abbrev for song=$song\n";
+  }
+
+  my $songlistFeet = readProc($DDR_RADAR_FEET_TOOL, "--ddrsonglist", $smFile);
+  chomp $songlistFeet;
+
+  return sprintf "%-40s |%s %s", $song, $abbrev, $songlistFeet;
 }
 
 sub parseXmlFile($){
