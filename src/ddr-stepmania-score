@@ -80,9 +80,9 @@ my $SONG_NAME_IDS_BY_SONG_DIR_SUFFIX = {
     => "the-world-death-note",
   "KoL DDR Post-5th & Pre-Supernova Edit Pack/V(for EXTREME)"
     => "v-for-extreme-king-of-light",
-  "Koreyja 3/Gee",
+  "Koreyja 3/Gee"
     => "gee-koreyja",
-  "otakus_dream_pad_mix_02/(Huzure) Hacking to the Gate (Steins Gate)",
+  "otakus_dream_pad_mix_02/(Huzure) Hacking to the Gate (Steins Gate)"
     => "hacking-to-the-gate-huzure",
   "Shpadoinkle #1/Bam bam bam!! [9]"
     => "bam-bam-bam",
