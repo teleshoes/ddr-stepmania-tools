@@ -9,6 +9,7 @@ binmode STDOUT, ":encoding(UTF-8)";
 sub formatSongList();
 sub searchSongs($$$);
 sub searchQueryToRegex($);
+sub parseZeniusSongNameOverrides($);
 sub getAllGameInfo();
 sub getGameInfo($);
 sub ensureGameInfoCache($);
@@ -70,47 +71,57 @@ my @NONSTOP_COURSES = qw(
   terra
 );
 
-my $songNameIdOverridesDuplicates = [
-  [11   => "la-bamba"                                                     => "la-bamba-lh-music-creation"],
-  [303  => "la-bamba"                                                     => "la-bamba-mexican-folk-song"],
-  [176  => "ever-snow"                                                    => "ever-snow-komatsu"],
-  [2810 => "ever-snow"                                                    => "ever-snow-terra"],
-];
-my $songNameIdOverridesCleanups = [
-  #redundant special characters
-  [88   => "stars-star-star-star-2nd-naokis-style"                        => "stars-2nd-naokis-style"],
-  [852  => "raspberry-heart-heart-english-version"                        => "raspberry-heart-english-version"],
-  [1091 => "sunkiss-heart-drop"                                           => "sunkiss-drop"],
-  [1105 => "stars-star-star-star-re-tuned-by-hll-ddr-edition"             => "stars-re-tuned-by-hll-ddr-edition"],
+my $songNameIdOverridesDuplicatesText = "
+#ZID-|---INITIAL_SONG_NAME_ID---------------------------------------|---FINAL_SONG_NAME_ID-----------------------
+11   | la-bamba                                                     | la-bamba-lh-music-creation
+303  | la-bamba                                                     | la-bamba-mexican-folk-song
+176  | ever-snow                                                    | ever-snow-komatsu
+2810 | ever-snow                                                    | ever-snow-terra
+";
 
-  #short/confusing name IDs
-  [1446 => "aa"                                                           => "aa-djamuro"],
-  [1550 => "a"                                                            => "a-renaissance"],
+my $songNameIdOverridesCleanupsText = "
+#ZID-|---INITIAL_SONG_NAME_ID---------------------------------------|---FINAL_SONG_NAME_ID-----------------------
 
-  #long name IDs
-  [60   => "cant-stop-fallin-in-love-super-euro-version"                  => "cant-stop-fallin-in-love-super-euro"],
-  [240  => "let-the-beat-hit-em-classic-r-and-b-style"                    => "let-the-beat-hit-em-classic-r-and-b"],
-  [1104 => "l-amour-et-la-liberte-darwin-and-dj-silver-remix"             => "l-amour-et-la-liberte-darwindjsilver"],
-  [1105 => "stars-star-star-star-re-tuned-by-hll-ddr-edition"             => "stars-terra-retuned-by-hll-ddr-edition"],
-  [2271 => "taj-he-spitz-tommie-sunshines-brooklyn-fire-re-touch"         => "taj-he-spitz-tommie-sunshine-brklyn-fire"],
-  [2454 => "paranoia-max-dirty-mix-in-roulette-x-special"                 => "paranoia-max-dirty-in-roulette-x-special"],
-  [2731 => "zeta-the-world-of-prime-numbers-and-the-transcendental-being" => "zeta-the-world-of-prime-numbers"],
-  [3165 => "all-my-heart-kono-koi-ni-watashi-no-subete-o-kakeru"          => "all-my-heart-super-heroine"],
-  [5149 => "put-your-faith-in-me-das-twinkly-disco-remix"                 => "put-your-faith-in-me-das-twinkly-disco"],
-  [5503 => "marisa-wa-taihen-na-mono-wo-nusunde-ikimashita"               => "marisa-wa-taihen-na-mono-wo-nusunde"],
-  [5801 => "how-to-cook-delicious-rice-and-the-effect-of-eating-rice"     => "how-to-cook-delicious-rice"],
-  [6002 => "rinto-shite-saku-hana-no-gotoku-hinabita-edition"             => "rinto-shite-saku-hana-no-gotoku-hinabita"],
-  [6393 => "yakyu-no-asobikata-soshite-sono-rekishi-ketteihan"            => "yakyu-no-asobikata-soshite-sono-rekishi"],
-  [6607 => "party-lights-tommie-sunshines-brooklyn-fire-remix"            => "party-lights-tommie-sunshine-brklyn-fire"],
-  [7314 => "mahou-no-tamago-cocona-electro-pop-edition"                   => "mahou-no-tamago-cocona-electro-pop"],
-  [7324 => "cirno-no-perfect-sansuu-kyoushitsu-edm-remix"                 => "cirno-no-perfect-sansuu-kyoushitsu-edm"],
-  [7376 => "kurokami-midareshi-shura-to-narite-rin-edition"               => "kurokami-midareshi-shura-to-narite-rin"],
-  [7500 => "far-east-nightbird-kors-k-remix-ddr-edit-ver"                 => "far-east-nightbird-kors-k-remix"],
-  [7766 => "shiawase-ni-nareru-kakushi-command-ga-arurashii"              => "shiawase-ni-nareru-kakushi-command"],
-  [8019 => "have-you-never-been-mellow-20th-anniversary-mix"              => "have-you-never-been-mellow-20th-anniv"],
-  [8062 => "50th-memorial-songs-futari-no-toki-under-the-cherry-blossoms" => "50th-memorial-songs-futari-no-toki"],
-  [8128 => "mikansei-no-jouki-kudou-otome-ddr-edition"                    => "mikansei-no-jouki-kudou-otome-ddr"],
-];
+
+#----|-----------------redundant special characters-----------------|--------------------------------------------
+88   | stars-star-star-star-2nd-naokis-style                        | stars-2nd-naokis-style
+852  | raspberry-heart-heart-english-version                        | raspberry-heart-english-version
+1091 | sunkiss-heart-drop                                           | sunkiss-drop
+1105 | stars-star-star-star-re-tuned-by-hll-ddr-edition             | stars-re-tuned-by-hll-ddr-edition
+
+
+#----|-----------------short/confusing name IDs---------------------|--------------------------------------------
+1446 | aa                                                           | aa-djamuro
+1550 | a                                                            | a-renaissance
+
+
+#----|-----------------long name IDs--------------------------------|--------------------------------------------
+60   | cant-stop-fallin-in-love-super-euro-version                  | cant-stop-fallin-in-love-super-euro
+240  | let-the-beat-hit-em-classic-r-and-b-style                    | let-the-beat-hit-em-classic-r-and-b
+1104 | l-amour-et-la-liberte-darwin-and-dj-silver-remix             | l-amour-et-la-liberte-darwindjsilver
+1105 | stars-star-star-star-re-tuned-by-hll-ddr-edition             | stars-terra-retuned-by-hll-ddr-edition
+2271 | taj-he-spitz-tommie-sunshines-brooklyn-fire-re-touch         | taj-he-spitz-tommie-sunshine-brklyn-fire
+2454 | paranoia-max-dirty-mix-in-roulette-x-special                 | paranoia-max-dirty-in-roulette-x-special
+2731 | zeta-the-world-of-prime-numbers-and-the-transcendental-being | zeta-the-world-of-prime-numbers
+3165 | all-my-heart-kono-koi-ni-watashi-no-subete-o-kakeru          | all-my-heart-super-heroine
+5149 | put-your-faith-in-me-das-twinkly-disco-remix                 | put-your-faith-in-me-das-twinkly-disco
+5503 | marisa-wa-taihen-na-mono-wo-nusunde-ikimashita               | marisa-wa-taihen-na-mono-wo-nusunde
+5801 | how-to-cook-delicious-rice-and-the-effect-of-eating-rice     | how-to-cook-delicious-rice
+6002 | rinto-shite-saku-hana-no-gotoku-hinabita-edition             | rinto-shite-saku-hana-no-gotoku-hinabita
+6393 | yakyu-no-asobikata-soshite-sono-rekishi-ketteihan            | yakyu-no-asobikata-soshite-sono-rekishi
+6607 | party-lights-tommie-sunshines-brooklyn-fire-remix            | party-lights-tommie-sunshine-brklyn-fire
+7314 | mahou-no-tamago-cocona-electro-pop-edition                   | mahou-no-tamago-cocona-electro-pop
+7324 | cirno-no-perfect-sansuu-kyoushitsu-edm-remix                 | cirno-no-perfect-sansuu-kyoushitsu-edm
+7376 | kurokami-midareshi-shura-to-narite-rin-edition               | kurokami-midareshi-shura-to-narite-rin
+7500 | far-east-nightbird-kors-k-remix-ddr-edit-ver                 | far-east-nightbird-kors-k-remix
+7766 | shiawase-ni-nareru-kakushi-command-ga-arurashii              | shiawase-ni-nareru-kakushi-command
+8019 | have-you-never-been-mellow-20th-anniversary-mix              | have-you-never-been-mellow-20th-anniv
+8062 | 50th-memorial-songs-futari-no-toki-under-the-cherry-blossoms | 50th-memorial-songs-futari-no-toki
+8128 | mikansei-no-jouki-kudou-otome-ddr-edition                    | mikansei-no-jouki-kudou-otome-ddr
+";
+
+my $songNameIdOverridesDuplicates = parseZeniusSongNameOverrides($songNameIdOverridesDuplicatesText);
+my $songNameIdOverridesCleanups = parseZeniusSongNameOverrides($songNameIdOverridesCleanupsText);
 my %customSongNamesBySongId = map {$$_[0] => $$_[2]} (
   @$songNameIdOverridesDuplicates, @$songNameIdOverridesCleanups);
 my %cleanupSongNameIdBySongNameId = map {$$_[1] => $$_[2]} (
@@ -414,6 +425,22 @@ sub searchQueryToRegex($){
   utf8::decode $regex;
 
   return $regex;
+}
+
+sub parseZeniusSongNameOverrides($){
+  my ($contents) = @_;
+  my @lines = split /\n/, $contents;
+  my $overrideArr = [];
+  for my $line(@lines){
+    next if $line =~ /^\s*$/ or $line =~ /^\s*#/;
+    if($line =~ /^(\d+)\s*\|\s*([a-zA-Z0-9\-]+)\s*\|\s*([a-zA-Z0-9\-]+)\s*$/){
+      my ($zeniusID, $oldSongNameId, $newSongNameId) = ($1, $2, $3);
+      push @$overrideArr, [$zeniusID, $oldSongNameId, $newSongNameId];
+    }else{
+      die "ERROR: malformed override config line\n$line";
+    }
+  }
+  return $overrideArr;
 }
 
 sub getAllGameInfo(){
