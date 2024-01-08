@@ -6,6 +6,45 @@ use HTML::TableExtract;
 use URI::Escape qw(uri_unescape);
 binmode STDOUT, ":encoding(UTF-8)";
 
+sub formatSongList();
+sub searchSongs($$$);
+sub searchQueryToRegex($);
+sub getAllGameInfo();
+sub getGameInfo($);
+sub ensureGameInfoCache($);
+sub refetchGameInfoCache($);
+sub readGameInfoCache($);
+sub writeGameInfoCache($$);
+sub parseGameHtml($$);
+sub getCachedSongsBySongNameId();
+sub getSongInfo($);
+sub ensureSongInfoCache($);
+sub songInfoCacheExists($);
+sub readSongInfoCache($);
+sub writeSongInfoCache($$);
+sub parseSongHtml($$);
+sub fetchGameSongIds($);
+sub fetchAllSongIds();
+sub fetchGameHtml($);
+sub fetchSongHtml($);
+sub fetchSongBanner($);
+sub ensureSongBanners($);
+sub getRemyWikiPageHtmlFile($);
+sub ensureRemyWikiPage($);
+sub ensureRemyWikiFiles($);
+sub getRemyWikiFiles($);
+sub getRemyWikiFileUrlsByFilePath($);
+sub getAvgDifficultyRatiosBetweenGames($$);
+sub extractNameId($);
+sub abbrevNameId($$$$);
+sub trimVowels($);
+sub abbrevWords($@);
+sub calculateSongDifficulties($$$);
+sub formatSong($$@);
+sub formatSongListHeader();
+sub htmlGetAllTables($);
+sub getJapaneseChars();
+
 my $BASE_URL = "https://zenius-i-vanisher.com";
 my $API_URL = "$BASE_URL/v5.2";
 my $CACHE_DIR = "$ENV{HOME}/.cache/ddr-zenius";
@@ -82,45 +121,6 @@ my @difficulties = qw(
   diff-singles-basic diff-singles-difficult diff-singles-expert diff-singles-challenge
   diff-doubles-basic diff-doubles-difficult diff-doubles-expert diff-doubles-challenge
 );
-
-sub formatSongList();
-sub searchSongs($$$);
-sub searchQueryToRegex($);
-sub getAllGameInfo();
-sub getGameInfo($);
-sub ensureGameInfoCache($);
-sub refetchGameInfoCache($);
-sub readGameInfoCache($);
-sub writeGameInfoCache($$);
-sub parseGameHtml($$);
-sub getCachedSongsBySongNameId();
-sub getSongInfo($);
-sub ensureSongInfoCache($);
-sub songInfoCacheExists($);
-sub readSongInfoCache($);
-sub writeSongInfoCache($$);
-sub parseSongHtml($$);
-sub fetchGameSongIds($);
-sub fetchAllSongIds();
-sub fetchGameHtml($);
-sub fetchSongHtml($);
-sub fetchSongBanner($);
-sub ensureSongBanners($);
-sub getRemyWikiPageHtmlFile($);
-sub ensureRemyWikiPage($);
-sub ensureRemyWikiFiles($);
-sub getRemyWikiFiles($);
-sub getRemyWikiFileUrlsByFilePath($);
-sub getAvgDifficultyRatiosBetweenGames($$);
-sub extractNameId($);
-sub abbrevNameId($$$$);
-sub trimVowels($);
-sub abbrevWords($@);
-sub calculateSongDifficulties($$$);
-sub formatSong($$@);
-sub formatSongListHeader();
-sub htmlGetAllTables($);
-sub getJapaneseChars();
 
 my $usage = "Usage:
   $0 [--songlist]
