@@ -14,7 +14,7 @@ sub formatScoreData($$);
 sub getSongAbsDir($);
 sub getSMFileFromSongDir($);
 sub getDDRSonglistLine($$$);
-sub parseSongNameIdOverrides($);
+sub parseSongNameIdOverridesFile($);
 sub parseXmlFile($);
 sub parseSMFile($);
 sub parseNoteSetStats($);
@@ -43,6 +43,7 @@ my $XML_FILE_PATTERN = "$ENV{HOME}/.stepmania-*/Save/Upload/*.xml";
 my $SONGS_PARENT_DIR = "$ENV{HOME}/.stepmania-5.0";
 my $CACHE_BASE_DIR = "$ENV{HOME}/.cache/ddr-stepmania-score";
 my $ZENIUS_NAME_ID_CACHE_FILE = "$ENV{HOME}/.cache/ddr-zenius-name-id-cache";
+my $SONG_NAME_ID_OVERRIDES_FILE = "$ENV{HOME}/.config/ddrname-songlist-simfile-overrides";
 
 my $DDR_RADAR_FEET_TOOL = "ddr-radar-feet";
 my $ZENIUS_TOOL = "zenius-ddrsonglist";
@@ -58,42 +59,7 @@ my $XML_MTIME_DIFF_WARNING_SECONDS = 90; #warn if image file and XML file mtimes
 my $XML_MTIME_DIFF_ERROR_SECONDS = 600; #FAIL if image file and XML file mtimes diff is greater
 
 #song-name-id overrides to use instead of zenius
-my $SONG_NAME_ID_OVERRIDES = "
-### zenius-generated songs with
-### song-dirs that dont match DDR
-lachryma-re-queen-m                      | DDR_17_A20/Lachryma (Re-Queen'M)
-night-of-knights-ryu-star-remix          | DDR_17_A20/Night of Knights (Ryu Remix)
-cirno-no-perfect-sansuu-kyoushitsu       | DDR_16_A/Cirno's Perfect Math Class
-cirno-no-perfect-sansuu-kyoushitsu-edm   | DDR_15_2014/Cirno's Perfect Math Class (EDM REMIX)
-cirno-no-perfect-sansuu-kyoushitsu-edm   | DDR_16_A/Cirno's Perfect Math Class (EDM REMIX)
-koisuru-uchusensou                       | DDR_16_A/Koisuru uchuu sensou!!
-night-of-nights                          | DDR_16_A/Night of knights
-meu-meu-petantan                         | DDR_14_2013/Meumeupettantan!!
-how-to-cook-delicious-rice               | DDR_14_2013/Okome no oishii takikata, soshite okome wo taberu koto ni yoru sono kouka
-sunkiss-drop                             | DDR_10_Supernova2/SUNKiSS DROP~Alison Side~
-
-### custom/stepmania songs with
-### too-long/unclear/duplicate
-### auto-generated song-name-ids
-blue-birthday-massacre-condemned-memoir  | ani/Elfen Lied AMV (Blue by The Birthday Massacre) [Sanjuro]
-zetsubou-billy-death-note                | ani/Zetsubou Billy [Death Note 2nd Ending] [neothe0ne]
-the-world-death-note                     | ani/The WORLD - Death Note 1st OP [Asahina-san]
-v-for-extreme-king-of-light              | KoL DDR Post-5th & Pre-Supernova Edit Pack/V(for EXTREME)
-gee-koreyja                              | Koreyja 3/Gee
-hacking-to-the-gate-huzure               | otakus_dream_pad_mix_02/(Huzure) Hacking to the Gate (Steins Gate)
-bam-bam-bam                              | Shpadoinkle #1/Bam bam bam!! [9]
-banana-bay                               | Shpadoinkle #1/Banana Bay [10]
-bang-bang                                | Shpadoinkle #1/Bang Bang! [9]
-biggest-show-on-earth                    | Shpadoinkle #1/Biggest show on earth [10]
-memories-shpadoinkle                     | Shpadoinkle #10/Memories
-born-to-be-wild-fanfare-ciocarlia        | test7/Born to Be Wild - Fanfare Ciocarlia - Borat
-let-it-go-winter-vivaldi-piano-guys      | test7/Let It Go [Frozen] + Winter [Vivaldi] - The Piano Guys
-a-thousand-leagues-below-mmx-remix       | test7/[Qualifier Singles] - A Thousand Leagues Below (MMX Remix)
-the-price-of-doing-business              | test7/The Price of Doing Business - Shovel Knight
-sonic3-carnivalnight-zone-act1-crazylegz | vid/Sonic 3 - Carnival Night Zone - Act 1 (Crazylegz Edit)
-super-mario-bros-behemoth                | vid/Super Mario Bros
-";
-my $SONG_NAME_IDS_BY_SONG_DIR_SUFFIX = parseSongNameIdOverrides($SONG_NAME_ID_OVERRIDES);
+my $SONG_NAME_IDS_BY_SONG_DIR_SUFFIX = parseSongNameIdOverridesFile($SONG_NAME_ID_OVERRIDES_FILE);
 my $FMT_HARDCODED_SONG_NAME_IDS = join "\n        ", map {join " ", @$_}
   chunkArr(3, sort values %$SONG_NAME_IDS_BY_SONG_DIR_SUFFIX);
 
@@ -688,9 +654,14 @@ sub getDDRSonglistLine($$$){
   return sprintf "%-40s |%s %s", $song, $abbrev, $songlistFeet;
 }
 
-sub parseSongNameIdOverrides($){
-  my ($overridesText) = @_;
-  my @lines = split /\n/, $overridesText;
+sub parseSongNameIdOverridesFile($){
+  my ($file) = @_;
+  my @lines;
+  if(-f $file){
+    open my $fh, "< $file" or die "ERROR: could not read file $file\n$!\n";
+    @lines = <$fh>;
+    close $fh;
+  }
   my $songNameIdsBySongDirSuffix = {};
   for my $line(@lines){
     next if $line =~ /^\s*$/ or $line =~ /^\s*#/;
