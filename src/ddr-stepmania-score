@@ -473,12 +473,15 @@ sub main(@){
 
       if($exitCode != 0){
         my $songDir = $$sd{SONG_DIR};
+        my $song = $$sd{SONG_NAME};
         my $smFile = getSMFileFromSongDir $songDir;
+        my $songlistLine = getDDRSonglistLine($songDir, $song, $smFile);
         die "\n\nERROR: $DDRNAME_TOOL failed\n"
           . "target: $file\n"
-          . "song: $$sd{SONG_NAME}\n"
+          . "song: $song\n"
           . "xml: $xmlFile\n"
           . "sm: $smFile\n"
+          . "songlist line:\n$songlistLine\n";
           ;
       }
     }elsif($cmd eq $COMMAND_DDRSONGLIST){
