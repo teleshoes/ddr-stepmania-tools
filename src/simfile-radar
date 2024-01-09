@@ -103,6 +103,7 @@ sub readSMInfoCache($$);
 sub writeSMInfoCache($$);
 sub songChecksum($$$);
 sub parseSMFile($);
+sub incrementDupeDiffs(@);
 sub extractSongNameId($);
 sub convertValuesByBeatToValuesByRow($);
 sub generateGameDiffKey($$);
@@ -1493,21 +1494,43 @@ sub parseSMFile($){
     $$noteSetInfo{stopsByRow} = convertValuesByBeatToValuesByRow($$noteSetInfo{stops});
   }
 
-
-  #generate a unique game-diff-key for each note-set in the file
+  my %noteSetsByGame;
   for my $noteSetInfo(@noteSetInfos){
     my $game = $$noteSetInfo{game};
-    my $difficulty = $$noteSetInfo{diff};
-    my $gameDiffKey = generateGameDiffKey($game, $difficulty);
-    while(defined $$smInfo{noteSetInfoByGameDiffKey}{$gameDiffKey}){
-      my $index = 1;
-      $index = $1 if $difficulty =~ s/(\d+)$//;
-      $index++;
-      $difficulty = "$difficulty$index";
-      my $dupeGameDiffKey = $gameDiffKey;
-      $gameDiffKey = generateGameDiffKey($game, $difficulty);
-      print STDERR "WARNING: duplicate game/difficulty: "
-        ." $dupeGameDiffKey (using $gameDiffKey)\n";
+    $noteSetsByGame{$game} = [] if not defined $noteSetsByGame{$game};
+    push @{$noteSetsByGame{$game}}, $noteSetInfo;
+  }
+
+  # generate a unique list of difficulties for each game
+  #   append an index to any remaining dupes
+  my %uniqDiffsPerGame;
+  for my $game(sort keys %noteSetsByGame){
+    my @gameNoteSets = @{$noteSetsByGame{$game}};
+    my @origDiffs = map {$$_{diff}} @gameNoteSets;
+    my @newDiffs = @origDiffs;
+    @newDiffs = incrementDupeDiffs(@newDiffs);
+    $uniqDiffsPerGame{$game} = [@newDiffs];
+    for(my $i=0; $i<@gameNoteSets; $i++){
+      my $noteSetInfo = $gameNoteSets[$i];
+      my $oldDiff = $$noteSetInfo{diff};
+      my $newDiff = $newDiffs[$i];
+      if($oldDiff ne $newDiff){
+        print STDERR "WARNING: duplicate difficulty for $game: "
+          ." $oldDiff (using $newDiff)\n";
+        $$noteSetInfo{diff} = $newDiff;
+      }
+    }
+  }
+
+  #ensure unique game-diff-key for each note-set in the file
+  for my $noteSetInfo(@noteSetInfos){
+    my $game = $$noteSetInfo{game};
+    my $diff = $$noteSetInfo{diff};
+
+    my $gameDiffKey = generateGameDiffKey($game, $diff);
+
+    if(defined $$smInfo{noteSetInfoByGameDiffKey}{$gameDiffKey}){
+      die "ERROR: dupe game-diff-key not resolved\n";
     }
 
     $$smInfo{noteSetInfoByGameDiffKey}{$gameDiffKey} = $noteSetInfo;
@@ -1520,6 +1543,27 @@ sub parseSMFile($){
   }
 
   return $smInfo;
+}
+
+sub incrementDupeDiffs(@){
+  my @diffs = @_;
+  my @newDiffs = @diffs;
+
+  for(my $i=$#newDiffs; $i>=0; $i--){
+    my $d = $diffs[$i];
+    my %otherDiffs = map {$newDiffs[$_] => 1} grep {$_ != $i} 0..$#newDiffs;
+
+    while(defined $otherDiffs{$d}){
+      my $index = 1;
+      $index = $1 if $d =~ /(\d+)$/;
+      $index++;
+      $d =~ s/\d+$//;
+      $d = "$d$index";
+    }
+    $newDiffs[$i] = $d;
+  }
+
+  return @newDiffs;
 }
 
 sub extractSongNameId($){
