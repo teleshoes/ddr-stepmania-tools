@@ -410,7 +410,7 @@ sub getDDRStepmaniaScoreAtts($$){
   my $xmlScores = [];
   for my $line(@lines){
     chomp $line;
-    my @vals = split /###/, $line;
+    my @vals = split /###/, $line, -1;
     if(@vals == @$atts - 1){
       push @vals, "";
     }
