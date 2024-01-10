@@ -166,6 +166,9 @@ my $usage = "Usage:
           Much of the numerical calculations were lifted from:
           https://dancedancerevolution.fandom.com/wiki/Groove_Radar
 
+          the groove radar values that are hardcoded in the simfile are stored,
+            as-is, in the variable SM_RADAR
+
       e.g.:
         > $0 GAIA.sm
         singles | beginner   | S22  | V22  | A12  | F8   | C0   |
@@ -260,6 +263,10 @@ my $usage = "Usage:
       parsed out of '#METER' (*.ssc) or '#NOTES' (*.sm) in simfile
       always a non-negative integer (or else ignored)
       presumably a DDR/ITG/PIU feet-meter/difficulty-rating, usually 1-20
+    SM_RADAR
+      parsed out of '#RADARVALUES' (*.ssc) or '#NOTES' (*.sm) in simfile
+      this value is NOT interpreted, validated or used in any calculations,
+      but is taken, as-is, from the simfile, if present
     SONG_DUR
       song duration, in fractional seconds
       this is calculated using BPM_ROWS, STOP_ROWS and SONG_ROW_COUNT
@@ -1159,6 +1166,8 @@ sub readNoteSetStatsCache($$){
   $$stats{GAME_ABBREV} = abbrevGame($$stats{GAME});
   $$stats{DIFF_ABBREV} = abbrevDiff($$stats{DIFF});
 
+  $$stats{SM_RADAR} = "" if not defined $$stats{SM_RADAR};
+
   return $stats;
 }
 sub writeNoteSetStatsCache($$$){
@@ -1176,6 +1185,7 @@ sub calculateNoteSetStats($$){
     GAME                      => $$noteSetInfo{game},
     DIFF_SM                   => $$noteSetInfo{diff},
     SM_FEET                   => $$noteSetInfo{smFeet},
+    SM_RADAR                  => $$noteSetInfo{smRadar},
     SONG_NAME                 => $$smInfo{songName},
     SONG_NAME_TRANSLIT        => $$smInfo{songNameTranslit},
     SONG_NAME_ID              => $$smInfo{songNameId},
@@ -1324,6 +1334,7 @@ sub readSMInfoCache($$){
     $$noteSetInfo{game} = $1    if $noteSetInfoTxt =~ /^game=(.+)$/m;
     $$noteSetInfo{diff} = $1    if $noteSetInfoTxt =~ /^diff=(.+)$/m;
     $$noteSetInfo{smFeet} = $1  if $noteSetInfoTxt =~ /^smFeet=(.+)$/m;
+    $$noteSetInfo{smRadar} = $1 if $noteSetInfoTxt =~ /^smRadar=(.+)$/m;
     $$noteSetInfo{bpms} = $1    if $noteSetInfoTxt =~ /^bpms=(.+)$/m;
     $$noteSetInfo{stops} = $1   if $noteSetInfoTxt =~ /^stops=(.+)$/m;
 
@@ -1396,6 +1407,7 @@ sub writeSMInfoCache($$){
       . "diff=$$noteSetInfo{diff}\n"
       . "smFeet=$$noteSetInfo{smFeet}\n"
       ;
+    print FH "smRadar=$$noteSetInfo{smRadar}\n" if defined $$noteSetInfo{smRadar};
     print FH "bpms=$$noteSetInfo{bpms}\n" if defined $$noteSetInfo{bpms};
     print FH "stops=$$noteSetInfo{stops}\n" if defined $$noteSetInfo{stops};
     close FH;
@@ -1481,10 +1493,11 @@ sub parseSMFile($){
     [^:]*?                   \s*:\s*
     (?<difficulty>$reName)   \s*:\s*
     (?<smFeet>[^:]*?)        \s*:\s*
-    [^:]*?                   \s*:\s*
+    (?<smRadar>[^:]*?)       \s*:\s*
     (?<notes>[^;:]+?)        (?:[;:]|$)
   /gsxi){
-    my ($game, $difficulty, $smFeet, $notes) = ($+{game}, $+{difficulty}, $+{smFeet}, $+{notes});
+    my ($game, $difficulty, $smFeet, $smRadar, $notes) = (
+      $+{game}, $+{difficulty}, $+{smFeet}, $+{smRadar}, $+{notes});
 
     $smFeet = "" if $smFeet !~ /^\d+$/;
 
@@ -1497,6 +1510,7 @@ sub parseSMFile($){
       game    => $game,
       diff    => $difficulty,
       smFeet  => $smFeet,
+      smRadar => $smRadar,
       notes   => $notes,
       bpms    => undef,
       stops   => undef,
@@ -1509,11 +1523,13 @@ sub parseSMFile($){
     my $game = $1       if $noteSet =~ /\#STEPSTYPE    \s*:\s*   ($reName)   \s*;\s*/sxi;
     my $difficulty = $1 if $noteSet =~ /\#DIFFICULTY   \s*:\s*   ($reName)   \s*;\s*/sxi;
     my $smFeet = $1     if $noteSet =~ /\#METER        \s*:\s*   (\d+)       \s*;\s*/sxi;
+    my $smRadar = $1    if $noteSet =~ /\#RADARVALUES  \s*:\s*   ([^;]+)     \s*;\s*/sxi;
     my $notes = $1      if $noteSet =~ /\#NOTES        \s*:\s*   ([^;]+)     \s*;\s*/sxi;
     my $bpms = $1       if $noteSet =~ /\#BPMS         \s*:\s*   ([^;]+)     \s*;\s*/sxi;
     my $stops = $1      if $noteSet =~ /\#STOPS        \s*:\s*   ([^;]+)     \s*;\s*/sxi;
 
     $smFeet = "" if not defined $smFeet;
+    $smRadar = "" if not defined $smRadar;
 
     die "ERROR: missing STEPSTYPE from $smFile $noteSet\n" if not defined $game;
     die "ERROR: missing DIFFICULTY from $smFile\n" if not defined $difficulty;
@@ -1523,6 +1539,7 @@ sub parseSMFile($){
       game    => $game,
       diff    => $difficulty,
       smFeet  => $smFeet,
+      smRadar => $smRadar,
       notes   => $notes,
       bpms    => $bpms,
       stops   => $stops,
