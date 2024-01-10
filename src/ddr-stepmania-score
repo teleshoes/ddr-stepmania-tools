@@ -567,7 +567,7 @@ sub calculateScoreDataCache($){
   my $smFile = getSMFileFromSongDir $songDir;
   my $songInfo = parseSMFile $smFile;
   my $songStats = $$songInfo{$gameDiffKey}{stats};
-  die "ERROR: $gameDiffKey is not defined in $songDir/$smFile\n" if not defined $songStats;
+  die "ERROR: $gameDiffKey is not defined in $smFile\n" if not defined $songStats;
 
   my $songName = getSongNameWithZeniusTool $songDir;
   my $ddraScore = getScoreDDRA($xmlInfo, $songStats);
