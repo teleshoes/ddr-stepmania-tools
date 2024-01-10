@@ -1494,12 +1494,12 @@ sub parseSMFile($){
     }
 
     push @noteSetInfos, {
-      game   => $game,
-      diff   => $difficulty,
-      smFeet => $smFeet,
-      notes  => $notes,
-      bpms   => undef,
-      stops  => undef,
+      game    => $game,
+      diff    => $difficulty,
+      smFeet  => $smFeet,
+      notes   => $notes,
+      bpms    => undef,
+      stops   => undef,
     };
   }
 
@@ -1520,12 +1520,12 @@ sub parseSMFile($){
     die "ERROR: missing NOTES from $smFile\n" if not defined $notes;
 
     push @noteSetInfos, {
-      game   => $game,
-      diff   => $difficulty,
-      smFeet => $smFeet,
-      notes  => $notes,
-      bpms   => $bpms,
-      stops  => $stops,
+      game    => $game,
+      diff    => $difficulty,
+      smFeet  => $smFeet,
+      notes   => $notes,
+      bpms    => $bpms,
+      stops   => $stops,
     };
   }
 
