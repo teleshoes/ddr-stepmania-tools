@@ -17,7 +17,6 @@ sub getDDRSonglistLine($$$);
 sub parseSongNameIdOverridesFile($);
 sub parseXmlFile($);
 sub parseSMFile($);
-sub parseNoteSetStats($);
 sub gameDiffKey($$);
 sub getFCValue($);
 sub getScoreDDRA($$);
@@ -47,6 +46,7 @@ my $SONG_NAME_ID_OVERRIDES_FILE = "$ENV{HOME}/.config/ddrname-songlist-simfile-o
 
 my $DDR_RADAR_FEET_TOOL = "ddr-radar-feet";
 my $ZENIUS_TOOL = "zenius-ddrsonglist";
+my $SIMFILE_RADAR_TOOL = "simfile-radar";
 
 my $DDRNAME_TOOL = "ddrname";
 my @DDRNAME_OPTS = qw(--no-check-orientation --no-banner-flash);
@@ -191,7 +191,7 @@ my $usage = "Usage:
           $FMT_HARDCODED_SONG_NAME_IDS
     (3) parse SM_GAME/SM_DIFF into DDRA_GAME / DDRA_DIFFICULTY using hardcoded transforms
     (4) locate the stepmania SIMFILE (*.sm or *.ssc) in $SONGS_PARENT_DIR/<SONG_DIR>/*.*
-    (5) parse the SIMFILE:
+    (5) parse the SIMFILE with $SIMFILE_RADAR_TOOL
         -parse all games/difficulties, but ignore all except SM_GAME/SM_DIFF
         -for SM_GAME/SM_DIFF, parse:
           -DDR_HOLD_ROW_COUNTS is DDRA-style count of number of rows with holds (single/multi arrow)
@@ -737,102 +737,53 @@ sub parseXmlFile($){
 
 sub parseSMFile($){
   my ($smFile) = @_;
-  my $sm = readFile $smFile;
+  my @fieldsArr = (
+    GAME             => "game",
+    DIFF             => "difficulty",
+    COUNT_NOTE_ROWS  => "stats-totalNoteRows",
+    COUNT_HOLD_ROWS  => "stats-holdRows",
+    COUNT_JUMP_ROWS  => "stats-jumpRows",
+    COUNT_TAPS       => "stats-taps",
+    COUNT_HOLDS      => "stats-holds",
+    COUNT_ROLLS      => "stats-rolls",
+    COUNT_MINES      => "stats-mines",
+    SM_FEET          => "feet",
+    SM_RADAR         => "radar",
+  );
+  my %fieldMap = @fieldsArr;
+  my @simfileRadarFields = map {$fieldsArr[$_]} grep {$_%2 == 0} 0..$#fieldsArr;
+  my $fieldNameCsv = join "###", map {"%$_"} @simfileRadarFields;
+
+  my @simfileRadarCmd = ($SIMFILE_RADAR_TOOL, "--no-cache", $smFile, "--format=$fieldNameCsv");
+  open my $cmdFH, "-|", @simfileRadarCmd
+    or die "ERROR: could not run @simfileRadarCmd\n$!\n";
+  my @lines = <$cmdFH>;
+  close $cmdFH;
+
   my $noteSets = {};
-
-  my $reGames = join "|", @STEPMANIA_GAMES;
-  my $reDiffs = join "|", @STEPMANIA_DIFFICULTIES;
-
-  #SM files
-  while($sm =~ /
-    \#NOTES                  \s*:\s*
-    (?<game>$reGames)        \s*:\s*
-    [^:]*?                   \s*:\s*
-    (?<difficulty>$reDiffs)  \s*:\s*
-    (?<feet>\d+)             \s*:\s*
-    (?<radar>[^;]*?)         \s*:\s*
-    (?<notes>[^;]+?)         ;
-  /gsxi){
-    my $gameDiffKey = gameDiffKey($+{game}, $+{difficulty});
-    $$noteSets{$gameDiffKey} = {%+};
-  }
-
-  #SSC files
-  my @sscNoteSets = $sm =~ /\#NOTEDATA\s*:.*?#NOTES\s*:[^;]*;/gsi;
-  for my $noteSet(@sscNoteSets){
-    my $info = {};
-    $$info{game} = $1       if $noteSet =~ /\#STEPSTYPE    \s*:\s*   ($reGames)   \s*;\s*/sxi;
-    $$info{difficulty} = $1 if $noteSet =~ /\#DIFFICULTY   \s*:\s*   ($reDiffs)   \s*;\s*/sxi;
-    $$info{feet} = $1       if $noteSet =~ /\#METER        \s*:\s*   (\d+)        \s*;\s*/sxi;
-    $$info{radar} = $1      if $noteSet =~ /\#RADARVALUES  \s*:\s*   ([^;]+)      \s*;\s*/sxi;
-    $$info{notes} = $1      if $noteSet =~ /\#NOTES        \s*:\s*   ([^;]+)      \s*;\s*/sxi;
-
-    die "ERROR: missing STEPSTYPE from $smFile $noteSet\n" if not defined $$info{game};
-    die "ERROR: missing DIFFICULTY from $smFile\n" if not defined $$info{difficulty};
-    die "ERROR: missing NOTES from $smFile\n" if not defined $$info{notes};
-
-    my $gameDiffKey = gameDiffKey($$info{game}, $$info{difficulty});
-    $$noteSets{$gameDiffKey} = $info;
-  }
-
-  my $gameDiffKeyCount = keys %$noteSets;
-  if($gameDiffKeyCount == 0){
-    die "ERROR: could not parse any note sets in $smFile\n";
-  }
-
-  for my $game(@STEPMANIA_GAMES){
-    for my $diff(@STEPMANIA_DIFFICULTIES){
-      my $gameDiffKey = gameDiffKey($game, $diff);
-      if(defined $$noteSets{$gameDiffKey}){
-        my $stats = parseNoteSetStats $$noteSets{$gameDiffKey}{notes};
-        $$noteSets{$gameDiffKey}{stats} = $stats;
+  for my $line(@lines){
+    chomp $line;
+    my @fieldVals = split /###/, $line;
+    if($#fieldVals != $#simfileRadarFields){
+      die "ERROR: failed to parse fields of @simfileRadarCmd\n";
+    }
+    my $noteSet = {};
+    $$noteSet{stats} = {};
+    for(my $i=0; $i<@fieldVals; $i++){
+      my $val = $fieldVals[$i];
+      my $simfileRadarFieldName = $simfileRadarFields[$i];
+      my $fieldName = $fieldMap{$simfileRadarFieldName};
+      if($fieldName =~ /^stats-(\w+)$/){
+        my $statName = $1;
+        $$noteSet{stats}{$statName} = $val;
+      }else{
+        $$noteSet{$fieldName} = $val;
       }
     }
+    my $gameDiffKey = gameDiffKey($$noteSet{game}, $$noteSet{difficulty});
+    $$noteSets{$gameDiffKey} = $noteSet;
   }
-
   return $noteSets;
-}
-
-sub parseNoteSetStats($){
-  my ($noteSetText) = @_;
-  my @lines = split /[\r\n]+/, $noteSetText;
-  my @noteRows;
-  for my $line(@lines){
-    my $row = $line;
-
-    $row =~ s/\/\/.*//;                   #remove comments
-    $row =~ s/F/0/g;                      #remove fakes
-    next if $row =~ /^0+$/;               #ignore empty rows
-    next if $row !~ /^[01234MLFAKNH]+$/;  #ignore rows that do not contain only note-chars
-
-    push @noteRows, $row;
-  }
-
-  my $stats = {
-    totalNoteRows  => 0,
-    holdRows       => 0,
-    jumpRows       => 0,
-    taps           => 0,
-    holds          => 0,
-    rolls          => 0,
-    mines          => 0,
-  };
-  for my $row(@noteRows){
-    if($row =~ /[124]/){
-      $$stats{totalNoteRows}++;
-    }
-    if($row =~ /[2]/){
-      $$stats{holdRows}++;
-    }
-    if($row =~ /[124].*[124]/){
-      $$stats{jumpRows}++;
-    }
-    $$stats{taps}  += $row =~ /1/;
-    $$stats{holds} += $row =~ /2/;
-    $$stats{rolls} += $row =~ /4/;
-    $$stats{mines} += $row =~ /M/;
-  }
-  return $stats;
 }
 
 sub gameDiffKey($$){
