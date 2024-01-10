@@ -16,7 +16,7 @@ sub getSMFileFromSongDir($);
 sub getDDRSonglistLine($$$);
 sub parseSongNameIdOverridesFile($);
 sub parseXmlFile($);
-sub parseSMFile($$$);
+sub parseSMFileSongStats($$$);
 sub gameDiffKey($$);
 sub getFCValue($);
 sub getScoreDDRA($$);
@@ -564,7 +564,8 @@ sub calculateScoreDataCache($){
   my $songDir = getSongAbsDir $$xmlInfo{songDir};
   my $gameDiffKey = gameDiffKey($$xmlInfo{game}, $$xmlInfo{difficulty});
   my $smFile = getSMFileFromSongDir $songDir;
-  my $songStats = parseSMFile $smFile, $$xmlInfo{game}, $$xmlInfo{difficulty};
+  my $songStats = parseSMFileSongStats(
+    $smFile, $$xmlInfo{game}, $$xmlInfo{difficulty});
 
   my $songName = getSongNameWithZeniusTool $songDir;
   my $ddraScore = getScoreDDRA($xmlInfo, $songStats);
@@ -732,7 +733,7 @@ sub parseXmlFile($){
   return $info;
 }
 
-sub parseSMFile($$$){
+sub parseSMFileSongStats($$$){
   my ($smFile, $game, $diff) = @_;
   my @simfileRadarFields = qw(
     GAME
