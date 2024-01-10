@@ -105,6 +105,7 @@ sub readSMInfoCache($$);
 sub writeSMInfoCache($$);
 sub songChecksum($$$);
 sub parseSMFile($);
+sub getUniqueDifficulties(@);
 sub swapDupeDiffsForMissingAdjacentDiffs(@);
 sub incrementDupeDiffs(@);
 sub extractSongNameId($);
@@ -1624,18 +1625,16 @@ sub parseSMFile($){
   for my $game(sort keys %noteSetsByGame){
     my @gameNoteSets = @{$noteSetsByGame{$game}};
     my @origDiffs = map {$$_{diff}} @gameNoteSets;
-    my @newDiffs = @origDiffs;
-    @newDiffs = swapDupeDiffsForMissingAdjacentDiffs(@newDiffs);
-    @newDiffs = incrementDupeDiffs(@newDiffs);
-    $uniqDiffsPerGame{$game} = [@newDiffs];
+    my @uniqDiffs = getUniqueDifficulties(@origDiffs);
+    $uniqDiffsPerGame{$game} = [@uniqDiffs];
     for(my $i=0; $i<@gameNoteSets; $i++){
       my $noteSetInfo = $gameNoteSets[$i];
       my $oldDiff = $$noteSetInfo{diff};
-      my $newDiff = $newDiffs[$i];
-      if($oldDiff ne $newDiff){
+      my $uniqDiff = $uniqDiffs[$i];
+      if($oldDiff ne $uniqDiff){
         print STDERR "WARNING: duplicate difficulty for $game: "
-          ." $oldDiff (using $newDiff)\n";
-        $$noteSetInfo{diff} = $newDiff;
+          ." $oldDiff (using $uniqDiff)\n";
+        $$noteSetInfo{diff} = $uniqDiff;
       }
     }
   }
@@ -1661,6 +1660,13 @@ sub parseSMFile($){
   }
 
   return $smInfo;
+}
+
+sub getUniqueDifficulties(@){
+  my @diffs = @_;
+  @diffs = swapDupeDiffsForMissingAdjacentDiffs(@diffs);
+  @diffs = incrementDupeDiffs(@diffs);
+  return @diffs;
 }
 
 #fill in adjacent missing diffs, if any, in (beginner, easy, medium, hard, expert)
