@@ -737,16 +737,14 @@ sub parseXmlFile($){
 
 sub parseSMFile($){
   my ($smFile) = @_;
-  my @fieldsArr = (
-    GAME             => "GAME",
-    DIFF             => "DIFF",
-    COUNT_NOTE_ROWS  => "COUNT_NOTE_ROWS",
-    COUNT_HOLD_ROWS  => "COUNT_HOLD_ROWS",
-    SM_FEET          => "SM_FEET",
-    SM_RADAR         => "SM_RADAR",
+  my @simfileRadarFields = qw(
+    GAME
+    DIFF
+    COUNT_NOTE_ROWS
+    COUNT_HOLD_ROWS
+    SM_FEET
+    SM_RADAR
   );
-  my %fieldMap = @fieldsArr;
-  my @simfileRadarFields = map {$fieldsArr[$_]} grep {$_%2 == 0} 0..$#fieldsArr;
   my $fieldNameFmt = join "###", map {"%$_"} @simfileRadarFields;
 
   my @simfileRadarCmd = ($SIMFILE_RADAR_TOOL, "--no-cache", $smFile, "--format=$fieldNameFmt");
@@ -765,8 +763,7 @@ sub parseSMFile($){
     my $noteSet = {};
     for(my $i=0; $i<@fieldVals; $i++){
       my $val = $fieldVals[$i];
-      my $simfileRadarFieldName = $simfileRadarFields[$i];
-      my $fieldName = $fieldMap{$simfileRadarFieldName};
+      my $fieldName = $simfileRadarFields[$i];
       $$noteSet{$fieldName} = $val;
     }
     my $gameDiffKey = gameDiffKey($$noteSet{GAME}, $$noteSet{DIFF});
