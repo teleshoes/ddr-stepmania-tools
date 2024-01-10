@@ -521,7 +521,7 @@ sub readScoreDataCache($){
       my ($key, $val) = ($1, $2);
       $$sd{$key} = $val;
     }else{
-      die "ERROR: invalid line in cache\n$line";
+      die "ERROR: invalid line in cache $cacheFile\n$line";
     }
   }
 
