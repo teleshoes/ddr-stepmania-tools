@@ -736,8 +736,6 @@ sub parseXmlFile($){
 sub parseSMFileSongStats($$$){
   my ($smFile, $game, $diff) = @_;
   my @simfileRadarFields = qw(
-    GAME
-    DIFF
     COUNT_NOTE_ROWS
     COUNT_HOLD_ROWS
     SM_FEET
