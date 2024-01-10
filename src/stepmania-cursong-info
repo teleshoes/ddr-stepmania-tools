@@ -15,7 +15,7 @@ my $SONG_PARENT_DIR = "$ENV{HOME}/Games/stepmania/latest";
 
 my $RECENT_MILLIS = 6 * 60 * 60 * 1000; #SIX HOURS
 
-my @ATTS = qw(DATETIME PASS_FAIL DDRA_SCORE PERCENT_SCORE FC_MAYBE);
+my @ATTS = qw(DATETIME PASS_FAIL DDRA_SCORE PERCENT_SCORE MODS FC_MAYBE);
 
 my @DDR_GAMES = qw(singles doubles);
 my @DDR_DIFFS = qw(beginner basic difficult expert challenge);
@@ -77,6 +77,7 @@ my $USAGE = "Usage:
 sub formatCurSongInfo($$);
 sub getCurSongInfo();
 sub getSongInfo($$$);
+sub extractSpeedMod($);
 sub ddrnameBestScore($$$);
 sub simfileRadar($$$);
 sub calculateRadarFeet($$$);
@@ -231,14 +232,16 @@ sub formatCurSongInfo($$){
     my $passFail = $$scoreAtts{PASS_FAIL};
     $passFail = "p" if $passFail =~ /^passed$/i;
     $passFail = "F" if $passFail =~ /^failed$/i;
+    my $speedMod = extractSpeedMod($$scoreAtts{MODS});
     if($$opts{format} ne $FORMAT_SHORT){
       my $ddrScore = sprintf "%-7s", $$scoreAtts{DDRA_SCORE};
       $ddrScore = maybeBig($opts, $ddrScore) if $i == 0;
 
-      $fmt .= sprintf("  %s   %s %s %s\n    %s\n",
+      $fmt .= sprintf("  %s   %s %s %s %s\n    %s\n",
                 $$scoreAtts{PASS_FAIL},
                 $ddrScore,
                 $$scoreAtts{PERCENT_SCORE},
+                $speedMod,
                 $$scoreAtts{FC_MAYBE},
                 $$scoreAtts{DATETIME},
       );
@@ -336,6 +339,14 @@ sub getSongInfo($$$){
   $$info{sessionXmlFailedCount} = $failedCount;
 
   return $info;
+}
+
+sub extractSpeedMod($){
+  my ($modStr) = @_;
+  $modStr = "" if not defined $modStr;
+  my $speedMod = "";
+  $speedMod = $1 if $modStr =~ /\b(m\d+|c\d+|a\d+|\d+x|\d*\.\d+x)\b/;
+  return $speedMod;
 }
 
 sub ddrnameBestScore($$$){
