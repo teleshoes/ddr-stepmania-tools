@@ -566,7 +566,7 @@ sub calculateScoreDataCache($){
   my $gameDiffKey = gameDiffKey($$xmlInfo{game}, $$xmlInfo{difficulty});
   my $smFile = getSMFileFromSongDir $songDir;
   my $songInfo = parseSMFile $smFile;
-  my $songStats = $$songInfo{$gameDiffKey}{stats};
+  my $songStats = $$songInfo{$gameDiffKey};
   die "ERROR: $gameDiffKey is not defined in $smFile\n" if not defined $songStats;
 
   my $songName = getSongNameWithZeniusTool $songDir;
@@ -587,8 +587,8 @@ sub calculateScoreDataCache($){
     DDRA_GAME       => getDDRAGame($$xmlInfo{game}),
     DDRA_DIFFICULTY => getDDRADiff($$xmlInfo{difficulty}),
     MODS            => $$xmlInfo{mods},
-    SM_FEET         => $$songInfo{$gameDiffKey}{feet},
-    SM_RADAR        => $$songInfo{$gameDiffKey}{radar},
+    SM_FEET         => $$songStats{feet},
+    SM_RADAR        => $$songStats{radar},
   };
 }
 
@@ -740,8 +740,8 @@ sub parseSMFile($){
   my @fieldsArr = (
     GAME             => "game",
     DIFF             => "difficulty",
-    COUNT_NOTE_ROWS  => "stats-totalNoteRows",
-    COUNT_HOLD_ROWS  => "stats-holdRows",
+    COUNT_NOTE_ROWS  => "totalNoteRows",
+    COUNT_HOLD_ROWS  => "holdRows",
     SM_FEET          => "feet",
     SM_RADAR         => "radar",
   );
@@ -763,17 +763,11 @@ sub parseSMFile($){
       die "ERROR: failed to parse fields of @simfileRadarCmd\n";
     }
     my $noteSet = {};
-    $$noteSet{stats} = {};
     for(my $i=0; $i<@fieldVals; $i++){
       my $val = $fieldVals[$i];
       my $simfileRadarFieldName = $simfileRadarFields[$i];
       my $fieldName = $fieldMap{$simfileRadarFieldName};
-      if($fieldName =~ /^stats-(\w+)$/){
-        my $statName = $1;
-        $$noteSet{stats}{$statName} = $val;
-      }else{
-        $$noteSet{$fieldName} = $val;
-      }
+      $$noteSet{$fieldName} = $val;
     }
     my $gameDiffKey = gameDiffKey($$noteSet{game}, $$noteSet{difficulty});
     $$noteSets{$gameDiffKey} = $noteSet;
