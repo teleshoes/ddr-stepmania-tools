@@ -564,9 +564,7 @@ sub calculateScoreDataCache($){
   my $songDir = getSongAbsDir $$xmlInfo{songDir};
   my $gameDiffKey = gameDiffKey($$xmlInfo{game}, $$xmlInfo{difficulty});
   my $smFile = getSMFileFromSongDir $songDir;
-  my $songInfo = parseSMFile $smFile, $$xmlInfo{game}, $$xmlInfo{difficulty};
-  my $songStats = $$songInfo{$gameDiffKey};
-  die "ERROR: $gameDiffKey is not defined in $smFile\n" if not defined $songStats;
+  my $songStats = parseSMFile $smFile, $$xmlInfo{game}, $$xmlInfo{difficulty};
 
   my $songName = getSongNameWithZeniusTool $songDir;
   my $ddraScore = getScoreDDRA($xmlInfo, $songStats);
@@ -758,23 +756,23 @@ sub parseSMFile($$$){
   my @lines = <$cmdFH>;
   close $cmdFH;
 
-  my $noteSets = {};
-  for my $line(@lines){
-    chomp $line;
-    my @fieldVals = split /###/, $line;
-    if($#fieldVals != $#simfileRadarFields){
-      die "ERROR: failed to parse fields of @simfileRadarCmd\n";
-    }
-    my $noteSet = {};
-    for(my $i=0; $i<@fieldVals; $i++){
-      my $val = $fieldVals[$i];
-      my $fieldName = $simfileRadarFields[$i];
-      $$noteSet{$fieldName} = $val;
-    }
-    my $gameDiffKey = gameDiffKey($$noteSet{GAME}, $$noteSet{DIFF});
-    $$noteSets{$gameDiffKey} = $noteSet;
+  if(@lines != 1){
+    die "ERROR: malformed output of @simfileRadarCmd\n";
   }
-  return $noteSets;
+  my $line = $lines[0];
+  chomp $line;
+
+  my @fieldVals = split /###/, $line;
+  if($#fieldVals != $#simfileRadarFields){
+    die "ERROR: failed to parse fields of @simfileRadarCmd\n";
+  }
+  my $noteSet = {};
+  for(my $i=0; $i<@fieldVals; $i++){
+    my $val = $fieldVals[$i];
+    my $fieldName = $simfileRadarFields[$i];
+    $$noteSet{$fieldName} = $val;
+  }
+  return $noteSet;
 }
 
 sub gameDiffKey($$){
