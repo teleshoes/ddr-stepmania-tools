@@ -748,7 +748,7 @@ sub parseSMFileSongStats($$$){
   my $out = readProc @simfileRadarCmd;
   chomp $out;
 
-  my @fieldVals = split /###/, $out;
+  my @fieldVals = split /###/, $out, -1;
   if($#fieldNames != $#fieldVals){
     die "ERROR: failed to parse fields of @simfileRadarCmd\n";
   }
