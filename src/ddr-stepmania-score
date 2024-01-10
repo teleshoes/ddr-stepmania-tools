@@ -742,11 +742,6 @@ sub parseSMFile($){
     DIFF             => "difficulty",
     COUNT_NOTE_ROWS  => "stats-totalNoteRows",
     COUNT_HOLD_ROWS  => "stats-holdRows",
-    COUNT_JUMP_ROWS  => "stats-jumpRows",
-    COUNT_TAPS       => "stats-taps",
-    COUNT_HOLDS      => "stats-holds",
-    COUNT_ROLLS      => "stats-rolls",
-    COUNT_MINES      => "stats-mines",
     SM_FEET          => "feet",
     SM_RADAR         => "radar",
   );
