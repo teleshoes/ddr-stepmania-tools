@@ -735,13 +735,8 @@ sub parseXmlFile($){
 
 sub parseSMFileSongStats($$$){
   my ($smFile, $game, $diff) = @_;
-  my @simfileRadarFields = qw(
-    COUNT_NOTE_ROWS
-    COUNT_HOLD_ROWS
-    SM_FEET
-    SM_RADAR
-  );
-  my $fieldNameFmt = join "###", map {"%$_"} @simfileRadarFields;
+  my @fieldNames = qw(COUNT_NOTE_ROWS COUNT_HOLD_ROWS SM_FEET SM_RADAR);
+  my $fieldNameFmt = join "###", map {"%$_"} @fieldNames;
 
   my @simfileRadarCmd = ($SIMFILE_RADAR_TOOL,
     "--no-cache",
@@ -750,28 +745,15 @@ sub parseSMFileSongStats($$$){
     "--format=$fieldNameFmt",
     $smFile,
   );
-  open my $cmdFH, "-|", @simfileRadarCmd
-    or die "ERROR: could not run @simfileRadarCmd\n$!\n";
-  my @lines = <$cmdFH>;
-  close $cmdFH;
+  my $out = readProc @simfileRadarCmd;
+  chomp $out;
 
-  if(@lines != 1){
-    die "ERROR: malformed output of @simfileRadarCmd\n";
-  }
-  my $line = $lines[0];
-  chomp $line;
-
-  my @fieldVals = split /###/, $line;
-  if($#fieldVals != $#simfileRadarFields){
+  my @fieldVals = split /###/, $out;
+  if($#fieldNames != $#fieldVals){
     die "ERROR: failed to parse fields of @simfileRadarCmd\n";
   }
-  my $noteSet = {};
-  for(my $i=0; $i<@fieldVals; $i++){
-    my $val = $fieldVals[$i];
-    my $fieldName = $simfileRadarFields[$i];
-    $$noteSet{$fieldName} = $val;
-  }
-  return $noteSet;
+  my $songStats = { map {$fieldNames[$_] => $fieldVals[$_]} (0..$#fieldNames) };
+  return $songStats;
 }
 
 sub gameDiffKey($$){
