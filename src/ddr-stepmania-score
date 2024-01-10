@@ -747,7 +747,11 @@ sub parseSMFile($){
   );
   my $fieldNameFmt = join "###", map {"%$_"} @simfileRadarFields;
 
-  my @simfileRadarCmd = ($SIMFILE_RADAR_TOOL, "--no-cache", $smFile, "--format=$fieldNameFmt");
+  my @simfileRadarCmd = ($SIMFILE_RADAR_TOOL,
+    "--no-cache",
+    "--format=$fieldNameFmt",
+    $smFile,
+  );
   open my $cmdFH, "-|", @simfileRadarCmd
     or die "ERROR: could not run @simfileRadarCmd\n$!\n";
   my @lines = <$cmdFH>;
