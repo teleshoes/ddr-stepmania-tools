@@ -16,7 +16,7 @@ sub getSMFileFromSongDir($);
 sub getDDRSonglistLine($$$);
 sub parseSongNameIdOverridesFile($);
 sub parseXmlFile($);
-sub parseSMFile($);
+sub parseSMFile($$$);
 sub gameDiffKey($$);
 sub getFCValue($);
 sub getScoreDDRA($$);
@@ -192,8 +192,7 @@ my $usage = "Usage:
     (3) parse SM_GAME/SM_DIFF into DDRA_GAME / DDRA_DIFFICULTY using hardcoded transforms
     (4) locate the stepmania SIMFILE (*.sm or *.ssc) in $SONGS_PARENT_DIR/<SONG_DIR>/*.*
     (5) parse the SIMFILE with $SIMFILE_RADAR_TOOL
-        -parse all games/difficulties, but ignore all except SM_GAME/SM_DIFF
-        -for SM_GAME/SM_DIFF, parse:
+        -fetch stats for game=SM_GAME and diff=SM_DIFF:
           -DDR_HOLD_ROW_COUNTS is DDRA-style count of number of rows with holds (single/multi arrow)
             -stepmania counts multi-arrow holds as multiple holds, DDR as single holds
           -DDR_TAP_ROW_COUNTS is DDRA-style count of number of rows with taps (single/multi arrow)
@@ -565,7 +564,7 @@ sub calculateScoreDataCache($){
   my $songDir = getSongAbsDir $$xmlInfo{songDir};
   my $gameDiffKey = gameDiffKey($$xmlInfo{game}, $$xmlInfo{difficulty});
   my $smFile = getSMFileFromSongDir $songDir;
-  my $songInfo = parseSMFile $smFile;
+  my $songInfo = parseSMFile $smFile, $$xmlInfo{game}, $$xmlInfo{difficulty};
   my $songStats = $$songInfo{$gameDiffKey};
   die "ERROR: $gameDiffKey is not defined in $smFile\n" if not defined $songStats;
 
@@ -735,8 +734,8 @@ sub parseXmlFile($){
   return $info;
 }
 
-sub parseSMFile($){
-  my ($smFile) = @_;
+sub parseSMFile($$$){
+  my ($smFile, $game, $diff) = @_;
   my @simfileRadarFields = qw(
     GAME
     DIFF
@@ -749,6 +748,8 @@ sub parseSMFile($){
 
   my @simfileRadarCmd = ($SIMFILE_RADAR_TOOL,
     "--no-cache",
+    "--game=$game",
+    "--diff=$diff",
     "--format=$fieldNameFmt",
     $smFile,
   );
