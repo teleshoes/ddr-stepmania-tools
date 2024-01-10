@@ -587,8 +587,8 @@ sub calculateScoreDataCache($){
     DDRA_GAME       => getDDRAGame($$xmlInfo{game}),
     DDRA_DIFFICULTY => getDDRADiff($$xmlInfo{difficulty}),
     MODS            => $$xmlInfo{mods},
-    SM_FEET         => $$songStats{feet},
-    SM_RADAR        => $$songStats{radar},
+    SM_FEET         => $$songStats{SM_FEET},
+    SM_RADAR        => $$songStats{SM_RADAR},
   };
 }
 
@@ -738,12 +738,12 @@ sub parseXmlFile($){
 sub parseSMFile($){
   my ($smFile) = @_;
   my @fieldsArr = (
-    GAME             => "game",
-    DIFF             => "difficulty",
-    COUNT_NOTE_ROWS  => "totalNoteRows",
-    COUNT_HOLD_ROWS  => "holdRows",
-    SM_FEET          => "feet",
-    SM_RADAR         => "radar",
+    GAME             => "GAME",
+    DIFF             => "DIFF",
+    COUNT_NOTE_ROWS  => "COUNT_NOTE_ROWS",
+    COUNT_HOLD_ROWS  => "COUNT_HOLD_ROWS",
+    SM_FEET          => "SM_FEET",
+    SM_RADAR         => "SM_RADAR",
   );
   my %fieldMap = @fieldsArr;
   my @simfileRadarFields = map {$fieldsArr[$_]} grep {$_%2 == 0} 0..$#fieldsArr;
@@ -769,7 +769,7 @@ sub parseSMFile($){
       my $fieldName = $fieldMap{$simfileRadarFieldName};
       $$noteSet{$fieldName} = $val;
     }
-    my $gameDiffKey = gameDiffKey($$noteSet{game}, $$noteSet{difficulty});
+    my $gameDiffKey = gameDiffKey($$noteSet{GAME}, $$noteSet{DIFF});
     $$noteSets{$gameDiffKey} = $noteSet;
   }
   return $noteSets;
@@ -812,13 +812,13 @@ sub getFCValue($){
 
 sub getScoreDDRA($$){
   my ($xmlInfo, $songStats) = @_;
-  my $step = 1000000 / ($$songStats{totalNoteRows}+$$songStats{holdRows});
+  my $step = 1000000 / ($$songStats{COUNT_NOTE_ROWS}+$$songStats{COUNT_HOLD_ROWS});
 
   my $xmlHoldsOk = $$xmlInfo{holdOk};
   my $xmlHoldsTotal = ($$xmlInfo{holdOk} + $$xmlInfo{holdLetGo} + $$xmlInfo{holdMissed});
   my $xmlHoldsRatio = $xmlHoldsTotal == 0 ? 0 : $xmlHoldsOk / $xmlHoldsTotal;
 
-  my $adjustedHolds = int($$songStats{holdRows} * $xmlHoldsRatio);
+  my $adjustedHolds = int($$songStats{COUNT_HOLD_ROWS} * $xmlHoldsRatio);
 
   my $score = 0;
   $score += $adjustedHolds      * $step;
