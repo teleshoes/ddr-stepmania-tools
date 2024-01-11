@@ -303,18 +303,16 @@ sub getUsage(;$){
     each contains the scores for the bucket, one per line
       formatted '%{date},%{score},%{notes}' e.g.: 20180523,999930,pfc
       (see --format)
-    \"notes\" are a space-separated list of:
-      FC      if one of [$okFCArgs] is present in the filename
-      SPECIAL if one of [$okSpecialArgs] is present in the filename
-      nobar   if $bucketFieldDesc is hard (FEET>=$HARD_SONG_FEET)
-      3rd     if $bucketFieldDesc is hard (FEET>=$HARD_SONG_FEET)
-      (see --notes)
+    \"notes\" are a space-separated list of annotations indicating things like
+      full-combo and high-score
+      see '--notes fc,special,highscore,nobar,3rd'
 
       e.g.: \"max300-doubles-expert\"
             20140331,723150,
-            20140401,990000,pfc nobar
+            20140401,891460,fc
             20140402,684120,nobar
-            20140403,784120,fc
+            20140403,884120,fc 3rd
+            20140404,756130,
 
 
             \"paranoiarespect-expert\"
@@ -355,20 +353,15 @@ sub getUsage(;$){
       --best-by-bucket
         include ONLY the highest score per bucket
       --notes NOTES_CSV
-        comma-separated list of notes to add.
+        comma-separated list of notes to add, one of fc|special|highscore|nobar|3rd
         default is: '$defaultNotesFormat'.
         use empty string for none
 
-        fc
-          add FC if FC is set for the song
-        special
-          add SPECIAL if SPECIAL is set for the song
-        highscore
-          add 'SCORE SONG' if SCORE is the highest in the bucket
-        nobar
-          add 'nobar' if $bucketFieldDesc is hard (FEET>=$HARD_SONG_FEET) and BAR is '$nobarArg'
-        3rd
-          add '3rd' if $bucketFieldDesc is hard (FEET>=$HARD_SONG_FEET) and STAGE is '3rd'
+        fc         = '<FC>'           - if full-combo attribute is present
+        special    = '<SPECIAL>'      - if special attribute is present, e.g.: 'unlock'
+        highscore  = '<SCORE> <SONG>' - if SCORE is the highest in the bucket
+        nobar      = '<BAR>'          - if (FEET>=$HARD_SONG_FEET) and BAR is '$nobarArg'
+        3rd        = '<STAGE>'        - if (FEET>=$HARD_SONG_FEET) and STAGE is '3rd'
       --abbrev
         shorten bucket names by using song abbreviations
       --combine-machines
