@@ -1665,7 +1665,7 @@ sub parseScoreFile($){
   };
 
   $$info{game} = $emptyGameArg if not defined $$info{game} or $$info{game} eq "";
-  $$info{timingWindows} = $emptyGameArg if not defined $$info{timingWindows} or $$info{timingWindows} eq "";
+  $$info{timingWindows} = $emptyTimingWindowsArg if not defined $$info{timingWindows} or $$info{timingWindows} eq "";
   $$info{fc} = $emptyFCArg if not defined $$info{fc} or $$info{fc} eq "";
   $$info{special} = $emptySpecialArg if not defined $$info{special} or $$info{special} eq "";
   $$info{videoType} = $emptyVideoTypeArg if not defined $$info{videoType} or $$info{videoType} eq "";
