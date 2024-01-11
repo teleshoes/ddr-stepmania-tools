@@ -97,6 +97,7 @@ my @okFileFormatVars = qw(
   machine
   timingWindows
   score
+  note
   fc
   special
   bar
@@ -205,6 +206,10 @@ my $yesbarArg = "bar";
 my $nobarArg = "nobar";
 my @barArgs = ($yesbarArg, $nobarArg, $avgbarArg);
 my $okBarArgs = join '|', @barArgs;
+
+my $noteArgPrefix = "note-";
+my $emptyNoteArg = "nonote";
+my $okNoteArgsRegex = "(?:$emptyNoteArg|$noteArgPrefix" . "[a-zA-Z0-9\-]+)";
 
 my @fcArgs = qw(nofc gfc fc pfc mfc);
 my $emptyFCArg = "nofc";
@@ -581,7 +586,7 @@ sub getUsage(;$){
   $0 IMG_FILE [OPT OPT ..] [INFO_ARG INFO_ARG ..]
 
     rename a $EXT_REGEX file using a consistent format
-    \"########_###_SONG_GAME_DIFFICULTY_MACHINE_SCORE_FC_SPECIAL_BAR_STAGE.EXT\"
+    \"########_###_SONG_GAME_DIFFICULTY_MACHINE_SCORE_NOTE_FC_SPECIAL_BAR_STAGE.EXT\"
     ######## is presumably a date in YYYYMMDD and ### is the camera pic index
 
      IMG_FILE
@@ -592,11 +597,12 @@ sub getUsage(;$){
        one of [$EXT_REGEX]
 
      INFO_ARG
-       one of [SONG|GAME|DIFFICULTY|MACHINE|TIMING_WINDOWS|SCORE|STAGE|BAR|FC|SPECIAL|FAILED|VIDEO_TYPE]
+       one of [SONG|GAME|DIFFICULTY|MACHINE|TIMING_WINDOWS|SCORE|STAGE|BAR|NOTE|FC|SPECIAL|FAILED|VIDEO_TYPE]
        exactly one SONG, DIFFICULTY, SCORE, STAGE, and BAR must be given
        exactly zero or one MACHINE args can be given  {REQUIRED, but defaults to '$defaultMachineArg' if missing}
        exactly zero or one GAME args can be given  {optional, '$emptyGameArg' is the same as no GAME arg}
        exactly zero or one TIMING_WINDOWS args can be given {optional, '$emptyTimingWindowsArg' is the same as no TIMING_WINDOWS arg}
+       exactly zero or one NOTE args can be given {optional, '$emptyNoteArg' is the same as no NOTE arg}
        exactly zero or one FC args can be given  {optional, '$emptyFCArg' is the same as no FC arg}
        exactly zero or one SPECIAL args can be given  {optional, '$emptySpecialArg' is the same as no SPECIAL arg}
        exactly zero or one VIDEO_TYPE args can be given  {optional, '$emptyVideoTypeArg' is the same as no FAILED arg}
@@ -647,6 +653,10 @@ sub getUsage(;$){
        an integer between 100,000 and 1,000,000
        must be a multiple of 10
        commas, if present, are stripped out
+
+     NOTE            {optional, '$emptyNoteArg' is the same as no NOTE arg}
+       a string starting with $noteArgPrefix, and consisting only of letts/numbers/dashes
+       e.g.: note-pad-misses-also-was-drunk
 
      FC              {optional, '$emptyFCArg' is the same as no FC arg}
        one of [$okFCArgs]
@@ -775,6 +785,7 @@ sub main(@){
     $$info{machine} = $defaultMachineArg if not defined $$info{machine};
     $$info{game} = $emptyGameArg if not defined $$info{game};
     $$info{timingWindows} = $emptyTimingWindowsArg if not defined $$info{timingWindows};
+    $$info{note} = $emptyNoteArg if not defined $$info{note};
     $$info{fc} = $emptyFCArg if not defined $$info{fc};
     $$info{special} = $emptySpecialArg if not defined $$info{special};
     $$info{videoType} = $emptyVideoTypeArg if not defined $$info{videoType};
@@ -1443,6 +1454,7 @@ sub nameFile($$$$){
 
   delete $$info{game} if defined $$info{game} and $$info{game} eq $emptyGameArg;
   delete $$info{timingWindows} if defined $$info{timingWindows} and $$info{timingWindows} eq $emptyTimingWindowsArg;
+  delete $$info{note} if defined $$info{note} and $$info{note} eq $emptyNoteArg;
   delete $$info{fc} if defined $$info{fc} and $$info{fc} eq $emptyFCArg;
   delete $$info{special} if defined $$info{special} and $$info{special} eq $emptySpecialArg;
   delete $$info{videoType} if defined $$info{videoType} and $$info{videoType} eq $emptyVideoTypeArg;
@@ -1458,6 +1470,7 @@ sub nameFile($$$$){
   $newFileName .= "_$$info{machine}";
   $newFileName .= "_$$info{timingWindows}" if defined $$info{timingWindows};
   $newFileName .= "_$$info{score}";
+  $newFileName .= "_$$info{note}" if defined $$info{note};
   $newFileName .= "_$$info{fc}" if defined $$info{fc};
   $newFileName .= "_$$info{special}" if defined $$info{special};
   $newFileName .= "_$$info{bar}";
@@ -1562,6 +1575,8 @@ sub parseOptsAndInfoArgs(@){
       }else{
         $infoAtt = "score";
       }
+    }elsif($arg =~ /^($okNoteArgsRegex)$/){
+      $infoAtt = "note";
     }elsif($arg =~ /^($okFCArgs)$/){
       $infoAtt = "fc";
     }elsif($arg =~ /^($okSpecialArgs)$/){
@@ -1635,6 +1650,7 @@ sub parseScoreFile($){
     _(?<machine>$okMachineArgs)
     (?:_(?<timingWindows>$okTimingWindowsArgs))?
     _(?<score>\d+)
+    (?:_(?<note>$okNoteArgsRegex))?
     (?:_(?<fc>$okFCArgs))?
     (?:_(?<special>$okSpecialArgs))?
     _(?<bar>$okBarArgs)
@@ -1653,6 +1669,7 @@ sub parseScoreFile($){
     machine       => $+{machine},
     timingWindows => $+{timingWindows},
     score         => $+{score},
+    note          => $+{note},
     fc            => $+{fc},
     special       => $+{special},
     bar           => $+{bar},
@@ -1661,6 +1678,7 @@ sub parseScoreFile($){
 
   $$info{game} = $emptyGameArg if not defined $$info{game} or $$info{game} eq "";
   $$info{timingWindows} = $emptyTimingWindowsArg if not defined $$info{timingWindows} or $$info{timingWindows} eq "";
+  $$info{note} = $emptyNoteArg if not defined $$info{note} or $$info{note} eq "";
   $$info{fc} = $emptyFCArg if not defined $$info{fc} or $$info{fc} eq "";
   $$info{special} = $emptySpecialArg if not defined $$info{special} or $$info{special} eq "";
   $$info{videoType} = $emptyVideoTypeArg if not defined $$info{videoType} or $$info{videoType} eq "";
@@ -2497,6 +2515,7 @@ sub bashComplete($$){
   @complete = (@difficultyArgs, @complete) if not defined $$info{difficulty};
   #@complete = (@machineArgs, @complete) if not defined $$info{machine};
   #@complete = (@timingWindowsArgs, @complete) if not defined $$info{timingWindows};
+  @complete = ($noteArgPrefix, @complete) if not defined $$info{note};
   #@complete = (@fcArgs, @complete) if not defined $$info{fc};
   #@complete = (@specialArgs, @complete) if not defined $$info{special};
   @complete = (@barArgs, @complete) if not defined $$info{bar};
