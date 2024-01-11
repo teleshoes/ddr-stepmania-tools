@@ -38,6 +38,7 @@ my $defaultNotes = {
   'highscore' => 0,
   'nobar' => 0,
   '3rd' => 0,
+  'extra' => 0,
 };
 my $defaultNotesFormat = join ",", grep {$$defaultNotes{$_}} keys %$defaultNotes;
 
@@ -305,7 +306,7 @@ sub getUsage(;$){
       (see --format)
     \"notes\" are a space-separated list of annotations indicating things like
       full-combo and high-score
-      see '--notes fc,special,highscore,nobar,3rd'
+      see '--notes fc,special,highscore,nobar,3rd,extra'
 
       e.g.: \"max300-doubles-expert\"
             20140331,723150,
@@ -353,7 +354,7 @@ sub getUsage(;$){
       --best-by-bucket
         include ONLY the highest score per bucket
       --notes NOTES_CSV
-        comma-separated list of notes to add, one of fc|special|highscore|nobar|3rd
+        comma-separated list of notes to add, one of fc|special|highscore|nobar|3rd|extra
         default is: '$defaultNotesFormat'.
         use empty string for none
 
@@ -362,6 +363,7 @@ sub getUsage(;$){
         highscore  = '<SCORE> <SONG>' - if SCORE is the highest in the bucket
         nobar      = '<BAR>'          - if (FEET>=$HARD_SONG_FEET) and BAR is '$nobarArg'
         3rd        = '<STAGE>'        - if (FEET>=$HARD_SONG_FEET) and STAGE is '3rd'
+        extra      = '<STAGE>'        - if (FEET>=$HARD_SONG_FEET) and STAGE is '4extra'
       --abbrev
         shorten bucket names by using song abbreviations
       --combine-machines
@@ -1800,6 +1802,9 @@ sub formatScoreLine($$$$$){
     push @notes, $$score{bar};
   }
   if($$okNotes{'3rd'} and $$score{stage} eq "3rd" and $$score{feet} > $HARD_SONG_FEET){
+    push @notes, $$score{stage};
+  }
+  if($$okNotes{'extra'} and $$score{stage} eq "4extra" and $$score{feet} > $HARD_SONG_FEET){
     push @notes, $$score{stage};
   }
 
