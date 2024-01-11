@@ -33,6 +33,7 @@ my @DEFAULT_BUCKET_FIELDS = qw(song game difficulty machine);
 my $bucketFieldDesc = join "-", map {"<" . uc($_) . ">"} @DEFAULT_BUCKET_FIELDS;
 
 my $defaultNotes = {
+  'note' => 1,
   'fc' => 1,
   'special' => 0,
   'highscore' => 0,
@@ -311,12 +312,12 @@ sub getUsage(;$){
       (see --format)
     \"notes\" are a space-separated list of annotations indicating things like
       full-combo and high-score
-      see '--notes fc,special,highscore,nobar,3rd,extra'
+      see '--notes note,fc,special,highscore,nobar,3rd,extra'
 
       e.g.: \"max300-doubles-expert\"
             20140331,723150,
             20140401,891460,fc
-            20140402,684120,nobar
+            20140402,684120,nobar tripped-and-fell
             20140403,884120,fc 3rd
             20140404,756130,
 
@@ -359,10 +360,11 @@ sub getUsage(;$){
       --best-by-bucket
         include ONLY the highest score per bucket
       --notes NOTES_CSV
-        comma-separated list of notes to add, one of fc|special|highscore|nobar|3rd|extra
+        comma-separated list of notes to add, one of note|fc|special|highscore|nobar|3rd|extra
         default is: '$defaultNotesFormat'.
         use empty string for none
 
+        note       = '<NOTE>'         - if manual $noteArgPrefix attribute is present
         fc         = '<FC>'           - if full-combo attribute is present
         special    = '<SPECIAL>'      - if special attribute is present, e.g.: 'unlock'
         highscore  = '<SCORE> <SONG>' - if SCORE is the highest in the bucket
@@ -1806,6 +1808,9 @@ sub formatScoreLine($$$$$){
   my ($score, $isHighScore, $format, $okNotes, $bucketName) = @_;
 
   my @notes;
+  if($$okNotes{'note'} and defined $$score{note} and $$score{note} =~ /^note-([a-zA-Z0-9\-]+)$/){
+    push @notes, $1;
+  }
   if($$okNotes{'fc'} and defined $$score{fc} and $$score{fc} ne $emptyFCArg){
     push @notes, $$score{fc};
   }
