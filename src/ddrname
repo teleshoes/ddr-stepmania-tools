@@ -2019,6 +2019,7 @@ sub splitScoresIntoCourses($$){
   } keys %$scoresByFile;
 
   my $stageNums = {
+    "0none" => 0,
     "1st" => 1,
     "2nd" => 2,
     "3rd" => 3,
@@ -2038,7 +2039,9 @@ sub splitScoresIntoCourses($$){
     die "invalid stage '$stage'\n" if not defined $stageNum;
 
     my $isNewCourse = 0;
-    if(defined $lastStageNum && defined $lastMtime){
+    if($stageNum == 0){
+      $isNewCourse = 1;
+    }elsif(defined $lastStageNum && defined $lastMtime){
       die "mtimes out of order at $file\n" if $lastMtime > $mtime;
       my $stageNumDiff = $stageNum - $lastStageNum;
       my $mtimeDiff = $mtime - $lastMtime;
