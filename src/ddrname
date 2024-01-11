@@ -199,10 +199,10 @@ my $okTimingWindowsArgs = join '|', @timingWindowsArgs;
 my @stageArgs = qw(0none 1st 2nd 3rd 4extra 4nonstop 5encore);
 my $okStageArgs = join '|', @stageArgs;
 
-my @barArgs = qw(bar nobar avgbar);
 my $avgbarArg = "avgbar";
 my $yesbarArg = "bar";
 my $nobarArg = "nobar";
+my @barArgs = ($yesbarArg, $nobarArg, $avgbarArg);
 my $okBarArgs = join '|', @barArgs;
 
 my @fcArgs = qw(nofc gfc fc pfc mfc);
@@ -210,7 +210,7 @@ my $emptyFCArg = "nofc";
 my $okFCArgs = join '|', @fcArgs;
 
 my @specialArgs = qw(nospecial unlock);
-my $emptySpecialArg = qw(nospecial);
+my $emptySpecialArg = "nospecial";
 my $okSpecialArgs = join '|', @specialArgs;
 
 my @videoTypeArgs = qw(novideo camera screen);
