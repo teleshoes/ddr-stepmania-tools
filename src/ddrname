@@ -51,6 +51,7 @@ my @okFilters = qw(
   --machine --sn2 --2013 --itg2 --x3 --a --sm --default-machine
   --tw
   --score --minscore --maxscore --monotonic --increasing --records
+  --closest-mtime
   --date --mindate --maxdate --dailybest
   --recent --sixmos --sixmonths --6mos
   --bar --nobar --diffbar --samebar
@@ -64,6 +65,7 @@ my $argOptFiltersRegex = join "|", qw(
   --song
   --feet --minfeet --maxfeet
   --score --minscore --maxscore
+  --closest-mtime
   --date --mindate --maxdate
   --machine
   --tw
@@ -488,6 +490,10 @@ sub getUsage(;$){
       --monotonic, --increasing, --records
         disclude any score that is lower than any score from a previous date,
         with the same $bucketFieldDesc
+
+    FILTER: CLOSEST MTIME
+      --closest-mtime DATETIME_EPOCH
+        include EXACTLY ONE score, whichever file has the closest mtime
 
     FILTER: DATE
       --date YYYYMMDD, --mindate YYYYMMDD
@@ -1280,6 +1286,9 @@ sub parseFilterOptions($){
     }elsif($opt =~ /^(--maxscore)$/){
       die getUsage("invalid $opt: $arg") if $arg !~ /^(\d+)$/;
       $$filters{maxscore} = $1;
+    }elsif($opt =~ /^(--closest-mtime)$/){
+      die getUsage("invalid $opt: $arg") if $arg !~ /^(\d+)$/;
+      $$filters{closestMtime} = $arg;
     }elsif($opt =~ /^(--mindate|--date)$/){
       die getUsage("invalid $opt: $arg") if $arg !~ /^(\d{8})$/;
       $$filters{mindate} = $1;
@@ -1993,6 +2002,28 @@ sub filterScores($$){
           delete $$scoresByFile{$$score{file}};
         }
       }
+    }
+  }
+
+  if($$filters{closestMtime}){
+    my $scores = [values %$scoresByFile];
+    my $mtimes = getMtimesByFile($scoresByFile);
+
+    my $minDiff = undef;
+    my $minScore = undef;
+    for my $score(@$scores){
+      my $file = $$score{file};
+      my $diff = $$mtimes{$file} - $$filters{closestMtime};
+      $diff = 0 - $diff if $diff < 0;
+      if(not defined $minDiff or $diff < $minDiff){
+        $minDiff = $diff;
+        $minScore = $score;
+      }
+    }
+    if(defined $minScore){
+      $scoresByFile = {$$minScore{file} => $minScore};
+    }else{
+      $scoresByFile = {};
     }
   }
 
