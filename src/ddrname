@@ -234,6 +234,9 @@ sub getUsage(;$){
   my $msg = shift;
 
   my $usage = "Usage:
+  $0 -h | --help
+    show this message
+
   $0 --fehterm
     run \"fehterm 'ddrname %f '\" (opens feh and a terminal connected to it with xdotool)
 
@@ -757,7 +760,10 @@ sub main(@){
     exit 0;
   }
 
-  if(@_ == 1 and $_[0] =~ /^(--fehterm)$/){
+  if(@_ == 1 and $_[0] =~ /^(-h|--help)$/){
+    print getUsage();
+    exit 0;
+  }elsif(@_ == 1 and $_[0] =~ /^(--fehterm)$/){
     my $cmd = shift;
     exec "fehterm", "ddrname %f ";
   }elsif(@_ == 2 and $_[0] =~ /^(--banners)$/){
