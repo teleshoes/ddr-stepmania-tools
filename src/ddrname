@@ -476,8 +476,8 @@ sub getUsage(;$){
       --a
         include only scores where MACHINE is a (same as: --machine a)
       --sm
-        include only scores where MACHINE is sm50pdp or sm53pdp or sm53ltek or sm53ltekp or sm53ltekpa
-        (same as: --machine sm50pdp,sm53pdp,sm53ltek,sm53ltekp,sm53ltekpa)
+        include only scores where MACHINE starts with 'sm'
+        (same as: --machine " . join(",", grep {/^sm/} @machineArgs) . "
       --default-machine
         include only scores where MACHINE is $defaultMachineArg
         (same as: --machine $defaultMachineArg)
@@ -1275,12 +1275,7 @@ sub parseFilterOptions($){
       $$filters{machine} = {map {$_ => 0} @machineArgs};
       $$filters{machine}{a} = 1;
     }elsif($opt =~ /^(--sm)$/){
-      $$filters{machine} = {map {$_ => 0} @machineArgs};
-      $$filters{machine}{sm50pdp} = 1;
-      $$filters{machine}{sm53pdp} = 1;
-      $$filters{machine}{sm53ltek} = 1;
-      $$filters{machine}{sm53ltekp} = 1;
-      $$filters{machine}{sm53ltekpa} = 1;
+      $$filters{machine} = {map {$_ => ($_ =~ /^sm/ ? 1 : 0)} @machineArgs};
     }elsif($opt =~ /^(--default-machine)$/){
       $$filters{machine} = {map {$_ => 0} @machineArgs};
       $$filters{machine}{$defaultMachineArg} = 1;
