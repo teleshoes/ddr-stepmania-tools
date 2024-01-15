@@ -1870,6 +1870,26 @@ sub getBucketBarCounts($){
 sub filterScoresByFileInfo($@){
   my ($filters, @files) = @_;
 
+  if(defined $$filters{closestMtime}){
+    my %mtimes = map {$_ => mtime("$scoreDir/$_")} @files;
+
+    my $minDiff = undef;
+    my $minFile = undef;
+    for my $file(@files){
+      my $diff = $mtimes{$file} - $$filters{closestMtime};
+      $diff = 0 - $diff if $diff < 0;
+      if(not defined $minDiff or $diff < $minDiff){
+        $minDiff = $diff;
+        $minFile = $file;
+      }
+    }
+    if(defined $minFile){
+      @files = ($minFile);
+    }else{
+      @files = ();
+    }
+  }
+
   my $filenameFilterRegex = extractFileNameFilterRegex($filters);
   @files = grep {/$filenameFilterRegex/} @files if defined $filenameFilterRegex;
 
@@ -1946,28 +1966,6 @@ sub filterScoresByScoreInfo($$){
           delete $$scoresByFile{$$score{file}};
         }
       }
-    }
-  }
-
-  if($$filters{closestMtime}){
-    my $scores = [values %$scoresByFile];
-    my $mtimes = getMtimesByFile($scoresByFile);
-
-    my $minDiff = undef;
-    my $minScore = undef;
-    for my $score(@$scores){
-      my $file = $$score{file};
-      my $diff = $$mtimes{$file} - $$filters{closestMtime};
-      $diff = 0 - $diff if $diff < 0;
-      if(not defined $minDiff or $diff < $minDiff){
-        $minDiff = $diff;
-        $minScore = $score;
-      }
-    }
-    if(defined $minScore){
-      $scoresByFile = {$$minScore{file} => $minScore};
-    }else{
-      $scoresByFile = {};
     }
   }
 
