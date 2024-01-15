@@ -145,7 +145,7 @@ sub getScoreBuckets($$@);
 sub formatScoreLine($$$$$);
 sub getBucketBarCounts($);
 sub filterScoresByFileInfo($@);
-sub filterScores($$);
+sub filterScoresByScoreInfo($$);
 sub getMtimesByFile($);
 sub splitScoresIntoCourses($$);
 sub splitCoursesIntoSessions(@);
@@ -1614,7 +1614,7 @@ sub getScoresByFile($){
 
   my $scoresByFile = { map {$_ => parseScoreFile $_} @files };
   if(defined $filters){
-    $scoresByFile = filterScores($scoresByFile, $filters);
+    $scoresByFile = filterScoresByScoreInfo($scoresByFile, $filters);
   }
   return $scoresByFile;
 }
@@ -1876,7 +1876,7 @@ sub filterScoresByFileInfo($@){
   return @files;
 }
 
-sub filterScores($$){
+sub filterScoresByScoreInfo($$){
   my ($scoresByFile, $filters) = @_;
   $scoresByFile = {%$scoresByFile};
 
