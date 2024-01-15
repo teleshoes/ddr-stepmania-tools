@@ -616,7 +616,7 @@ sub getUsage(;$){
        exactly zero or one NOTE args can be given {optional, '$emptyNoteArg' is the same as no NOTE arg}
        exactly zero or one FC args can be given  {optional, '$emptyFCArg' is the same as no FC arg}
        exactly zero or one SPECIAL args can be given  {optional, '$emptySpecialArg' is the same as no SPECIAL arg}
-       exactly zero or one VIDEO_TYPE args can be given  {optional, '$emptyVideoTypeArg' is the same as no FAILED arg}
+       exactly zero or one VIDEO_TYPE args can be given  {optional, '$emptyVideoTypeArg' is the same as no VIDEO_TYPE arg}
        exactly zero or one FAILED args can be given  {optional, '$emptyFailedArg' is the same as no FAILED arg}
 
      SONG            {REQUIRED}
