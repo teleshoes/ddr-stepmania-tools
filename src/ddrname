@@ -48,7 +48,7 @@ my @okFilters = qw(
   --song
   --hard --nothard --feet --minfeet --maxfeet
   --singles --doubles --nonstop --nonstopdoubles
-  --beginner --basic --difficult --expert --challenge --edit
+  --difficulty --beginner --basic --difficult --expert --challenge --edit
   --machine --sn2 --2013 --itg2 --x3 --a --sm --default-machine
   --tw
   --score --minscore --maxscore --monotonic --increasing --records
@@ -68,6 +68,7 @@ my $argOptFiltersRegex = join "|", qw(
   --score --minscore --maxscore
   --closest-mtime
   --date --mindate --maxdate
+  --difficulty
   --machine
   --tw
 );
@@ -154,6 +155,7 @@ sub combine(@);
 sub mtime($);
 sub getImageOrientation($);
 sub checkUnique(@);
+sub isSubset($$);
 sub bannerFlash($);
 sub bashComplete($$);
 sub warnMsg($);
@@ -447,24 +449,17 @@ sub getUsage(;$){
         {overrides --singles and --nonstop and --doubles}
 
     FILTER: DIFFICULTY
-      --beginner
-        include only scores where DIFFICULTY is beginner OR not defined
-        {overrides --basic|--difficult|--expert|--challenge|--edit}
-      --basic
-        include only scores where DIFFICULTY is basic OR not defined
-        {overrides --beginner|--difficult|--expert|--challenge|--edit}
-      --difficult
-        include only scores where DIFFICULTY is difficult OR not defined
-        {overrides --beginner|--basic|--expert|--challenge|--edit}
-      --expert
-        include only scores where DIFFICULTY is expert OR not defined
-        {overrides --beginner|--basic|--difficult|--challenge|--edit}
-      --challenge
-        include only scores where DIFFICULTY is challenge OR not defined
-        {overrides --beginner|--basic|--difficult|--expert|--edit}
-      --edit
-        include only scores where DIFFICULTY is edit OR not defined
-        {overrides --beginner|--basic|--difficult|--expert|--challenge}
+      --difficulty DIFFICULTY_CSV
+        include only scores where DIFFICULTY is one of the values
+          in the comma-separated list of difficulties DIFFICULTY_CSV
+          (all other scores are excluded)
+        e.g.: --difficulty expert,challenge
+      --beginner        same as: --difficulty beginner
+      --basic           same as: --difficulty basic
+      --difficult       same as: --difficulty difficult
+      --expert          same as: --difficulty expert
+      --challenge       same as: --difficulty challenge
+      --edit            same as: --difficulty edit
 
     FILTER: MACHINE
       --machine MACHINE_CSV
@@ -1262,10 +1257,12 @@ sub parseFilterOptions($){
       $$filters{game} = {singles => 0, doubles => 0, nonstop => 1, nonstopdoubles => 0};
     }elsif($opt =~ /^(--nonstopdoubles)$/){
       $$filters{game} = {singles => 0, doubles => 0, nonstop => 0, nonstopdoubles => 1};
+    }elsif($opt =~ /^(--difficulty)$/){
+      my @csvArg = split /\s*,\s*/, $arg;
+      die getUsage("invalid $opt: $arg") if not isSubset(\@csvArg, \@difficultyArgs);
+      $$filters{difficultyRegex} = join "|", @csvArg;
     }elsif($opt =~ /^--(beginner|basic|difficult|expert|challenge|edit)$/){
-      my $difficulty = $1;
-      $$filters{difficulty} = {map {$_ => 0} @difficultyArgs};
-      $$filters{difficulty}{$difficulty} = 1;
+      $$filters{difficultyRegex} = $1;
     }elsif($opt =~ /^(--sn2)$/){
       $$filters{machine} = {map {$_ => 0} @machineArgs};
       $$filters{machine}{sn2} = 1;
@@ -1948,10 +1945,10 @@ sub filterScores($$){
         $ok = 0;
       }
     }
-    if(defined $$filters{difficulty}){
-      my $f = $$filters{difficulty};
+    if(defined $$filters{difficultyRegex}){
+      my $f = $$filters{difficultyRegex};
       my $difficulty = $$s{difficulty};
-      if(defined $$f{$difficulty} and not $$f{$difficulty}){
+      if($difficulty !~ /^$f$/){
         $ok = 0;
       }
     }
@@ -2464,6 +2461,14 @@ sub checkUnique(@){
     $uniqCI{lc $s} = 1;
     $uniqCS{$s} = 1;
   }
+}
+sub isSubset($$){
+  my ($arr1, $arr2) = @_;
+  my %ok2 = map {$_ => 1} @$arr2;
+  for my $e1(@$arr1){
+    return 0 if not defined $ok2{$e1};
+  }
+  return 1;
 }
 
 sub bannerFlash($){
