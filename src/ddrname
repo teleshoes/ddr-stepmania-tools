@@ -1869,21 +1869,41 @@ sub getBucketBarCounts($){
 sub filterScoresByFileInfo($@){
   my ($filters, @files) = @_;
 
+  #modified binary search to find the closest by mtime
+  #  exactly zero or one files will match this filter
   if(defined $$filters{closestMtime}){
-    my %mtimes = map {$_ => mtime("$scoreDir/$_")} @files;
+    my $targetMtime = $$filters{closestMtime};
+    my $min = 0;
+    my $max = $#files;
+    my $targetIdx = undef;
+    while(1){
+      #only one or two elems to compare, select the closest
+      if($min == $max){
+        $targetIdx = $min;
+        last;
+      }elsif($min == $max-1){
+        my $leftMtimeDiff = $targetMtime - mtime("$scoreDir/$files[$min]");
+        my $rightMtimeDiff = $targetMtime - mtime("$scoreDir/$files[$max]");
+        $leftMtimeDiff = 0-$leftMtimeDiff if $leftMtimeDiff < 0;
+        $rightMtimeDiff = 0-$rightMtimeDiff if $rightMtimeDiff < 0;
+        if($leftMtimeDiff <= $rightMtimeDiff){
+          $targetIdx = $min;
+        }else{
+          $targetIdx = $max;
+        }
+        last;
+      }
 
-    my $minDiff = undef;
-    my $minFile = undef;
-    for my $file(@files){
-      my $diff = $mtimes{$file} - $$filters{closestMtime};
-      $diff = 0 - $diff if $diff < 0;
-      if(not defined $minDiff or $diff < $minDiff){
-        $minDiff = $diff;
-        $minFile = $file;
+      my $mid = int(($min+$max)/2);
+      my $midMtime = mtime("$scoreDir/$files[$mid]");
+      if($midMtime <= $targetMtime){
+        $min = $mid;
+      }else{
+        $max = $mid;
       }
     }
-    if(defined $minFile){
-      @files = ($minFile);
+    if(defined $targetIdx and 0 <= $targetIdx and $targetIdx <= $#files){
+      @files = ($files[$targetIdx]);
     }else{
       @files = ();
     }
