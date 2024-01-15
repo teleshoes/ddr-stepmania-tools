@@ -1660,7 +1660,7 @@ sub parseScoreFile($){
     (?:\.\/)?
     (?<date>\d{8})
     _(?<index>\d+)
-    (?:_(?<passFail>reminder_failed))?
+    (?:_reminder_(?<passFail>failed))?
     _(?<song>$okSongArgs)
     (?:_(?<game>$okGameArgs))?
     _(?<difficulty>$okDifficultyArgs)
