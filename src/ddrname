@@ -49,7 +49,7 @@ my @okFilters = qw(
   --hard --nothard --feet --minfeet --maxfeet
   --singles --doubles --nonstop --nonstopdoubles
   --difficulty --beginner --basic --difficult --expert --challenge --edit
-  --machine --sn2 --2013 --itg2 --x3 --a --sm --default-machine
+  --machine --sn2 --2013 --itg2 --x3 --a --sm --arcade --not-sm --default-machine
   --tw
   --score --minscore --maxscore --monotonic --increasing --records
   --closest-mtime
@@ -478,6 +478,9 @@ sub getUsage(;$){
       --sm
         include only scores where MACHINE starts with 'sm'
         (same as: --machine " . join(",", grep {/^sm/} @machineArgs) . "
+      --arcade | --not-sm
+        include only scores where MACHINE does not start with 'sm'
+        (same as: --machine " . join(",", grep {/^(?!sm)/} @machineArgs) . "
       --default-machine
         include only scores where MACHINE is $defaultMachineArg
         (same as: --machine $defaultMachineArg)
@@ -1276,6 +1279,8 @@ sub parseFilterOptions($){
       $$filters{machine}{a} = 1;
     }elsif($opt =~ /^(--sm)$/){
       $$filters{machine} = {map {$_ => ($_ =~ /^sm/ ? 1 : 0)} @machineArgs};
+    }elsif($opt =~ /^(--arcade|--not-sm)$/){
+      $$filters{machine} = {map {$_ => ($_ !~ /^sm/ ? 1 : 0)} @machineArgs};
     }elsif($opt =~ /^(--default-machine)$/){
       $$filters{machine} = {map {$_ => 0} @machineArgs};
       $$filters{machine}{$defaultMachineArg} = 1;
