@@ -226,9 +226,9 @@ my @videoTypeArgs = qw(novideo camera screen);
 my $emptyVideoTypeArg = "novideo";
 my $okVideoTypeArgs = join '|', @videoTypeArgs;
 
-my @failedArgs = qw(passed failed);
-my $emptyFailedArg = "passed";
-my $okFailedArgs = join '|', @failedArgs;
+my @passFailArgs = qw(passed failed);
+my $emptyPassFailArg = "passed";
+my $okPassFailArgs = join '|', @passFailArgs;
 
 sub getUsage(;$){
   my $msg = shift;
@@ -608,7 +608,7 @@ sub getUsage(;$){
        one of [$EXT_REGEX]
 
      INFO_ARG
-       one of [SONG|GAME|DIFFICULTY|MACHINE|TIMING_WINDOWS|SCORE|STAGE|BAR|NOTE|FC|SPECIAL|FAILED|VIDEO_TYPE]
+       one of [SONG|GAME|DIFFICULTY|MACHINE|TIMING_WINDOWS|SCORE|STAGE|BAR|NOTE|FC|SPECIAL|PASSFAIL|VIDEO_TYPE]
        exactly one SONG, DIFFICULTY, SCORE, STAGE, and BAR must be given
        exactly zero or one MACHINE args can be given  {REQUIRED, but defaults to '$defaultMachineArg' if missing}
        exactly zero or one GAME args can be given  {optional, '$emptyGameArg' is the same as no GAME arg}
@@ -617,7 +617,7 @@ sub getUsage(;$){
        exactly zero or one FC args can be given  {optional, '$emptyFCArg' is the same as no FC arg}
        exactly zero or one SPECIAL args can be given  {optional, '$emptySpecialArg' is the same as no SPECIAL arg}
        exactly zero or one VIDEO_TYPE args can be given  {optional, '$emptyVideoTypeArg' is the same as no VIDEO_TYPE arg}
-       exactly zero or one FAILED args can be given  {optional, '$emptyFailedArg' is the same as no FAILED arg}
+       exactly zero or one PASSFAIL args can be given  {optional, '$emptyPassFailArg' is the same as no PASSFAIL arg}
 
      SONG            {REQUIRED}
        song name from $SONG_LIST_FILE
@@ -688,8 +688,8 @@ sub getUsage(;$){
     VIDEO_TYPE       {optional, '$emptyVideoTypeArg' is the same as no VIDEO_TYPE arg}
       one of [$okVideoTypeArgs]
 
-     FAILED          {optional, '$emptyFailedArg' is the same as no FAILED arg}
-       one of [$okFailedArgs]
+     PASSFAIL        {optional, '$emptyPassFailArg' is the same as no PASSFAIL arg}
+       one of [$okPassFailArgs]
        if 'failed', name will start with \"reminder_failed\"
 
      OPT
@@ -803,7 +803,7 @@ sub main(@){
     $$info{fc} = $emptyFCArg if not defined $$info{fc};
     $$info{special} = $emptySpecialArg if not defined $$info{special};
     $$info{videoType} = $emptyVideoTypeArg if not defined $$info{videoType};
-    $$info{failed} = $emptyFailedArg if not defined $$info{failed};
+    $$info{passFail} = $emptyPassFailArg if not defined $$info{passFail};
 
     my $scoresByFile = getScoresByFile(undef);
     my $scores = [values %$scoresByFile];
@@ -1475,12 +1475,12 @@ sub nameFile($$$$){
   delete $$info{fc} if defined $$info{fc} and $$info{fc} eq $emptyFCArg;
   delete $$info{special} if defined $$info{special} and $$info{special} eq $emptySpecialArg;
   delete $$info{videoType} if defined $$info{videoType} and $$info{videoType} eq $emptyVideoTypeArg;
-  delete $$info{failed} if defined $$info{failed} and $$info{failed} eq $emptyFailedArg;
+  delete $$info{passFail} if defined $$info{passFail} and $$info{passFail} eq $emptyPassFailArg;
 
   my $newFileName = '';
   $newFileName .= "$prefix";
   $newFileName .= "_$$info{videoType}" if defined $$info{videoType};
-  $newFileName .= "_reminder_failed" if defined $$info{failed};
+  $newFileName .= "_reminder_failed" if defined $$info{passFail};
   $newFileName .= "_$$info{song}";
   $newFileName .= "_$$info{game}" if defined $$info{game};
   $newFileName .= "_$$info{difficulty}";
@@ -1604,8 +1604,8 @@ sub parseOptsAndInfoArgs(@){
       $infoAtt = "stage";
     }elsif($arg =~ /^($okVideoTypeArgs)$/){
       $infoAtt = "videoType";
-    }elsif($arg =~ /^($okFailedArgs)$/){
-      $infoAtt = "failed";
+    }elsif($arg =~ /^($okPassFailArgs)$/){
+      $infoAtt = "passFail";
     }else{
       $infoAtt = undef;
     }
@@ -1660,7 +1660,7 @@ sub parseScoreFile($){
     (?:\.\/)?
     (?<date>\d{8})
     _(?<index>\d+)
-    (?:_(?<failed>reminder_failed))?
+    (?:_(?<passFail>reminder_failed))?
     _(?<song>$okSongArgs)
     (?:_(?<game>$okGameArgs))?
     _(?<difficulty>$okDifficultyArgs)
@@ -1679,7 +1679,7 @@ sub parseScoreFile($){
     file          => $file,
     date          => $+{date},
     index         => $+{index},
-    failed        => $+{failed},
+    passFail      => $+{passFail},
     song          => $+{song},
     game          => $+{game},
     difficulty    => $+{difficulty},
@@ -1699,7 +1699,7 @@ sub parseScoreFile($){
   $$info{fc} = $emptyFCArg if not defined $$info{fc} or $$info{fc} eq "";
   $$info{special} = $emptySpecialArg if not defined $$info{special} or $$info{special} eq "";
   $$info{videoType} = $emptyVideoTypeArg if not defined $$info{videoType} or $$info{videoType} eq "";
-  $$info{failed} = $emptyFailedArg if not defined $$info{failed} or $$info{failed} eq "";
+  $$info{passFail} = $emptyPassFailArg if not defined $$info{passFail} or $$info{passFail} eq "";
 
   my $feet = $songFeetDifficulties{$$info{song}}{$$info{game}}{$$info{difficulty}};
   if(not defined $feet or $feet !~ /^\d+$/){
