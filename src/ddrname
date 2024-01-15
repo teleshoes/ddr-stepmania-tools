@@ -1252,22 +1252,16 @@ sub parseFilterOptions($){
       $$filters{difficultyRegex} = join "|", @csvArg;
     }elsif($opt =~ /^--(beginner|basic|difficult|expert|challenge|edit)$/){
       $$filters{difficultyRegex} = $1;
-    }elsif($opt =~ /^(--sm)$/){
-      $$filters{machine} = {map {$_ => ($_ =~ /^sm/ ? 1 : 0)} @machineArgs};
-    }elsif($opt =~ /^(--arcade|--not-sm)$/){
-      $$filters{machine} = {map {$_ => ($_ !~ /^sm/ ? 1 : 0)} @machineArgs};
-    }elsif($opt =~ /^(--default-machine)$/){
-      $$filters{machine} = {map {$_ => 0} @machineArgs};
-      $$filters{machine}{$defaultMachineArg} = 1;
     }elsif($opt =~ /^(--machine)$/){
-      $$filters{machine} = {map {$_ => 0} @machineArgs};
-      my @okMachines = split /\s*,\s*/, $arg;
-      for my $mach(@okMachines){
-        if(not defined $$filters{machine}{$mach}){
-          die getUsage("invalid $opt: $arg");
-        }
-        $$filters{machine}{$mach} = 1;
-      }
+      my @csvArg = split /\s*,\s*/, $arg;
+      die getUsage("invalid $opt: $arg") if not isSubset(\@csvArg, \@machineArgs);
+      $$filters{machineRegex} = join "|", @csvArg;
+    }elsif($opt =~ /^(--sm)$/){
+      $$filters{machineRegex} = "sm.*";
+    }elsif($opt =~ /^(--arcade|--not-sm)$/){
+      $$filters{machineRegex} = "(?!sm).*";
+    }elsif($opt =~ /^(--default-machine)$/){
+      $$filters{machineRegex} = $defaultMachineArg;
     }elsif($opt =~ /^(--tw)$/){
       my @csvArg = split /\s*,\s*/, $arg;
       die getUsage("invalid $opt: $arg") if not isSubset(\@csvArg, \@timingWindowsArgs);
@@ -1920,10 +1914,10 @@ sub filterScores($$){
         $ok = 0;
       }
     }
-    if(defined $$filters{machine}){
-      my $f = $$filters{machine};
+    if(defined $$filters{machineRegex}){
+      my $f = $$filters{machineRegex};
       my $machine = $$s{machine};
-      if(defined $$f{$machine} and not $$f{$machine}){
+      if($machine !~ /^$f$/){
         $ok = 0;
       }
     }
