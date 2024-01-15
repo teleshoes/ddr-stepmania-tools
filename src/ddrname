@@ -903,8 +903,7 @@ sub orientation($@){
   my $opts = [@_];
 
   my $filters = parseFilterOptions $opts;
-  my $scoresByFile = getScoresByFile(extractFileNameFilterRegex($filters));
-  $scoresByFile = filterScores $scoresByFile, $filters;
+  my $scoresByFile = getScoresByFile($filters);
 
   for my $file(sort keys %$scoresByFile){
     my $orientation = getImageOrientation "$scoreDir/$file";
@@ -941,8 +940,7 @@ sub dateStats($@){
 
   die getUsage() if @$opts != 0;
 
-  my $scoresByFile = getScoresByFile(extractFileNameFilterRegex($filters));
-  $scoresByFile = filterScores $scoresByFile, $filters;
+  my $scoresByFile = getScoresByFile($filters);
 
   my @courses = splitScoresIntoCourses $scoresByFile, getMtimesByFile $scoresByFile;
 
@@ -1040,8 +1038,7 @@ sub courseStats($@){
 
   die getUsage() if @$opts != 0;
 
-  my $scoresByFile = getScoresByFile(extractFileNameFilterRegex($filters));
-  $scoresByFile = filterScores $scoresByFile, $filters;
+  my $scoresByFile = getScoresByFile($filters);
 
   my @courses = splitScoresIntoCourses($scoresByFile, getMtimesByFile $scoresByFile);
 
@@ -1607,10 +1604,18 @@ sub parseOptsAndInfoArgs(@){
 }
 
 sub getScoresByFile($){
-  my ($filenameFilterRegex) = @_;
+  my ($filters) = @_;
   my @files = listScoreFiles();
-  @files = grep {/$filenameFilterRegex/} @files if defined $filenameFilterRegex;
+
+  if(defined $filters){
+    my $filenameFilterRegex = extractFileNameFilterRegex($filters);
+    @files = grep {/$filenameFilterRegex/} @files if defined $filenameFilterRegex;
+  }
+
   my $scoresByFile = { map {$_ => parseScoreFile $_} @files };
+  if(defined $filters){
+    $scoresByFile = filterScores($scoresByFile, $filters);
+  }
   return $scoresByFile;
 }
 
@@ -2131,8 +2136,7 @@ sub formatScores($$$$$$$){
   my ($format, $groupBuckets, $bestByBucketOnly,
       $okNotes, $abbrevBucket, $combineMachines, $filters) = @_;
 
-  my $scoresByFile = getScoresByFile(extractFileNameFilterRegex($filters));
-  $scoresByFile = filterScores $scoresByFile, $filters;
+  my $scoresByFile = getScoresByFile($filters);
 
   my @bucketFields = @DEFAULT_BUCKET_FIELDS;
 
