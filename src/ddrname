@@ -68,6 +68,7 @@ my $argOptFiltersRegex = join "|", qw(
   --score --minscore --maxscore
   --closest-mtime
   --date --mindate --maxdate
+  --game
   --difficulty
   --machine
   --tw
@@ -435,18 +436,15 @@ sub getUsage(;$){
       this file has hardcoded best-guess entries for feet, also in the DDR-A 1-20 scale
 
     FILTER: GAME
-      --singles
-        include only scores where GAME is singles OR not defined
-        {overrides --doubles and --nonstop and --nonstopdoubles}
-      --doubles
-        include only scores where GAME is doubles
-        {overrides --singles and --nonstop and --nonstopdoubles}
-      --nonstop
-        include only scores where GAME is nonstop
-        {overrides --singles and --doubles and --nonstopdoubles}
-      --nonstopdoubles
-        include only scores where GAME is nonstopdoubles
-        {overrides --singles and --nonstop and --doubles}
+      --game GAME_CSV
+        include only scores where GAME is one of the values
+          in the comma-separated list of games GAME_CSV
+          (all other scores are excluded)
+        e.g.: --game doubles,nonstopdoubles
+      --singles         same as: --game singles
+      --doubles         same as: --game doubles
+      --nonstop         same as: --game nonstop
+      --nonstopdoubles  same as: --game nonstopdoubles
 
     FILTER: DIFFICULTY
       --difficulty DIFFICULTY_CSV
@@ -1249,14 +1247,12 @@ sub parseFilterOptions($){
     }elsif($opt =~ /^(--maxfeet)$/){
       die getUsage("invalid $opt: $arg") if $arg !~ /^(\d+)$/;
       $$filters{maxfeet} = $1;
-    }elsif($opt =~ /^(--singles)$/){
-      $$filters{game} = {singles => 1, doubles => 0, nonstop => 0, nonstopdoubles => 0};
-    }elsif($opt =~ /^(--doubles)$/){
-      $$filters{game} = {singles => 0, doubles => 1, nonstop => 0, nonstopdoubles => 0};
-    }elsif($opt =~ /^(--nonstop)$/){
-      $$filters{game} = {singles => 0, doubles => 0, nonstop => 1, nonstopdoubles => 0};
-    }elsif($opt =~ /^(--nonstopdoubles)$/){
-      $$filters{game} = {singles => 0, doubles => 0, nonstop => 0, nonstopdoubles => 1};
+    }elsif($opt =~ /^(--game)$/){
+      my @csvArg = split /\s*,\s*/, $arg;
+      die getUsage("invalid $opt: $arg") if not isSubset(\@csvArg, \@gameArgs);
+      $$filters{gameRegex} = join "|", @csvArg;
+    }elsif($opt =~ /^--(singles|doubles|nonstop|nonstopdoubles)$/){
+      $$filters{gameRegex} = $1;
     }elsif($opt =~ /^(--difficulty)$/){
       my @csvArg = split /\s*,\s*/, $arg;
       die getUsage("invalid $opt: $arg") if not isSubset(\@csvArg, \@difficultyArgs);
@@ -1938,10 +1934,10 @@ sub filterScores($$){
         $ok = 0;
       }
     }
-    if(defined $$filters{game}){
-      my $f = $$filters{game};
+    if(defined $$filters{gameRegex}){
+      my $f = $$filters{gameRegex};
       my $game = $$s{game};
-      if(defined $$f{$game} and not $$f{$game}){
+      if($game !~ /^$f$/){
         $ok = 0;
       }
     }
