@@ -631,6 +631,7 @@ sub readScoreDataCache($){
   close FH;
 
   for my $line(@lines){
+    next if $line =~ /^\s*$/;
     if($line =~ /^(\w+)=(.*)$/){
       my ($key, $val) = ($1, $2);
       $$sd{$key} = $val;
