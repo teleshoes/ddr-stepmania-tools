@@ -1480,7 +1480,7 @@ sub nameFile($$$$){
   my $newFileName = '';
   $newFileName .= "$prefix";
   $newFileName .= "_$$info{videoType}" if defined $$info{videoType};
-  $newFileName .= "_reminder_failed" if defined $$info{passFail};
+  $newFileName .= "_reminder_$$info{passFail}" if defined $$info{passFail};
   $newFileName .= "_$$info{song}";
   $newFileName .= "_$$info{game}" if defined $$info{game};
   $newFileName .= "_$$info{difficulty}";
