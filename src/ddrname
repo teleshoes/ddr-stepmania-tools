@@ -150,7 +150,6 @@ sub getMtimesByFile($);
 sub splitScoresIntoCourses($$);
 sub splitCoursesIntoSessions(@);
 sub formatScores($$$$$$$);
-sub extractFileNameFilterRegex($);
 sub getBestScore($);
 sub gnuplot($$);
 sub combine(@);
@@ -1890,8 +1889,44 @@ sub filterScoresByFileInfo($@){
     }
   }
 
-  my $filenameFilterRegex = extractFileNameFilterRegex($filters);
-  @files = grep {/$filenameFilterRegex/} @files if defined $filenameFilterRegex;
+  my @filterFileNameFields = (
+    [$$filters{passFail},           $okPassFailArgs,      $emptyPassFailArg,      "reminder_"],
+    [$$filters{songRegex},          "[^_]+",              undef,                  ""],
+    [$$filters{gameRegex},          $okGameArgs,          $emptyGameArg,          ""],
+    [$$filters{difficultyRegex},    $okDifficultyArgs,    undef,                  ""],
+    [$$filters{machineRegex},       $okMachineArgs,       undef,                  ""],
+    [$$filters{timingWindowsRegex}, $okTimingWindowsArgs, $emptyTimingWindowsArg, ""],
+  );
+
+  my $regex = '^\d+_\d+';
+  for my $filterField(@filterFileNameFields){
+    my ($filteredRegex, $unfilteredRegex, $allowEmptyArg, $prefix) = @$filterField;
+
+    my $allowEmpty;
+    if(not defined $allowEmptyArg){
+      #required field
+      $allowEmpty = 0;
+    }elsif(defined $filteredRegex and $allowEmptyArg !~ /^$filteredRegex$/){
+      #not required field, but empty value is filtered out
+      $allowEmpty = 0;
+    }else{
+      #not required field, and the empty value is not filtered out
+      $allowEmpty = 1;
+    }
+
+    my $fieldRegex;
+    if(not defined $filteredRegex){
+      $fieldRegex = "_$prefix(?:$unfilteredRegex)";
+    }else{
+      $fieldRegex = "_$prefix(?:$filteredRegex)";
+    }
+    $fieldRegex = "(?:$fieldRegex)?" if $allowEmpty;
+
+    $regex .= $fieldRegex;
+  }
+  $regex .= "_.+";
+
+  @files = grep {/^$regex$/} @files;
 
   return @files;
 }
@@ -1910,12 +1945,6 @@ sub filterScoresByScoreInfo($$){
       my $filterVal = $$filters{$filterName};
       next if not defined $filterVal;
 
-      $ok = $ok && $$s{passFail}      eq $filterVal      if $filterName eq "passFail";
-      $ok = $ok && $$s{song}          =~ /^$filterVal$/  if $filterName eq "songRegex";
-      $ok = $ok && $$s{game}          =~ /^$filterVal$/  if $filterName eq "gameRegex";
-      $ok = $ok && $$s{difficulty}    =~ /^$filterVal$/  if $filterName eq "difficultyRegex";
-      $ok = $ok && $$s{machine}       =~ /^$filterVal$/  if $filterName eq "machineRegex";
-      $ok = $ok && $$s{timingWindows} =~ /^$filterVal$/  if $filterName eq "timingWindowsRegex";
       $ok = $ok && $$s{feet}          >= $filterVal      if $filterName eq "minfeet";
       $ok = $ok && $$s{feet}          <= $filterVal      if $filterName eq "maxfeet";
       $ok = $ok && $$s{score}         >= $filterVal      if $filterName eq "minscore";
@@ -2174,14 +2203,6 @@ sub formatScores($$$$$$$){
     $isFirstBucket = 0;
   }
   return $fmt;
-}
-
-sub extractFileNameFilterRegex($){
-  my ($filters) = @_;
-  my $songRegex = $$filters{songRegex};
-  return undef if not defined $songRegex;
-  my @okSongs = grep {/^$songRegex$/} @songArgs;
-  return join "|", @okSongs;
 }
 
 sub getBestScore($){
