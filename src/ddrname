@@ -143,6 +143,7 @@ sub sortScores($);
 sub getBucketName($$@);
 sub getScoreBuckets($$@);
 sub formatScoreLine($$$$$);
+sub calculateBarCountsByBucket();
 sub getBucketBarCounts($);
 sub filterScoresByFileInfo($@);
 sub filterScoresByScoreInfo($$);
@@ -1849,6 +1850,15 @@ sub formatScoreLine($$$$$){
   return $scoreFmt;
 }
 
+#expensive to calculate
+sub calculateBarCountsByBucket(){
+  my $allScoresByFile = getScoresByFile(undef);
+  my $allScores = [values %$allScoresByFile];
+  my $buckets = getScoreBuckets($allScores, 0, @DEFAULT_BUCKET_FIELDS);
+  my $bucketBarCounts = getBucketBarCounts $buckets;
+  return $bucketBarCounts;
+}
+
 sub getBucketBarCounts($){
   my $buckets = shift;
   my $bucketBarCounts = {};
@@ -1953,9 +1963,6 @@ sub filterScoresByFileInfo($@){
 
 sub filterScoresByScoreInfo($$){
   my ($filters, $scoresByFile) = @_;
-  $scoresByFile = {%$scoresByFile};
-
-  my $origScoresByFile = {%$scoresByFile};
 
   for my $file(sort keys %$scoresByFile){
     my $s = $$scoresByFile{$file};
@@ -1978,9 +1985,9 @@ sub filterScoresByScoreInfo($$){
   }
 
   if($$filters{bar}){
-    my $scores = [values %$origScoresByFile];
+    my $scores = [values %$scoresByFile];
     my $buckets = getScoreBuckets($scores, 0, @DEFAULT_BUCKET_FIELDS);
-    my $bucketBarCounts = getBucketBarCounts $buckets;
+    my $bucketBarCounts = calculateBarCountsByBucket();
     for my $bucketName(sort keys %$buckets){
       my $bucketScores = $$buckets{$bucketName};
       my $barCount = $$bucketBarCounts{$bucketName}{$yesbarArg};
