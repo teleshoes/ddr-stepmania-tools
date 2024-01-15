@@ -1663,8 +1663,6 @@ sub getScoresByFile($){
 sub listScoreFiles(){
   my @files = listDirFiles($scoreDir);
   s/^.*\/// foreach @files;
-  @files = sort @files;
-  @files = grep {$_ =~ /^\d+_.*\.($EXT_REGEX)$/} @files;
 
   my @passes = grep {$_ !~ /^\d+_\d+_reminder_/} @files;
   my @failures = grep {/^\d+_\d+_reminder_failed_/} @files;
