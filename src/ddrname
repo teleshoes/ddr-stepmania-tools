@@ -230,6 +230,10 @@ my @passFailArgs = qw(passed failed);
 my $emptyPassFailArg = "passed";
 my $okPassFailArgs = join '|', @passFailArgs;
 
+my $FILTER_PASSFAIL_ALL = "passfail-all";
+my $FILTER_PASSFAIL_PASSED = "passfail-passed";
+my $FILTER_PASSFAIL_FAILED = "passfail-failed";
+
 sub getUsage(;$){
   my $msg = shift;
 
@@ -388,6 +392,15 @@ sub getUsage(;$){
     FILTER: SONG
       --song REGEX
         include only scores where the whole SONG string matches REGEX
+
+    FILTER: PASSFAIL
+      --passed
+        include ONLY scores with <PASSFAIL> att of 'passed'
+        NOTE: this is the DEFAULT
+      --passfail | --passfail-all
+        include all scores, regardless of PASSFAIL
+      --failed
+        include ONLY scores with <PASSFAIL> att of 'failed'
 
     FILTER: FEET
       --hard
@@ -1207,6 +1220,10 @@ sub parseFilterOptions($){
   my ($opts) = @_;
   my $otherOpts = [];
   my $filters = {};
+
+  #default to passed-only
+  $$filters{passFail} = $FILTER_PASSFAIL_PASSED;
+
   while(@$opts > 0){
     my $opt = shift @$opts;
     my $arg;
@@ -1219,6 +1236,12 @@ sub parseFilterOptions($){
       die getUsage("missing arg to $opt") if not defined $arg;
       my $regex = "^$arg\$";
       $$filters{songs} = {map {$_ => $_ =~ m/$regex/ ? 1 : 0} @songArgs};
+    }elsif($opt =~ /^(--passfail|--passfail-all)$/){
+      $$filters{passFail} = $FILTER_PASSFAIL_ALL;
+    }elsif($opt =~ /^(--passed)$/){
+      $$filters{passFail} = $FILTER_PASSFAIL_PASSED;
+    }elsif($opt =~ /^(--failed)$/){
+      $$filters{passFail} = $FILTER_PASSFAIL_FAILED;
     }elsif($opt =~ /^(--hard)$/){
       $$filters{minfeet} = $HARD_SONG_FEET;
     }elsif($opt =~ /^(--nothard)$/){
@@ -1890,6 +1913,17 @@ sub filterScores($$){
   for my $file(sort keys %$scoresByFile){
     my $s = $$scoresByFile{$file};
     my $ok = 1;
+
+    if(defined $$filters{passFail}){
+      my $f = $$filters{passFail};
+      my $passFail = $$s{passFail};
+      if($f eq $FILTER_PASSFAIL_PASSED and $passFail ne 'passed'){
+        $ok = 0;
+      }
+      if($f eq $FILTER_PASSFAIL_FAILED and $passFail ne 'failed'){
+        $ok = 0;
+      }
+    }
     if(defined $$filters{songs}){
       my $f = $$filters{songs};
       my $song = $$s{song};
