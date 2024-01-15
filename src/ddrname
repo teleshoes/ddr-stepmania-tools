@@ -1945,12 +1945,12 @@ sub filterScoresByScoreInfo($$){
       my $filterVal = $$filters{$filterName};
       next if not defined $filterVal;
 
-      $ok = $ok && $$s{feet}          >= $filterVal      if $filterName eq "minfeet";
-      $ok = $ok && $$s{feet}          <= $filterVal      if $filterName eq "maxfeet";
-      $ok = $ok && $$s{score}         >= $filterVal      if $filterName eq "minscore";
-      $ok = $ok && $$s{score}         <= $filterVal      if $filterName eq "maxscore";
-      $ok = $ok && $$s{date}          <= $filterVal      if $filterName eq "mindate";
-      $ok = $ok && $$s{date}          >= $filterVal      if $filterName eq "maxdate";
+      $ok = $ok && $$s{feet}  >= $filterVal if $filterName eq "minfeet";
+      $ok = $ok && $$s{feet}  <= $filterVal if $filterName eq "maxfeet";
+      $ok = $ok && $$s{score} >= $filterVal if $filterName eq "minscore";
+      $ok = $ok && $$s{score} <= $filterVal if $filterName eq "maxscore";
+      $ok = $ok && $$s{date}  <= $filterVal if $filterName eq "mindate";
+      $ok = $ok && $$s{date}  >= $filterVal if $filterName eq "maxdate";
     }
 
     delete $$scoresByFile{$file} if not $ok;
