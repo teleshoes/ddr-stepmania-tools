@@ -1614,7 +1614,7 @@ sub getScoresByFile($){
 
   my $scoresByFile = { map {$_ => parseScoreFile $_} @files };
   if(defined $filters){
-    $scoresByFile = filterScoresByScoreInfo($scoresByFile, $filters);
+    $scoresByFile = filterScoresByScoreInfo($filters, $scoresByFile);
   }
   return $scoresByFile;
 }
@@ -1877,7 +1877,7 @@ sub filterScoresByFileInfo($@){
 }
 
 sub filterScoresByScoreInfo($$){
-  my ($scoresByFile, $filters) = @_;
+  my ($filters, $scoresByFile) = @_;
   $scoresByFile = {%$scoresByFile};
 
   my $origScoresByFile = {%$scoresByFile};
