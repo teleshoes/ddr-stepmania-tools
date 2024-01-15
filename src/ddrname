@@ -1872,90 +1872,24 @@ sub filterScores($$){
     my $s = $$scoresByFile{$file};
     my $ok = 1;
 
-    if(defined $$filters{passFail}){
-      my $f = $$filters{passFail};
-      my $passFail = $$s{passFail};
-      if($passFail ne $f){
-        $ok = 0;
-      }
+    for my $filterName(sort keys %$filters){
+      my $filterVal = $$filters{$filterName};
+      next if not defined $filterVal;
+
+      $ok = $ok && $$s{passFail}      eq $filterVal      if $filterName eq "passFail";
+      $ok = $ok && $$s{song}          =~ /^$filterVal$/  if $filterName eq "songRegex";
+      $ok = $ok && $$s{game}          =~ /^$filterVal$/  if $filterName eq "gameRegex";
+      $ok = $ok && $$s{difficulty}    =~ /^$filterVal$/  if $filterName eq "difficultyRegex";
+      $ok = $ok && $$s{machine}       =~ /^$filterVal$/  if $filterName eq "machineRegex";
+      $ok = $ok && $$s{timingWindows} =~ /^$filterVal$/  if $filterName eq "timingWindowsRegex";
+      $ok = $ok && $$s{feet}          >= $filterVal      if $filterName eq "minfeet";
+      $ok = $ok && $$s{feet}          <= $filterVal      if $filterName eq "maxfeet";
+      $ok = $ok && $$s{score}         >= $filterVal      if $filterName eq "minscore";
+      $ok = $ok && $$s{score}         <= $filterVal      if $filterName eq "maxscore";
+      $ok = $ok && $$s{date}          <= $filterVal      if $filterName eq "mindate";
+      $ok = $ok && $$s{date}          >= $filterVal      if $filterName eq "maxdate";
     }
-    if(defined $$filters{songRegex}){
-      my $f = $$filters{songRegex};
-      my $song = $$s{song};
-      if($song !~ /^$f$/){
-        $ok = 0;
-      }
-    }
-    if(defined $$filters{minfeet}){
-      my $f = $$filters{minfeet};
-      my $feet = $$s{feet};
-      if($feet < $f){
-        $ok = 0;
-      }
-    }
-    if(defined $$filters{maxfeet}){
-      my $f = $$filters{maxfeet};
-      my $feet = $$s{feet};
-      if($feet > $f){
-        $ok = 0;
-      }
-    }
-    if(defined $$filters{gameRegex}){
-      my $f = $$filters{gameRegex};
-      my $game = $$s{game};
-      if($game !~ /^$f$/){
-        $ok = 0;
-      }
-    }
-    if(defined $$filters{difficultyRegex}){
-      my $f = $$filters{difficultyRegex};
-      my $difficulty = $$s{difficulty};
-      if($difficulty !~ /^$f$/){
-        $ok = 0;
-      }
-    }
-    if(defined $$filters{machineRegex}){
-      my $f = $$filters{machineRegex};
-      my $machine = $$s{machine};
-      if($machine !~ /^$f$/){
-        $ok = 0;
-      }
-    }
-    if(defined $$filters{timingWindowsRegex}){
-      my $f = $$filters{timingWindowsRegex};
-      my $tw = $$s{timingWindows};
-      if($tw !~ /^$f$/){
-        $ok = 0;
-      }
-    }
-    if(defined $$filters{minscore}){
-      my $f = $$filters{minscore};
-      my $score = $$s{score};
-      if($score < $f){
-        $ok = 0;
-      }
-    }
-    if(defined $$filters{maxscore}){
-      my $f = $$filters{maxscore};
-      my $score = $$s{score};
-      if($score > $f){
-        $ok = 0;
-      }
-    }
-    if(defined $$filters{mindate}){
-      my $f = $$filters{mindate};
-      my $date = $$s{date};
-      if($date < $f){
-        $ok = 0;
-      }
-    }
-    if(defined $$filters{maxdate}){
-      my $f = $$filters{maxdate};
-      my $date = $$s{date};
-      if($date > $f){
-        $ok = 0;
-      }
-    }
+
     delete $$scoresByFile{$file} if not $ok;
   }
 
