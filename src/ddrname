@@ -1292,14 +1292,9 @@ sub parseFilterOptions($){
         $$filters{machine}{$mach} = 1;
       }
     }elsif($opt =~ /^(--tw)$/){
-      $$filters{timingWindows} = {map {$_ => 0} @timingWindowsArgs};
-      my @okTWs = split /\s*,\s*/, $arg;
-      for my $tw(@okTWs){
-        if(not defined $$filters{timingWindows}{$tw}){
-          die getUsage("invalid $opt: $arg");
-        }
-        $$filters{timingWindows}{$tw} = 1;
-      }
+      my @csvArg = split /\s*,\s*/, $arg;
+      die getUsage("invalid $opt: $arg") if not isSubset(\@csvArg, \@timingWindowsArgs);
+      $$filters{timingWindowsRegex} = join "|", @csvArg;
     }elsif($opt =~ /^(--score|--minscore)$/){
       die getUsage("invalid $opt: $arg") if $arg !~ /^(\d+)$/;
       $$filters{minscore} = $1;
@@ -1955,11 +1950,10 @@ sub filterScores($$){
         $ok = 0;
       }
     }
-    if(defined $$filters{timingWindows}){
-      my $f = $$filters{timingWindows};
+    if(defined $$filters{timingWindowsRegex}){
+      my $f = $$filters{timingWindowsRegex};
       my $tw = $$s{timingWindows};
-      $tw = $emptyTimingWindowsArg if not defined $tw;
-      if(defined $$f{$tw} and not $$f{$tw}){
+      if($tw !~ /^$f$/){
         $ok = 0;
       }
     }
