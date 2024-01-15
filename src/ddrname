@@ -144,6 +144,7 @@ sub getBucketName($$@);
 sub getScoreBuckets($$@);
 sub formatScoreLine($$$$$);
 sub getBucketBarCounts($);
+sub filterScoresByFileInfo($@);
 sub filterScores($$);
 sub getMtimesByFile($);
 sub splitScoresIntoCourses($$);
@@ -1608,8 +1609,7 @@ sub getScoresByFile($){
   my @files = listScoreFiles();
 
   if(defined $filters){
-    my $filenameFilterRegex = extractFileNameFilterRegex($filters);
-    @files = grep {/$filenameFilterRegex/} @files if defined $filenameFilterRegex;
+    @files = filterScoresByFileInfo($filters, @files);
   }
 
   my $scoresByFile = { map {$_ => parseScoreFile $_} @files };
@@ -1865,6 +1865,15 @@ sub getBucketBarCounts($){
     $$bucketBarCounts{$bucketName}{$nobarArg} = $nobarCount;
   }
   return $bucketBarCounts;
+}
+
+sub filterScoresByFileInfo($@){
+  my ($filters, @files) = @_;
+
+  my $filenameFilterRegex = extractFileNameFilterRegex($filters);
+  @files = grep {/$filenameFilterRegex/} @files if defined $filenameFilterRegex;
+
+  return @files;
 }
 
 sub filterScores($$){
