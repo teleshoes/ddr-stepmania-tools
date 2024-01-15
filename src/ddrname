@@ -1114,6 +1114,7 @@ sub scoreStats($@){
   }
 
   if(defined $$formatOptScoresOptions{notesCsv}){
+    $okNotes = {map {$_ => 0} keys %$okNotes};
     my @notes = split /\s*,\s*/, $$formatOptScoresOptions{notesCsv};
     for my $note(@notes){
       if(defined $$okNotes{$note}){
