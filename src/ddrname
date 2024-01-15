@@ -1233,8 +1233,7 @@ sub parseFilterOptions($){
 
     if($opt =~ /^(--song)$/){
       die getUsage("missing arg to $opt") if not defined $arg;
-      my $regex = "^$arg\$";
-      $$filters{songs} = {map {$_ => $_ =~ m/$regex/ ? 1 : 0} @songArgs};
+      $$filters{songRegex} = $arg;
     }elsif($opt =~ /^(--passfail|--passfail-all)$/){
       delete $$filters{passFail};
     }elsif($opt =~ /^(--passed)$/){
@@ -1921,10 +1920,10 @@ sub filterScores($$){
         $ok = 0;
       }
     }
-    if(defined $$filters{songs}){
-      my $f = $$filters{songs};
+    if(defined $$filters{songRegex}){
+      my $f = $$filters{songRegex};
       my $song = $$s{song};
-      if(defined $$f{$song} and not $$f{$song}){
+      if($song !~ /^$f$/){
         $ok = 0;
       }
     }
@@ -2276,9 +2275,9 @@ sub formatScores($$$$$$$){
 
 sub extractFileNameFilterRegex($){
   my ($filters) = @_;
-  my $songs = $$filters{songs};
-  return undef if not defined $songs;
-  my @okSongs = grep {$$songs{$_}} sort keys %$songs;
+  my $songRegex = $$filters{songRegex};
+  return undef if not defined $songRegex;
+  my @okSongs = grep {/^$songRegex$/} @songArgs;
   return join "|", @okSongs;
 }
 
