@@ -1639,8 +1639,10 @@ sub listScoreFiles(){
   s/^.*\/// foreach @files;
   @files = sort @files;
   @files = grep {$_ =~ /^\d+_.*\.($EXT_REGEX)$/} @files;
-  @files = grep {$_ !~ /_reminder_/} @files;
-  return @files;
+
+  my @passes = grep {$_ !~ /^\d+_\d+_reminder_/} @files;
+  my @failures = grep {/^\d+_\d+_reminder_failed_/} @files;
+  return sort (@passes, @failures);
 }
 
 sub listDirFiles($){
