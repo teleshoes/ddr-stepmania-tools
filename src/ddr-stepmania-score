@@ -137,7 +137,24 @@ my $usage = "Usage:
               -ignore any XML files with mtime after IMG_FILE mtime
               -of the remaining, select the oldest file as XML_SCORE_FILE
       (C) obtain SCORE_DATA from XML_SCORE_FILE (see SCORE_DATA)
-      (D) perform COMMAND
+      (D) obtain DDRNAME_SCORE_INFO
+        -fetch closest DDRNAME_SCORE_INFO from `ddrname`
+        -check that the following fields in DDRNAME_SCORE_INFO match SCORE_DATA:
+          -song          => SONG_NAME
+          -game          => DDRA_GAME
+          -difficulty    => DDRA_DIFFICULTY
+          -score         => DDRA_SCORE
+        -if so, extract the following fields from DDRNAME_SCORE_INFO into SCORE_DATA:
+          -file          => DDRNAME_FILE
+          -bar           => DDRNAME_BAR
+          -note          => DDRNAME_NOTE
+          -machine       => DDRNAME_MACHINE
+          -timingWindows => DDRNAME_TIMING_WINDOWS
+          -fc            => DDRNAME_FC
+          -special       => DDRNAME_SPECIAL
+          -stage         => DDRNAME_STAGE
+          -quality       => DDRNAME_QUALITY
+      (E) perform COMMAND
         (1) if COMMAND is --print (this is the default):
               -print SEPARATOR line
               -print each SCORE_DATA item, one per line
@@ -240,6 +257,15 @@ my $usage = "Usage:
         -MODS
         -SM_FEET
         -SM_RADAR
+        -DDRNAME_FILE
+        -DDRNAME_BAR
+        -DDRNAME_NOTE
+        -DDRNAME_MACHINE
+        -DDRNAME_TIMING_WINDOWS
+        -DDRNAME_FC
+        -DDRNAME_SPECIAL
+        -DDRNAME_STAGE
+        -DDRNAME_QUALITY
 
   $EXEC --extract-song-name SONG_DIR
     extract SONG_NAME out of SONG_DIR, as above
@@ -496,13 +522,102 @@ sub getScoreDataByXmlFile($$$){
   my ($xmlFile, $readCache, $writeCache) = @_;
   my $sd = undef;
   $sd = readScoreDataCache($xmlFile) if $readCache;
+
+  my $cacheOutOfDate = 0;
   if(not defined $sd){
     $sd = calculateScoreDataCache($xmlFile);
+    $cacheOutOfDate = 1;
     writeScoreDataCache($xmlFile, $sd) if $writeCache;
   }
+
+  if(not defined $$sd{DDRNAME_FILE}){
+    my $mtime = mtime($xmlFile);
+    my @fieldNames = qw(
+      song game difficulty score
+      file
+      bar note
+      machine timingWindows fc special stage quality
+    );
+
+    my $ddrnameInfo = ddrnameGetClosestMtimeInfo($$sd{SONG_NAME}, $mtime, [@fieldNames]);
+
+    #assert that the parsed XML score data matches the ddrname file
+    my $ddrnameMismatch = 0;
+    $ddrnameMismatch = 1 if $$ddrnameInfo{song}       ne $$sd{SONG_NAME};
+    $ddrnameMismatch = 1 if $$ddrnameInfo{game}       ne $$sd{DDRA_GAME};
+    $ddrnameMismatch = 1 if $$ddrnameInfo{difficulty} ne $$sd{DDRA_DIFFICULTY};
+    $ddrnameMismatch = 1 if $$ddrnameInfo{score}      ne $$sd{DDRA_SCORE};
+    if($ddrnameMismatch){
+      print STDERR "XML/DDRNAME file info mismatch:\n$xmlFile\n";
+      $ddrnameInfo = undef;
+    }
+
+    if(defined $ddrnameInfo){
+      $$sd{DDRNAME_FILE} = $$ddrnameInfo{file};
+      $$sd{DDRNAME_BAR} = $$ddrnameInfo{bar};
+      $$sd{DDRNAME_NOTE} = $$ddrnameInfo{note};
+      $$sd{DDRNAME_MACHINE} = $$ddrnameInfo{machine};
+      $$sd{DDRNAME_TIMING_WINDOWS} = $$ddrnameInfo{timingWindows};
+      $$sd{DDRNAME_FC} = $$ddrnameInfo{fc};
+      $$sd{DDRNAME_SPECIAL} = $$ddrnameInfo{special};
+      $$sd{DDRNAME_STAGE} = $$ddrnameInfo{stage};
+      $$sd{DDRNAME_QUALITY} = $$ddrnameInfo{quality};
+      #ddrname file may have been created after reading cache
+      $cacheOutOfDate = 1;
+    }else{
+      $$sd{DDRNAME_FILE} = "";
+      $$sd{DDRNAME_BAR} = "";
+      $$sd{DDRNAME_NOTE} = "";
+      $$sd{DDRNAME_MACHINE} = "";
+      $$sd{DDRNAME_TIMING_WINDOWS} = "";
+      $$sd{DDRNAME_FC} = "";
+      $$sd{DDRNAME_SPECIAL} = "";
+      $$sd{DDRNAME_STAGE} = "";
+      $$sd{DDRNAME_QUALITY} = "";
+    }
+  }
+
+  if($writeCache and $cacheOutOfDate){
+    writeScoreDataCache($xmlFile, $sd);
+  }
+
   return $sd;
 }
 
+sub ddrnameGetClosestMtimeInfo($$$){
+  my ($song, $mtime, $fieldNamesArr) = @_;
+
+  my @fieldNames = @$fieldNamesArr;
+  my $fmt = join "###", map {"%{$_}"} @fieldNames;
+  my @ddrnameCmd = ("ddrname", "--scorestats",
+    "--no-group-buckets",
+    "--format", "$fmt",
+    "--song", $song,
+    "--passfail",
+    "--closest-mtime", "$mtime",
+  );
+
+  my $out = readProc @ddrnameCmd;
+  my @lines = split /\n/, $out;
+  if(@lines == 0){
+    return undef;
+  }elsif(@lines > 1){
+    die "ERROR: too many scores returned by @ddrnameCmd\n$out";
+  }else{
+    my $line = $lines[0];
+    my @fieldVals = split "###", $line, -1;
+    if($#fieldNames != $#fieldVals){
+      die "ERROR: malformed output of @ddrnameCmd\n$out";
+    }
+    my $info = {};
+    for(my $i=0; $i<@fieldNames; $i++){
+      my $fieldName = $fieldNames[$i];
+      my $fieldVal = $fieldVals[$i];
+      $$info{$fieldName} = $fieldVal;
+    }
+    return $info;
+  }
+}
 sub readScoreDataCache($){
   my ($xmlFile) = @_;
   my $sd = undef;
