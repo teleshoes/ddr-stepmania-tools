@@ -210,7 +210,27 @@ sub formatCurSongInfo($$){
              $$info{simfileRadar}{CHAOS},
              ;
   $fmt .= fmtBig($opts,
-    "  feet=" . fmtYellow($opts, $$info{radarFeet}) . "\n");
+    "  feet=" . fmtYellow($opts, $$info{radarFeet}));
+
+  my @xmlScores = @{$$info{xmlScores}};
+
+  my $scoreNow = "";
+  if(@xmlScores > 0){
+    my $lastScore = $xmlScores[0];
+    if($$lastScore{DATETIME} =~ /^(\d\d\d\d-\d\d-\d\d)_(\d\d:\d\d:\d\d)$/){
+      my ($date, $time) = ($1, $2);
+      my $epoch = `date --date="${date}T${time}" +%s`;
+      chomp $epoch;
+      my $elapsed = time - $epoch;
+      #show most recent score if newer than ten minutes old
+      if($elapsed < 10 * 60){
+        $scoreNow = $$lastScore{DDRA_SCORE};
+      }
+    }
+  }
+  $scoreNow = sprintf "%7s", $scoreNow;
+  $fmt .= fmtMonospace($opts, fmtBig($opts, "  |$scoreNow|"));
+  $fmt .= "\n";
 
   $fmt .= "\n";
 
@@ -222,7 +242,6 @@ sub formatCurSongInfo($$){
 
   $fmt .= "\n";
 
-  my @xmlScores = @{$$info{xmlScores}};
   for(my $i=0; $i<$XML_SCORE_LIMIT; $i++){
     my $scoreAtts;
     if($i < @xmlScores){
@@ -236,7 +255,6 @@ sub formatCurSongInfo($$){
     my $speedMod = extractSpeedMod($$scoreAtts{MODS});
     if($$opts{format} ne $FORMAT_SHORT){
       my $ddrScore = sprintf "%-7s", $$scoreAtts{DDRA_SCORE};
-      $ddrScore = fmtBig($opts, $ddrScore) if $i == 0;
 
       $fmt .= sprintf("  %s   %s %s %s %s\n    %s\n",
                 $$scoreAtts{PASS_FAIL},
