@@ -255,20 +255,20 @@ sub formatCurSongInfo($$){
     $passFail = "p" if $passFail =~ /^passed$/i;
     $passFail = "F" if $passFail =~ /^failed$/i;
     my $speedMod = extractSpeedMod($$scoreAtts{MODS});
-    if($$opts{format} ne $FORMAT_SHORT){
-      my $ddrScore = sprintf "%-7s", $$scoreAtts{DDRA_SCORE};
+    my $ddrScore = sprintf "%-7s", $$scoreAtts{DDRA_SCORE};
 
-      $xmlScoreFmt .= sprintf("  %s   %s %s %s %s\n",
-                $passFail,
-                $ddrScore,
-                $$scoreAtts{PERCENT_SCORE},
-                $speedMod,
-                $$scoreAtts{FC_MAYBE},
-      );
-      $xmlScoreFmt .= fmtUnderline($opts, "    $$scoreAtts{DATETIME}") . "\n";
-    }
+    $xmlScoreFmt .= sprintf("  %s   %s %s %s %s\n",
+              $passFail,
+              $ddrScore,
+              $$scoreAtts{PERCENT_SCORE},
+              $speedMod,
+              $$scoreAtts{FC_MAYBE},
+    );
+    $xmlScoreFmt .= fmtUnderline($opts, "    $$scoreAtts{DATETIME}") . "\n";
   }
-  $fmt .= fmtMonospace($opts, $xmlScoreFmt);
+  if($$opts{format} ne $FORMAT_SHORT){
+    $fmt .= fmtMonospace($opts, $xmlScoreFmt);
+  }
 
   if($$opts{format} eq $FORMAT_QML){
     $fmt =~ s/\n/<br\/>/g;
