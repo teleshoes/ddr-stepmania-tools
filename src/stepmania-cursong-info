@@ -15,7 +15,7 @@ my $SONG_PARENT_DIR = "$ENV{HOME}/Games/stepmania/latest";
 
 my $RECENT_MILLIS = 6 * 60 * 60 * 1000; #SIX HOURS
 
-my @ATTS = qw(DATETIME PASS_FAIL DDRA_SCORE PERCENT_SCORE MODS FC_MAYBE DDRNAME_BAR);
+my @ATTS = qw(DATETIME PASS_FAIL DDRA_SCORE PERCENT_SCORE MODS FC_MAYBE DDRNAME_BAR DDRNAME_NOTE);
 
 my @DDR_GAMES = qw(singles doubles);
 my @DDR_DIFFS = qw(beginner basic difficult expert challenge);
@@ -269,6 +269,11 @@ sub formatCurSongInfo($$){
       die "ERROR: malformed date/time \"$$scoreAtts{DATETIME}\"\n";
     }
 
+    my $note = $$scoreAtts{DDRNAME_NOTE};
+    if(not defined $note or $note eq "nonote"){
+      $note = "";
+    }
+
     $xmlScoreFmt .= join "| ", (
       formatField($opts, 3,  "%s",   $passFailFmt,                       [@failFmtFunctions]),
       formatField($opts, 10, "%06s", $$scoreAtts{DDRA_SCORE},            [@failFmtFunctions]),
@@ -276,6 +281,7 @@ sub formatCurSongInfo($$){
       formatField($opts, 5,  "%-5s", extractSpeedMod($$scoreAtts{MODS}), []),
     );
     $xmlScoreFmt .= "\n";
+    $xmlScoreFmt .= " $note\n" if length $note > 0;
     $xmlScoreFmt .= fmtUnderline($opts, join "| ", (
       formatField($opts, 3,  "%s",   $$scoreAtts{FC_MAYBE},              []),
       formatField($opts, 10, "%s",   $date,                              []),
