@@ -257,14 +257,14 @@ sub formatCurSongInfo($$){
     if($$opts{format} ne $FORMAT_SHORT){
       my $ddrScore = sprintf "%-7s", $$scoreAtts{DDRA_SCORE};
 
-      $fmt .= sprintf("  %s   %s %s %s %s\n    %s\n",
+      $fmt .= sprintf("  %s   %s %s %s %s\n",
                 $passFail,
                 $ddrScore,
                 $$scoreAtts{PERCENT_SCORE},
                 $speedMod,
                 $$scoreAtts{FC_MAYBE},
-                $$scoreAtts{DATETIME},
       );
+      $fmt .= "    $$scoreAtts{DATETIME}\n";
     }
   }
 
