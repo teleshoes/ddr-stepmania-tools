@@ -251,14 +251,15 @@ sub formatCurSongInfo($$){
     }else{
       $scoreAtts = {map {$_ => ""} @ATTS};
     }
-    my $passFail = $$scoreAtts{PASS_FAIL};
-    $passFail = "p" if $passFail =~ /^passed$/i;
-    $passFail = "F" if $passFail =~ /^failed$/i;
+    my $passFailFmt = "";
+    $passFailFmt = "p" if $$scoreAtts{PASS_FAIL} =~ /^passed$/i;
+    $passFailFmt = "F" if $$scoreAtts{PASS_FAIL} =~ /^failed$/i;
+
     my $speedMod = extractSpeedMod($$scoreAtts{MODS});
     my $ddrScore = sprintf "%-7s", $$scoreAtts{DDRA_SCORE};
 
     $xmlScoreFmt .= sprintf("  %s   %s %s %s %s\n",
-              $passFail,
+              $passFailFmt,
               $ddrScore,
               $$scoreAtts{PERCENT_SCORE},
               $speedMod,
