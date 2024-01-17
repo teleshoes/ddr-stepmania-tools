@@ -249,7 +249,7 @@ sub formatCurSongInfo($$){
   }
 
   if($$opts{format} eq $FORMAT_QML){
-    $fmt =~ s/\n/<br\/>\n/g;
+    $fmt =~ s/\n/<br\/>/g;
     $fmt =~ s/ </&nbsp;</g;
     $fmt =~ s/> />&nbsp;/g;
     $fmt =~ s/  /&nbsp;&nbsp;/g;
