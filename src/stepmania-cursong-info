@@ -85,6 +85,7 @@ sub getDDRStepmaniaScoreAtts($$);
 sub findXmlFiles($$$);
 sub findRecentXmlFiles();
 sub fmtBig($$);
+sub fmtMonospace($$);
 sub fmtBlue($$);
 sub fmtYellow($$);
 sub fmtRed($$);
@@ -477,6 +478,14 @@ sub fmtBig($$){
   my ($opts, $text) = @_;
   if($$opts{format} eq $FORMAT_QML){
     return "<font size='+2'><b>$text</b></font>";
+  }else{
+    return $text;
+  }
+}
+sub fmtMonospace($$){
+  my ($opts, $text) = @_;
+  if($$opts{format} eq $FORMAT_QML){
+    return "<tt>$text</tt>";
   }else{
     return $text;
   }
