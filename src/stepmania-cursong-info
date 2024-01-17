@@ -75,7 +75,7 @@ my $USAGE = "Usage:
 ";
 
 sub formatCurSongInfo($$);
-sub formatField($$$);
+sub formatField($$$$$);
 sub getCurSongInfo();
 sub getSongInfo($$$);
 sub extractSpeedMod($);
@@ -266,16 +266,16 @@ sub formatCurSongInfo($$){
     }
 
     $xmlScoreFmt .= join " ", (
-      formatField(3,  "%s",   $passFailFmt),
-      formatField(9,  "%-7s", $$scoreAtts{DDRA_SCORE}),
-      formatField(0,  "%s",   $$scoreAtts{PERCENT_SCORE}),
-      formatField(0,  "%s",   extractSpeedMod($$scoreAtts{MODS})),
-      formatField(0,  "%s",   $$scoreAtts{FC_MAYBE}),
+      formatField($opts, 3,  "%s",   $passFailFmt,                       []),
+      formatField($opts, 9,  "%-7s", $$scoreAtts{DDRA_SCORE},            []),
+      formatField($opts, 0,  "%s",   $$scoreAtts{PERCENT_SCORE},         []),
+      formatField($opts, 0,  "%s",   extractSpeedMod($$scoreAtts{MODS}), []),
+      formatField($opts, 0,  "%s",   $$scoreAtts{FC_MAYBE},              []),
     );
     $xmlScoreFmt .= "\n";
     $xmlScoreFmt .= fmtUnderline($opts, join " ", (
-      formatField(14, "%s", $date),
-      formatField(10, "%s", $time),
+      formatField($opts, 14, "%s",   $date,                              []),
+      formatField($opts, 10, "%s",   $time,                              []),
     ));
     $xmlScoreFmt .= "\n";
   }
@@ -293,11 +293,14 @@ sub formatCurSongInfo($$){
   return $fmt;
 }
 
-sub formatField($$$){
-  my ($minLen, $formatSpec, $str) = @_;
+sub formatField($$$$$){
+  my ($opts, $minLen, $formatSpec, $str, $fmtFunctions) = @_;
   $str = "" if not defined $str;
   $str = sprintf $formatSpec, $str if length $str > 0;
   $str = sprintf "%${minLen}s", $str;
+  for my $fmtFunction(@$fmtFunctions){
+    $str = &$fmtFunction($opts, $str);
+  }
   return $str;
 }
 
