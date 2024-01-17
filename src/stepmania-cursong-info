@@ -253,6 +253,9 @@ sub formatCurSongInfo($$){
     }else{
       $scoreAtts = {map {$_ => ""} @ATTS};
     }
+
+    my @failFmtFunctions = $$scoreAtts{PASS_FAIL} =~ /^failed$/i ? (\&fmtBold, \&fmtYellow) : ();
+
     my $passFailFmt = "";
     $passFailFmt = "p" if $$scoreAtts{PASS_FAIL} =~ /^passed$/i;
     $passFailFmt = "F" if $$scoreAtts{PASS_FAIL} =~ /^failed$/i;
@@ -267,9 +270,9 @@ sub formatCurSongInfo($$){
     }
 
     $xmlScoreFmt .= join " ", (
-      formatField($opts, 3,  "%s",   $passFailFmt,                       []),
-      formatField($opts, 9,  "%-7s", $$scoreAtts{DDRA_SCORE},            []),
-      formatField($opts, 0,  "%s",   $$scoreAtts{PERCENT_SCORE},         []),
+      formatField($opts, 3,  "%s",   $passFailFmt,                       [@failFmtFunctions]),
+      formatField($opts, 9,  "%-7s", $$scoreAtts{DDRA_SCORE},            [@failFmtFunctions]),
+      formatField($opts, 0,  "%s",   $$scoreAtts{PERCENT_SCORE},         [@failFmtFunctions]),
       formatField($opts, 0,  "%s",   extractSpeedMod($$scoreAtts{MODS}), []),
       formatField($opts, 0,  "%s",   $$scoreAtts{FC_MAYBE},              []),
     );
