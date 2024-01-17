@@ -243,6 +243,7 @@ sub formatCurSongInfo($$){
 
   $fmt .= "\n";
 
+  my $xmlScoreFmt = "";
   for(my $i=0; $i<$XML_SCORE_LIMIT; $i++){
     my $scoreAtts;
     if($i < @xmlScores){
@@ -257,16 +258,17 @@ sub formatCurSongInfo($$){
     if($$opts{format} ne $FORMAT_SHORT){
       my $ddrScore = sprintf "%-7s", $$scoreAtts{DDRA_SCORE};
 
-      $fmt .= sprintf("  %s   %s %s %s %s\n",
+      $xmlScoreFmt .= sprintf("  %s   %s %s %s %s\n",
                 $passFail,
                 $ddrScore,
                 $$scoreAtts{PERCENT_SCORE},
                 $speedMod,
                 $$scoreAtts{FC_MAYBE},
       );
-      $fmt .= fmtUnderline($opts, "    $$scoreAtts{DATETIME}") . "\n";
+      $xmlScoreFmt .= fmtUnderline($opts, "    $$scoreAtts{DATETIME}") . "\n";
     }
   }
+  $fmt .= $xmlScoreFmt;
 
   if($$opts{format} eq $FORMAT_QML){
     $fmt =~ s/\n/<br\/>/g;
