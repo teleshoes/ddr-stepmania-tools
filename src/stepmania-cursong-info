@@ -267,14 +267,14 @@ sub formatCurSongInfo($$){
     my $speedMod = extractSpeedMod($$scoreAtts{MODS});
     my $ddrScore = sprintf "%-7s", $$scoreAtts{DDRA_SCORE};
 
-    $xmlScoreFmt .= sprintf("  %s   %s %s %s %s\n",
+    $xmlScoreFmt .= sprintf("%3s %9s %s %s %s\n",
               $passFailFmt,
               $ddrScore,
               $$scoreAtts{PERCENT_SCORE},
               $speedMod,
               $$scoreAtts{FC_MAYBE},
     );
-    $xmlScoreFmt .= fmtUnderline($opts, "    $date   $time") . "\n";
+    $xmlScoreFmt .= fmtUnderline($opts, sprintf "%14s %10s", $date, $time) . "\n";
   }
   if($$opts{format} ne $FORMAT_SHORT){
     $fmt .= fmtMonospace($opts, $xmlScoreFmt);
