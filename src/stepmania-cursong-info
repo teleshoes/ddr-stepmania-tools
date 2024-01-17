@@ -268,7 +268,7 @@ sub formatCurSongInfo($$){
       $xmlScoreFmt .= fmtUnderline($opts, "    $$scoreAtts{DATETIME}") . "\n";
     }
   }
-  $fmt .= $xmlScoreFmt;
+  $fmt .= fmtMonospace($opts, $xmlScoreFmt);
 
   if($$opts{format} eq $FORMAT_QML){
     $fmt =~ s/\n/<br\/>/g;
