@@ -257,7 +257,7 @@ sub formatCurSongInfo($$){
     my @failFmtFunctions = $$scoreAtts{PASS_FAIL} =~ /^failed$/i ? (\&fmtBold, \&fmtYellow) : ();
 
     my $passFailFmt = "";
-    $passFailFmt = "p" if $$scoreAtts{PASS_FAIL} =~ /^passed$/i;
+    $passFailFmt = "P" if $$scoreAtts{PASS_FAIL} =~ /^passed$/i;
     $passFailFmt = "F" if $$scoreAtts{PASS_FAIL} =~ /^failed$/i;
 
     my ($date, $time);
