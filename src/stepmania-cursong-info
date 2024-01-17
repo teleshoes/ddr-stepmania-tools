@@ -86,6 +86,7 @@ sub findXmlFiles($$$);
 sub findRecentXmlFiles();
 sub fmtBig($$);
 sub fmtMonospace($$);
+sub fmtUnderline($$);
 sub fmtBlue($$);
 sub fmtYellow($$);
 sub fmtRed($$);
@@ -506,6 +507,14 @@ sub fmtMonospace($$){
     return "<tt>$text</tt>";
   }else{
     return $text;
+  }
+}
+sub fmtUnderline($$){
+  my ($opts, $text) = @_;
+  if($$opts{format} eq $FORMAT_QML){
+    return "<u>$text</u>";
+  }else{
+    return colorText($opts, $text, "underline");
   }
 }
 
