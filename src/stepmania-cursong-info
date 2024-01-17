@@ -84,10 +84,10 @@ sub calculateRadarFeet($$$);
 sub getDDRStepmaniaScoreAtts($$);
 sub findXmlFiles($$$);
 sub findRecentXmlFiles();
-sub maybeBig($$);
-sub blue($$);
-sub yellow($$);
-sub red($$);
+sub fmtBig($$);
+sub fmtBlue($$);
+sub fmtYellow($$);
+sub fmtRed($$);
 sub colorText($$$);
 sub md5sum($);
 sub writeFile($$);
@@ -178,8 +178,8 @@ sub formatCurSongInfo($$){
   my $fmt = "\n";
   $fmt .= readProcLine("date") . "\n";
   $fmt .= sprintf("  offset=%s   timings=%s\n",
-            red($opts, "$$info{offsetMillis}ms"),
-            red($opts, $$info{smartTimings}),
+            fmtRed($opts, "$$info{offsetMillis}ms"),
+            fmtRed($opts, $$info{smartTimings}),
   );
   $fmt .= "\n";
 
@@ -195,10 +195,10 @@ sub formatCurSongInfo($$){
   }
 
   $fmt .= sprintf("%s\n%-7s %-9s %s\n",
-            blue($opts, $trimSongNameId),
+            fmtBlue($opts, $trimSongNameId),
             $$info{ddrGame},
             $$info{ddrDiff},
-            yellow($opts, $best),
+            fmtYellow($opts, $best),
   );
 
   $fmt .= sprintf "S%-3d | V%-3d | A%-3d | F%-3d | C%-3d\n",
@@ -208,16 +208,16 @@ sub formatCurSongInfo($$){
              $$info{simfileRadar}{FREEZE},
              $$info{simfileRadar}{CHAOS},
              ;
-  $fmt .= maybeBig($opts,
-    "  feet=" . yellow($opts, $$info{radarFeet}) . "\n");
+  $fmt .= fmtBig($opts,
+    "  feet=" . fmtYellow($opts, $$info{radarFeet}) . "\n");
 
   $fmt .= "\n";
 
-  my $passedFmt = " passed=" . yellow($opts, $$info{sessionXmlPassedCount});
-  my $failedFmt = " failed=" . yellow($opts, $$info{sessionXmlFailedCount});
+  my $passedFmt = " passed=" . fmtYellow($opts, $$info{sessionXmlPassedCount});
+  my $failedFmt = " failed=" . fmtYellow($opts, $$info{sessionXmlFailedCount});
 
-  $fmt .= maybeBig($opts, $passedFmt) . "\n";
-  $fmt .= maybeBig($opts, $failedFmt) . "\n";
+  $fmt .= fmtBig($opts, $passedFmt) . "\n";
+  $fmt .= fmtBig($opts, $failedFmt) . "\n";
 
   $fmt .= "\n";
 
@@ -235,7 +235,7 @@ sub formatCurSongInfo($$){
     my $speedMod = extractSpeedMod($$scoreAtts{MODS});
     if($$opts{format} ne $FORMAT_SHORT){
       my $ddrScore = sprintf "%-7s", $$scoreAtts{DDRA_SCORE};
-      $ddrScore = maybeBig($opts, $ddrScore) if $i == 0;
+      $ddrScore = fmtBig($opts, $ddrScore) if $i == 0;
 
       $fmt .= sprintf("  %s   %s %s %s %s\n    %s\n",
                 $$scoreAtts{PASS_FAIL},
@@ -473,7 +473,7 @@ sub findRecentXmlFiles(){
   return @files;
 }
 
-sub maybeBig($$){
+sub fmtBig($$){
   my ($opts, $text) = @_;
   if($$opts{format} eq $FORMAT_QML){
     return "<font size='+2'><b>$text</b></font>";
@@ -482,17 +482,17 @@ sub maybeBig($$){
   }
 }
 
-sub blue($$){
+sub fmtBlue($$){
   my ($opts, $text) = @_;
   my $color = $$opts{format} eq $FORMAT_QML ? "blue" : "bold blue";
   return colorText($opts, $text, $color);
 }
-sub yellow($$){
+sub fmtYellow($$){
   my ($opts, $text) = @_;
   my $color = $$opts{format} eq $FORMAT_QML ? "brown" : "yellow";
   return colorText($opts, $text, $color);
 }
-sub red($$){
+sub fmtRed($$){
   my ($opts, $text) = @_;
   return colorText($opts, $text, "red");
 }
