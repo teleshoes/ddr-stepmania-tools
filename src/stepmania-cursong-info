@@ -273,7 +273,7 @@ sub formatCurSongInfo($$){
       formatField($opts, 3,  "%s",   $passFailFmt,                       [@failFmtFunctions]),
       formatField($opts, 9,  "%06s", $$scoreAtts{DDRA_SCORE},            [@failFmtFunctions]),
       formatField($opts, 0,  "%7s",  $$scoreAtts{PERCENT_SCORE},         [@failFmtFunctions]),
-      formatField($opts, 0,  "%s",   extractSpeedMod($$scoreAtts{MODS}), []),
+      formatField($opts, 0,  "%-5s", extractSpeedMod($$scoreAtts{MODS}), []),
     );
     $xmlScoreFmt .= "\n";
     $xmlScoreFmt .= fmtUnderline($opts, join " ", (
