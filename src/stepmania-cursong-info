@@ -264,7 +264,7 @@ sub formatCurSongInfo($$){
                 $speedMod,
                 $$scoreAtts{FC_MAYBE},
       );
-      $fmt .= "    $$scoreAtts{DATETIME}\n";
+      $fmt .= fmtUnderline($opts, "    $$scoreAtts{DATETIME}") . "\n";
     }
   }
 
