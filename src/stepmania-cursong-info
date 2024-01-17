@@ -255,6 +255,15 @@ sub formatCurSongInfo($$){
     $passFailFmt = "p" if $$scoreAtts{PASS_FAIL} =~ /^passed$/i;
     $passFailFmt = "F" if $$scoreAtts{PASS_FAIL} =~ /^failed$/i;
 
+    my ($date, $time);
+    if(not defined $$scoreAtts{DATETIME} or $$scoreAtts{DATETIME} eq ""){
+      ($date, $time) = ("", "");
+    }elsif($$scoreAtts{DATETIME} =~ /^(\d\d\d\d-\d\d-\d\d)_(\d\d:\d\d:\d\d)$/){
+      ($date, $time) = ($1, $2);
+    }else{
+      die "ERROR: malformed date/time \"$$scoreAtts{DATETIME}\"\n";
+    }
+
     my $speedMod = extractSpeedMod($$scoreAtts{MODS});
     my $ddrScore = sprintf "%-7s", $$scoreAtts{DDRA_SCORE};
 
@@ -265,7 +274,7 @@ sub formatCurSongInfo($$){
               $speedMod,
               $$scoreAtts{FC_MAYBE},
     );
-    $xmlScoreFmt .= fmtUnderline($opts, "    $$scoreAtts{DATETIME}") . "\n";
+    $xmlScoreFmt .= fmtUnderline($opts, "    $date   $time") . "\n";
   }
   if($$opts{format} ne $FORMAT_SHORT){
     $fmt .= fmtMonospace($opts, $xmlScoreFmt);
