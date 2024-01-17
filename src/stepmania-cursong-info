@@ -75,6 +75,7 @@ my $USAGE = "Usage:
 ";
 
 sub formatCurSongInfo($$);
+sub formatField($$$);
 sub getCurSongInfo();
 sub getSongInfo($$$);
 sub extractSpeedMod($);
@@ -264,17 +265,19 @@ sub formatCurSongInfo($$){
       die "ERROR: malformed date/time \"$$scoreAtts{DATETIME}\"\n";
     }
 
-    my $speedMod = extractSpeedMod($$scoreAtts{MODS});
-    my $ddrScore = sprintf "%-7s", $$scoreAtts{DDRA_SCORE};
-
-    $xmlScoreFmt .= sprintf("%3s %9s %s %s %s\n",
-              $passFailFmt,
-              $ddrScore,
-              $$scoreAtts{PERCENT_SCORE},
-              $speedMod,
-              $$scoreAtts{FC_MAYBE},
+    $xmlScoreFmt .= join " ", (
+      formatField(3,  "%s",   $passFailFmt),
+      formatField(9,  "%-7s", $$scoreAtts{DDRA_SCORE}),
+      formatField(0,  "%s",   $$scoreAtts{PERCENT_SCORE}),
+      formatField(0,  "%s",   extractSpeedMod($$scoreAtts{MODS})),
+      formatField(0,  "%s",   $$scoreAtts{FC_MAYBE}),
     );
-    $xmlScoreFmt .= fmtUnderline($opts, sprintf "%14s %10s", $date, $time) . "\n";
+    $xmlScoreFmt .= "\n";
+    $xmlScoreFmt .= fmtUnderline($opts, join " ", (
+      formatField(14, "%s", $date),
+      formatField(10, "%s", $time),
+    ));
+    $xmlScoreFmt .= "\n";
   }
   if($$opts{format} ne $FORMAT_SHORT){
     $fmt .= fmtMonospace($opts, $xmlScoreFmt);
@@ -288,6 +291,14 @@ sub formatCurSongInfo($$){
   }
 
   return $fmt;
+}
+
+sub formatField($$$){
+  my ($minLen, $formatSpec, $str) = @_;
+  $str = "" if not defined $str;
+  $str = sprintf $formatSpec, $str if length $str > 0;
+  $str = sprintf "%${minLen}s", $str;
+  return $str;
 }
 
 sub getCurSongInfo(){
