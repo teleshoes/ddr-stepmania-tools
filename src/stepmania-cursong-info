@@ -15,7 +15,7 @@ my $SONG_PARENT_DIR = "$ENV{HOME}/Games/stepmania/latest";
 
 my $RECENT_MILLIS = 6 * 60 * 60 * 1000; #SIX HOURS
 
-my @ATTS = qw(DATETIME PASS_FAIL DDRA_SCORE PERCENT_SCORE MODS FC_MAYBE);
+my @ATTS = qw(DATETIME PASS_FAIL DDRA_SCORE PERCENT_SCORE MODS FC_MAYBE DDRNAME_BAR);
 
 my @DDR_GAMES = qw(singles doubles);
 my @DDR_DIFFS = qw(beginner basic difficult expert challenge);
@@ -280,6 +280,7 @@ sub formatCurSongInfo($$){
     $xmlScoreFmt .= fmtUnderline($opts, join " ", (
       formatField($opts, 14, "%s",   $date,                              []),
       formatField($opts, 10, "%s",   $time,                              []),
+      formatField($opts, 5,  "%-5s", $$scoreAtts{DDRNAME_BAR},           []),
     ));
     $xmlScoreFmt .= "\n";
   }
