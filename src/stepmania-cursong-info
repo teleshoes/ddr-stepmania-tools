@@ -257,7 +257,7 @@ sub formatCurSongInfo($$){
       my $ddrScore = sprintf "%-7s", $$scoreAtts{DDRA_SCORE};
 
       $fmt .= sprintf("  %s   %s %s %s %s\n    %s\n",
-                $$scoreAtts{PASS_FAIL},
+                $passFail,
                 $ddrScore,
                 $$scoreAtts{PERCENT_SCORE},
                 $speedMod,
