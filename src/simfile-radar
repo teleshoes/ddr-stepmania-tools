@@ -1046,6 +1046,10 @@ sub getMaxNoteRowsPerSec($$$){
       $segmentDur = $durAfterNextRow;
     }
 
+    #segment goes ends after the END of the last note row
+    #  i.e.: infinitesimally before the start of the next note row outside of the segment
+    $segmentDur += $rowDurs[$segmentEndRow];
+
     my $nps;
     if($segmentDur == 0){
       $nps = 1;
