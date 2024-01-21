@@ -12,6 +12,8 @@ my $ROWS_PER_MEASURE = 192;
 my $BEATS_PER_MEASURE = 4;
 my $ROWS_PER_BEAT = int($ROWS_PER_MEASURE/$BEATS_PER_MEASURE); #48
 
+my $NANOSEC_PER_SEC = 1000_000_000;
+
 my $CACHE_BASE_DIR_SUFFIX = ".cache/simfile-radar";
 
 my $SM_CHARS = '[01234MLFAKNHGOETU]';
@@ -90,7 +92,7 @@ sub getSongDuration($$$);
 sub getNoteCounts($);
 sub getTotalFreezeRowCount($);
 sub getMaxMeasureDensity($);
-sub bpmToSecondsPerRow($);
+sub bpmToNanoSecondsPerRow($);
 sub removeWarps($$$);
 sub calculateNotesPerSecondInfo($$$);
 sub getTotalNoteIrregularity($);
@@ -986,12 +988,12 @@ sub getMaxMeasureDensity($){
   return $maxDensity;
 }
 
-sub bpmToSecondsPerRow($){
+sub bpmToNanoSecondsPerRow($){
   my ($bpm) = @_;
   my $beatsPerSec = $bpm / 60.0;
   my $rowsPerSec = $ROWS_PER_BEAT * $beatsPerSec;
-  my $secPerRow = 1 / $rowsPerSec;
-  return $secPerRow;
+  my $nanosecPerRow = $NANOSEC_PER_SEC / $rowsPerSec;
+  return int($nanosecPerRow + 0.5);
 }
 
 #remove rows with negative or very large bpms
@@ -1050,17 +1052,18 @@ sub calculateNotesPerSecondInfo($$$){
 
   #seconds until the next row (not the next note)
   #  defined for the last row as if there was an empty row after it, at the same bpm
-  my @rowDurs;
+  my @rowDursNanoS;
 
-  my $curSecPerRow = bpmToSecondsPerRow($firstBpm);
+  my $curNanoSecPerRow = bpmToNanoSecondsPerRow($firstBpm);
   for(my $row=0; $row<=@$rows; $row++){
-    $curSecPerRow = bpmToSecondsPerRow($$bpmsByRow{$row}) if defined $$bpmsByRow{$row};
+    $curNanoSecPerRow = bpmToNanoSecondsPerRow($$bpmsByRow{$row}) if defined $$bpmsByRow{$row};
 
-    my $dur = $curSecPerRow;
+    my $durNanoS = $curNanoSecPerRow;
     if(defined $$stopsByRow{$row}){
-      $dur += $$stopsByRow{$row}; #stops are immediately AFTER the row
+      #stops are immediately AFTER the row, so add directly to this row duration
+      $durNanoS += int($NANOSEC_PER_SEC * $$stopsByRow{$row} + 0.5);
     }
-    push @rowDurs, $dur;
+    push @rowDursNanoS, $durNanoS;
   }
 
   my %okNoteRows;
@@ -1114,7 +1117,8 @@ sub calculateNotesPerSecondInfo($$$){
   for my $varSuffix(sort keys %varsBySuffix){
     my %varInfo = %{$varsBySuffix{$varSuffix}};
     my $maxNoteRows = $varInfo{MAX_NOTE_ROWS};
-    my $maxDurationS = $varInfo{MAX_DURATION_S};
+    my $maxDurationNanoS = defined $varInfo{MAX_DURATION_S} ?
+      int($NANOSEC_PER_SEC * $varInfo{MAX_DURATION_S} + 0.5) : undef;
     my $isPeak = $varInfo{PEAK};
 
     my $prevSegmentEndRow = undef;
@@ -1137,32 +1141,33 @@ sub calculateNotesPerSecondInfo($$$){
 
       my $segmentStartRow = $row;
       my $segmentEndRow = $row;
-      my $segmentDurationS = 0;
+      my $segmentDurationNanoS = 0;
       while(1){
         my $segmentEndRowAfterNextRow = $segmentEndRow + 1;
         my $noteRowCountAfterNextRow = $segmentEndRowAfterNextRow-$segmentStartRow + 1;
-        my $durAfterNextRow = $segmentDurationS + $rowDurs[$segmentEndRow];
+        my $durAfterNextRowNanoS =
+          $segmentDurationNanoS + $rowDursNanoS[$segmentEndRowAfterNextRow];
         if($segmentEndRowAfterNextRow > $#$rows){
           #last segment
           last;
         }elsif(defined $maxNoteRows and $noteRowCountAfterNextRow > $maxNoteRows){
           last;
-        }elsif(defined $maxDurationS and $durAfterNextRow > $maxDurationS){
+        }elsif(defined $maxDurationNanoS and $durAfterNextRowNanoS > $maxDurationNanoS){
           last;
         }else{
           $segmentEndRow = $segmentEndRowAfterNextRow;
-          $segmentDurationS = $durAfterNextRow;
+          $segmentDurationNanoS = $durAfterNextRowNanoS;
         }
       }
 
       #segment ends after the END of the last note row
       #  i.e.: infinitesimally before the start of the next note row after the segment
-      $segmentDurationS += $rowDurs[$segmentEndRow];
+      $segmentDurationNanoS += $rowDursNanoS[$segmentEndRow];
 
       my $segmentNoteCount = grep {$okNoteRows{$_}} $segmentStartRow..$segmentEndRow;
 
-      if($segmentDurationS >= 0.01){
-        my $nps = $segmentNoteCount / $segmentDurationS;
+      if($segmentDurationNanoS >= 0.01*$NANOSEC_PER_SEC){
+        my $nps = $segmentNoteCount / $segmentDurationNanoS * $NANOSEC_PER_SEC;
         $npsTotal += $nps;
         $segmentCount++;
         if($nps > $maxNps){
