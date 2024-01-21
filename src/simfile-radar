@@ -1071,10 +1071,14 @@ sub calculateNotesPerSecondInfo($$$){
 
       my $segmentNoteCount = grep {$okNoteRows{$_}} $segmentStartRow..$segmentEndRow;
 
-      $segmentDurationS = 1 if $segmentDurationS <= 0;
-      my $nps = $segmentNoteCount / $segmentDurationS;
-      if($nps > $maxNps){
-        $maxNps = $nps;
+      if($segmentDurationS >= 0.01){
+        my $nps = $segmentNoteCount / $segmentDurationS;
+        if($nps > $maxNps){
+          $maxNps = $nps;
+        }
+      }else{
+        #skip very short segments
+        next;
       }
     }
     $$npsInfo{"MAX_$varSuffix"} = $maxNps;
