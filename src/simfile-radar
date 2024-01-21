@@ -368,9 +368,9 @@ my $usage = "Usage:
            if split by duration, each segment will have APPROXIMATELY the same length
              (since each segment is a fixed number of NOTE_ROWS, duration is to the closest row)
            e.g.:
-            if a song is 120bpm, one measure is two seconds long, so:
+            if a song is 120bpm with no stops, one measure is two seconds long, so:
               MAX_NPS_BY_1MEAS == MAX_NPS_BY_2S
-            if a song is 180bpm, one measure is one and one third seconds long, so:
+            if a song is 180bpm with no stops, one measure is one and one third seconds long, so:
               MAX_NPS_BY_3MEAS == MAX_NPS_BY_4S
         segments can be non-overlapping or overlapping (peak)
            if non-overlapping, each note row appears in exactly one segment
