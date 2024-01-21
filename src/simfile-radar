@@ -92,7 +92,7 @@ sub getTotalFreezeRowCount($);
 sub getMaxMeasureDensity($);
 sub bpmToSecondsPerRow($);
 sub removeWarps($$$);
-sub getMaxNotesPerSec($$$);
+sub calculateNotesPerSecondInfo($$$);
 sub getTotalNoteIrregularity($);
 sub getBPMChangeAmount($$);
 sub formatDDRDiff($);
@@ -985,7 +985,7 @@ sub removeWarps($$$){
   return ($rows, $bpmsByRow, $stopsByRow);
 }
 
-sub getMaxNoteRowsPerSec($$$){
+sub calculateNotesPerSecondInfo($$$){
   my ($rows, $bpmsByRow, $stopsByRow) = @_;
   my $songDurS = 0;
 
@@ -1064,7 +1064,11 @@ sub getMaxNoteRowsPerSec($$$){
     }
   }
 
-  return $maxNps;
+  my $npsInfo = {
+    MAX_NOTE_ROWS_PER_SEC => $maxNps,
+  };
+
+  return $npsInfo;
 }
 
 
@@ -1268,11 +1272,12 @@ sub calculateNoteSetStats($$){
     SONG_DUR                  => getSongDuration($rows, $bpmsByRow, $stopsByRow),
     SONG_ROW_COUNT            => getSongRowCount($rows),
     MAX_MEASURE_DENSITY       => getMaxMeasureDensity $rows,
-    MAX_NOTE_ROWS_PER_SEC     => getMaxNoteRowsPerSec($rows, $bpmsByRow, $stopsByRow),
     TOTAL_FREEZE_ROW_COUNT    => getTotalFreezeRowCount $rows,
     TOTAL_NOTE_IRREGULARITY   => getTotalNoteIrregularity $rows,
     BPM_CHANGE_AMOUNT         => getBPMChangeAmount($bpmsByRow, $stopsByRow),
   };
+
+  $s = {%$s, %{calculateNotesPerSecondInfo($rows, $bpmsByRow, $stopsByRow)}},
 
   #meaningful calculated values
   $$s{SONG_DUR_FMT}              = formatTimeMSS $$s{SONG_DUR};
