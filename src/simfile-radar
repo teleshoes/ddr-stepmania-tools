@@ -1040,25 +1040,38 @@ sub calculateNotesPerSecondInfo($$$){
   #
 
   # MAX_DURATION_S: maximum length of segment in seconds
+  # PEAK:           if true, every note row with a top/hold/roll gets its own segment,
+  #                   which can overlap with other segments
+  #                 if false, every segment starts on the note
+  #                    row immediately after the previous segment
+  #                    (or the first note row of the song)
   my %varsBySuffix = (
-    NOTE_ROWS_PER_SEC => {MAX_DURATION_S => 1.0},
+    NOTE_ROWS_PER_SEC => {MAX_DURATION_S => 1.0, PEAK => 1},
   );
 
   my $npsInfo = {};
   for my $varSuffix(sort keys %varsBySuffix){
     my %varInfo = %{$varsBySuffix{$varSuffix}};
     my $maxDurationS = $varInfo{MAX_DURATION_S};
+    my $isPeak = $varInfo{PEAK};
 
+    my $prevSegmentEndRow = undef;
     my $npsTotal = 0;
     my $segmentCount = 0;
     my $maxNps = 0;
     for(my $row=0; $row<$#$rows; $row++){
-      #skip segments that do not start with a note row
-      #    -at least one segment that has the peak-NPS-per-segment
-      #      will necessarily start with a note row
-      #    -if a segment doesn't start with a note row, moving the segment down
-      #      a note row can only increase NPS
-      next if not $okNoteRows{$row};
+      if($isPeak){
+        #skip segments that do not start with a note row
+        #    -at least one segment that has the peak-NPS-per-segment
+        #      will necessarily start with a note row
+        #    -if a segment doesn't start with a note row, moving the segment down
+        #      a note row can only increase NPS
+        next if not $okNoteRows{$row};
+      }else{
+        #do not allow overlap
+        #    -consider only note rows that do not appear in previous segments
+        next if defined $prevSegmentEndRow and $row <= $prevSegmentEndRow;
+      }
 
       my $segmentStartRow = $row;
       my $segmentEndRow = $row;
