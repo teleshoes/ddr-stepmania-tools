@@ -345,13 +345,16 @@ my $usage = "Usage:
       if NOTE_ROWS has fewer than $ROWS_PER_MEASURE rows (song is shorter than one measure),
         count the total number of non-empty rows
 
+    MAX_NPS_BY_1MEAS      AVG_NPS_BY_1MEAS
     MAX_NPS_BY_1S         AVG_NPS_BY_1S
     MAX_NPS_BY_1S_PEAK    AVG_NPS_BY_1S_PEAK
       split NOTE_ROWS into segments, count the notes per second, and take the [MAX|AVG]
 
       note:
-        segments are split by max duration
-           each segment will have APPROXIMATELY the same length
+        segments are split by either max measures OR by max duration
+           if split by measure, then each segment can have a very different length
+             (since each segment can have a different BPM)
+           if split by duration, each segment will have APPROXIMATELY the same length
              (since each segment is a fixed number of NOTE_ROWS, duration is to the closest row)
         segments can be non-overlapping or overlapping (peak)
            if non-overlapping, each note row appears in exactly one segment
@@ -360,12 +363,19 @@ my $usage = "Usage:
 
         1) remove warps
              -any note rows with a negative or extremely high BPM are REMOVED
-        2) split note rows into segments of a certain max duration
-             A) === non-overlapping by max duration ===
+        2) split note rows into segments of a certain max duration or max measure count
+             A) === by max measures ===
+                [BY_1MEAS]
+                  -split segments into non-overlapping segments at most 1 measure long
+                  -a measure is $ROWS_PER_MEASURE rows ($BEATS_PER_MEASURE beats per measure)
+                  -each note row appears in exactly one segment
+                  -each segment can have a very different duration, due to different BPMs
+                  -if there are warps, segments will not necessarily align with in-game measures
+             B) === non-overlapping by max duration ===
                 [BY_1S]
                   -split rows into non-overlapping segments at most 1s long
                   -each note row appears in exactly one segment
-             B) === peak by max duration ===
+             C) === peak by max duration ===
                 [BY_1S_PEAK]
                   -split rows into all possible segments starting with a note,
                      at most 1s long
@@ -1055,6 +1065,9 @@ sub calculateNotesPerSecondInfo($$$){
   #     (i.e.: only consider the longest possible segment, as close to 1.0s as possible)
   #
 
+  my $MEAS1 = $ROWS_PER_MEASURE * 1;
+
+  # MAX_NOTE_ROWS:  maximum number of rows per segment
   # MAX_DURATION_S: maximum length of segment in seconds
   # PEAK:           if true, every note row with a top/hold/roll gets its own segment,
   #                   which can overlap with other segments
@@ -1062,13 +1075,15 @@ sub calculateNotesPerSecondInfo($$$){
   #                    row immediately after the previous segment
   #                    (or the first note row of the song)
   my %varsBySuffix = (
-    BY_1S      => {MAX_DURATION_S => 1.0, PEAK => 0},
-    BY_1S_PEAK => {MAX_DURATION_S => 1.0, PEAK => 1},
+    BY_1MEAS   => {MAX_NOTE_ROWS => $MEAS1, MAX_DURATION_S => undef, PEAK => 0},
+    BY_1S      => {MAX_NOTE_ROWS => undef,  MAX_DURATION_S => 1.0,   PEAK => 0},
+    BY_1S_PEAK => {MAX_NOTE_ROWS => undef,  MAX_DURATION_S => 1.0,   PEAK => 1},
   );
 
   my $npsInfo = {};
   for my $varSuffix(sort keys %varsBySuffix){
     my %varInfo = %{$varsBySuffix{$varSuffix}};
+    my $maxNoteRows = $varInfo{MAX_NOTE_ROWS};
     my $maxDurationS = $varInfo{MAX_DURATION_S};
     my $isPeak = $varInfo{PEAK};
 
@@ -1095,9 +1110,12 @@ sub calculateNotesPerSecondInfo($$$){
       my $segmentDurationS = 0;
       while(1){
         my $segmentEndRowAfterNextRow = $segmentEndRow + 1;
+        my $noteRowCountAfterNextRow = $segmentEndRowAfterNextRow-$segmentStartRow + 1;
         my $durAfterNextRow = $segmentDurationS + $rowDurs[$segmentEndRow];
         if($segmentEndRowAfterNextRow > $#$rows){
           #last segment
+          last;
+        }elsif(defined $maxNoteRows and $noteRowCountAfterNextRow > $maxNoteRows){
           last;
         }elsif(defined $maxDurationS and $durAfterNextRow > $maxDurationS){
           last;
@@ -1120,6 +1138,7 @@ sub calculateNotesPerSecondInfo($$$){
         if($nps > $maxNps){
           $maxNps = $nps;
         }
+        $prevSegmentEndRow = $segmentEndRow;
       }else{
         #skip very short segments
         next;
