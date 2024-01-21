@@ -344,7 +344,7 @@ my $usage = "Usage:
       take the maximum count of non-empty rows of any contiguous chain
       if NOTE_ROWS has fewer than $ROWS_PER_MEASURE rows (song is shorter than one measure),
         count the total number of non-empty rows
-    MAX_NOTE_ROWS_PER_SEC
+    MAX_NPS_BY_1S_PEAK
       slice note rows into (roughly) 1-second segments,
         allowing segments to overlap,
         and select the segment with the most note rows
@@ -354,7 +354,7 @@ my $usage = "Usage:
           (i.e.: this results in a MINIMUM of note-rows-per=second = 1)
         -never consider segments that are ENTIRELY part of another segment
           (i.e.: only consider the longest possible segment, as close to 1.0s as possible)
-    AVG_NOTE_ROWS_PER_SEC
+    AVG_NPS_BY_1S_PEAK
       slice note rows into (roughly) 1-second segments,
         allowing segments to overlap,
         and take the mean of the number of note rows
@@ -1046,7 +1046,7 @@ sub calculateNotesPerSecondInfo($$$){
   #                    row immediately after the previous segment
   #                    (or the first note row of the song)
   my %varsBySuffix = (
-    NOTE_ROWS_PER_SEC => {MAX_DURATION_S => 1.0, PEAK => 1},
+    BY_1S_PEAK => {MAX_DURATION_S => 1.0, PEAK => 1},
   );
 
   my $npsInfo = {};
@@ -1109,8 +1109,8 @@ sub calculateNotesPerSecondInfo($$$){
       }
     }
     my $avgNps = $npsTotal/$segmentCount;
-    $$npsInfo{"MAX_$varSuffix"} = $maxNps;
-    $$npsInfo{"AVG_$varSuffix"} = $avgNps;
+    $$npsInfo{"MAX_NPS_$varSuffix"} = $maxNps;
+    $$npsInfo{"AVG_NPS_$varSuffix"} = $avgNps;
   }
 
   return $npsInfo;
