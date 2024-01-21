@@ -1174,7 +1174,7 @@ sub calculateNotesPerSecondInfo($$$){
         next;
       }
     }
-    my $avgNps = $npsTotal/$segmentCount;
+    my $avgNps = $segmentCount > 0 ? $npsTotal/$segmentCount : 0;
     $$npsInfo{"MAX_NPS_$varSuffix"} = $maxNps;
     $$npsInfo{"AVG_NPS_$varSuffix"} = $avgNps;
   }
