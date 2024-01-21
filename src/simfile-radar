@@ -350,6 +350,9 @@ my $usage = "Usage:
     MAX_NPS_BY_3MEAS      AVG_NPS_BY_3MEAS
     MAX_NPS_BY_4MEAS      AVG_NPS_BY_4MEAS
     MAX_NPS_BY_1S         AVG_NPS_BY_1S
+    MAX_NPS_BY_2S         AVG_NPS_BY_2S
+    MAX_NPS_BY_3S         AVG_NPS_BY_3S
+    MAX_NPS_BY_4S         AVG_NPS_BY_4S
     MAX_NPS_BY_1S_PEAK    AVG_NPS_BY_1S_PEAK
     MAX_NPS_BY_2S_PEAK    AVG_NPS_BY_2S_PEAK
     MAX_NPS_BY_3S_PEAK    AVG_NPS_BY_3S_PEAK
@@ -378,8 +381,8 @@ my $usage = "Usage:
                   -each segment can have a very different duration, due to different BPMs
                   -if there are warps, segments will not necessarily align with in-game measures
              B) === non-overlapping by max duration ===
-                [BY_1S]
-                  -split rows into non-overlapping segments at most 1s long
+                [BY_1S|BY_2S|BY_3S|BY_4S]
+                  -split rows into non-overlapping segments at most [1S|2S|3S|4S] long
                   -each note row appears in exactly one segment
              C) === peak by max duration ===
                 [BY_1S_PEAK|BY_2S_PEAK|BY_3S_PEAK|BY_4S_PEAK]
@@ -1089,6 +1092,9 @@ sub calculateNotesPerSecondInfo($$$){
     BY_3MEAS   => {MAX_NOTE_ROWS => $MEAS3, MAX_DURATION_S => undef, PEAK => 0},
     BY_4MEAS   => {MAX_NOTE_ROWS => $MEAS4, MAX_DURATION_S => undef, PEAK => 0},
     BY_1S      => {MAX_NOTE_ROWS => undef,  MAX_DURATION_S => 1.0,   PEAK => 0},
+    BY_2S      => {MAX_NOTE_ROWS => undef,  MAX_DURATION_S => 2.0,   PEAK => 0},
+    BY_3S      => {MAX_NOTE_ROWS => undef,  MAX_DURATION_S => 3.0,   PEAK => 0},
+    BY_4S      => {MAX_NOTE_ROWS => undef,  MAX_DURATION_S => 4.0,   PEAK => 0},
     BY_1S_PEAK => {MAX_NOTE_ROWS => undef,  MAX_DURATION_S => 1.0,   PEAK => 1},
     BY_2S_PEAK => {MAX_NOTE_ROWS => undef,  MAX_DURATION_S => 2.0,   PEAK => 1},
     BY_3S_PEAK => {MAX_NOTE_ROWS => undef,  MAX_DURATION_S => 3.0,   PEAK => 1},
