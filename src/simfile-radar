@@ -1141,7 +1141,10 @@ sub calculateNotesPerSecondInfo($$$){
 
       my $segmentStartRow = $row;
       my $segmentEndRow = $row;
-      my $segmentDurationNanoS = 0;
+
+      #segment ends after the END of the last note row
+      #  i.e.: infinitesimally before the start of the next note row after the segment
+      my $segmentDurationNanoS = $rowDursNanoS[$segmentEndRow];
       while(1){
         my $segmentEndRowAfterNextRow = $segmentEndRow + 1;
         my $noteRowCountAfterNextRow = $segmentEndRowAfterNextRow-$segmentStartRow + 1;
@@ -1160,9 +1163,6 @@ sub calculateNotesPerSecondInfo($$$){
         }
       }
 
-      #segment ends after the END of the last note row
-      #  i.e.: infinitesimally before the start of the next note row after the segment
-      $segmentDurationNanoS += $rowDursNanoS[$segmentEndRow];
 
       my $segmentNoteCount = grep {$okNoteRows{$_}} $segmentStartRow..$segmentEndRow;
 
