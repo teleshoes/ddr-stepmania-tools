@@ -1028,45 +1028,57 @@ sub calculateNotesPerSecondInfo($$$){
   #   -never consider segments that are ENTIRELY part of another segment
   #     (i.e.: only consider the longest possible segment, as close to 1.0s as possible)
   #
-  for(my $segmentStartRow=0; $segmentStartRow<=@$rows; $segmentStartRow++){
 
-    #optimization; max NPS must start (or end) with a note row
-    # so we will consider only segments that start with a note row
-    next if not $okNoteRows{$segmentStartRow};
+  # MAX_DURATION_S: maximum length of segment in seconds
+  my %varsBySuffix = (
+    NOTE_ROWS_PER_SEC => {MAX_DURATION_S => 1.0},
+  );
 
-    my $segmentNoteRowCount = 0;
-    my $segmentDur = 0;
-    my $segmentEndRow = undef;
-    for(my $row=$segmentStartRow; $row<=@$rows; $row++){
-      $segmentNoteRowCount++ if $okNoteRows{$row};
-      $segmentEndRow = $row;
+  my $npsInfo = {};
+  for my $varSuffix(sort keys %varsBySuffix){
+    my %varInfo = %{$varsBySuffix{$varSuffix}};
+    my $maxDurationS = $varInfo{MAX_DURATION_S};
 
-      my $durAfterNextRow = $segmentDur + $rowDurs[$row];
-      last if $durAfterNextRow > 1.0;
-      $segmentDur = $durAfterNextRow;
+    my $maxNps = 0;
+    for(my $row=0; $row<$#$rows; $row++){
+      #skip segments that do not start with a note row
+      #    -at least one segment that has the peak-NPS-per-segment
+      #      will necessarily start with a note row
+      #    -if a segment doesn't start with a note row, moving the segment down
+      #      a note row can only increase NPS
+      next if not $okNoteRows{$row};
+
+      my $segmentStartRow = $row;
+      my $segmentEndRow = $row;
+      my $segmentDurationS = 0;
+      while(1){
+        my $segmentEndRowAfterNextRow = $segmentEndRow + 1;
+        my $durAfterNextRow = $segmentDurationS + $rowDurs[$segmentEndRow];
+        if($segmentEndRowAfterNextRow > $#$rows){
+          #last segment
+          last;
+        }elsif(defined $maxDurationS and $durAfterNextRow > $maxDurationS){
+          last;
+        }else{
+          $segmentEndRow = $segmentEndRowAfterNextRow;
+          $segmentDurationS = $durAfterNextRow;
+        }
+      }
+
+      #segment ends after the END of the last note row
+      #  i.e.: infinitesimally before the start of the next note row after the segment
+      $segmentDurationS += $rowDurs[$segmentEndRow];
+
+      my $segmentNoteCount = grep {$okNoteRows{$_}} $segmentStartRow..$segmentEndRow;
+
+      $segmentDurationS = 1 if $segmentDurationS <= 0;
+      my $nps = $segmentNoteCount / $segmentDurationS;
+      if($nps > $maxNps){
+        $maxNps = $nps;
+      }
     }
-
-    #segment goes ends after the END of the last note row
-    #  i.e.: infinitesimally before the start of the next note row outside of the segment
-    $segmentDur += $rowDurs[$segmentEndRow];
-
-    my $nps;
-    if($segmentDur == 0){
-      $nps = 1;
-    }else{
-      $nps = $segmentNoteRowCount / $segmentDur;
-    }
-    $maxNps = $nps if $nps > $maxNps;
-
-    if($segmentEndRow == @$rows-1){
-      #current segment contains the last row, additional segments will be subset
-      last;
-    }
+    $$npsInfo{"MAX_$varSuffix"} = $maxNps;
   }
-
-  my $npsInfo = {
-    MAX_NOTE_ROWS_PER_SEC => $maxNps,
-  };
 
   return $npsInfo;
 }
