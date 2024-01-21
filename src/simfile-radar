@@ -1163,6 +1163,12 @@ sub calculateNotesPerSecondInfo($$$){
         }
       }
 
+      if(defined $maxNoteRows and $segmentEndRow - $segmentStartRow + 1 > $maxNoteRows){
+        die "ERROR: segment max note rows exceeded\n";
+      }
+      if(defined $maxDurationNanoS and $segmentDurationNanoS > $maxDurationNanoS){
+        die "ERROR: segment max duration exceeded\n";
+      }
 
       my $segmentNoteCount = grep {$okNoteRows{$_}} $segmentStartRow..$segmentEndRow;
 
