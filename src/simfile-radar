@@ -91,6 +91,7 @@ sub getNoteCounts($);
 sub getTotalFreezeRowCount($);
 sub getMaxMeasureDensity($);
 sub bpmToSecondsPerRow($);
+sub removeWarps($$$);
 sub getMaxNotesPerSec($$$);
 sub getTotalNoteIrregularity($);
 sub getBPMChangeAmount($$);
@@ -939,9 +940,56 @@ sub bpmToSecondsPerRow($){
   return $secPerRow;
 }
 
+#remove rows with negative or very large bpms
+#  fairly expensive if there are warps, but fast if there are no warps
+sub removeWarps($$$){
+  my ($rows, $bpmsByRow, $stopsByRow) = @_;
+
+  my $isWarp = 0;
+  my $anyWarps = 0;
+  my $indexOffset = 0;
+  my %indexOldToNew;
+  for(my $row=0; $row<@$rows; $row++){
+    my $bpm = $$bpmsByRow{$row};
+    if(defined $bpm){
+      if($bpm < 0 || $bpm > 109713){
+        $isWarp = 1;
+        $anyWarps = 1;
+      }else{
+        $isWarp = 0;
+      }
+    }
+    if($isWarp){
+      $indexOffset++;
+    }else{
+      $indexOldToNew{$row} = $row - $indexOffset;
+    }
+  }
+
+  if($anyWarps){
+    my @newRows;
+    my %newBpmsByRow;
+    my %newStopsByRow;
+    for my $oldIndex(sort {$a <=> $b} keys %indexOldToNew){
+      push @newRows, $$rows[$oldIndex];
+      my $newIndex = $indexOldToNew{$oldIndex};
+      $newBpmsByRow{$newIndex} = $$bpmsByRow{$oldIndex};
+      $newStopsByRow{$newIndex} = $$stopsByRow{$oldIndex};
+    }
+
+    $rows = \@newRows;
+    $bpmsByRow = \%newBpmsByRow;
+    $stopsByRow = \%newStopsByRow;
+  }
+
+  return ($rows, $bpmsByRow, $stopsByRow);
+}
+
 sub getMaxNoteRowsPerSec($$$){
   my ($rows, $bpmsByRow, $stopsByRow) = @_;
   my $songDurS = 0;
+
+ ($rows, $bpmsByRow, $stopsByRow) = removeWarps($rows, $bpmsByRow, $stopsByRow);
 
   my @bpmChangeRows = sort {$a <=> $b} keys %$bpmsByRow;
   my $firstBpm = $$bpmsByRow{$bpmChangeRows[0]};
