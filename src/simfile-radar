@@ -186,6 +186,8 @@ my $usage = "Usage:
 
 
   VARIABLE
+    SM_FILE
+      simfile path that is being analyzed, as passed in (not cached)
     GAME
       game type in simfile (e.g.: dance-single, dance-double, pump-single)
       EXCEPT:
@@ -762,6 +764,8 @@ sub handleSimfile($$$$$$$$$){
   for my $gameDiffKey(@gameDiffKeys){
     next if isGameDiffSkipped($gameDiffFilters, $gameDiffKey);
     my $s = getNoteSetStats($smFile, $smInfo, $gameDiffKey, $readCache, $writeCache);
+
+    $$s{SM_FILE} = $smFile;
 
     #copy default machine values into plain radar variables
     for my $radarStat(qw(STREAM VOLTAGE AIR FREEZE CHAOS)){
