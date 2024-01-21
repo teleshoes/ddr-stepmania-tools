@@ -345,6 +345,7 @@ my $usage = "Usage:
       if NOTE_ROWS has fewer than $ROWS_PER_MEASURE rows (song is shorter than one measure),
         count the total number of non-empty rows
 
+    MAX_NPS_BY_1S         AVG_NPS_BY_1S
     MAX_NPS_BY_1S_PEAK    AVG_NPS_BY_1S_PEAK
       split NOTE_ROWS into segments, count the notes per second, and take the [MAX|AVG]
 
@@ -352,12 +353,20 @@ my $usage = "Usage:
         segments are split by max duration
            each segment will have APPROXIMATELY the same length
              (since each segment is a fixed number of NOTE_ROWS, duration is to the closest row)
+        segments can be non-overlapping or overlapping (peak)
+           if non-overlapping, each note row appears in exactly one segment
+           if overlapping, then each segment that starts with a note row is considered
 
 
         1) remove warps
              -any note rows with a negative or extremely high BPM are REMOVED
         2) split note rows into segments of a certain max duration
-                === peak by max duration ===
+             A) === non-overlapping by max duration ===
+                [BY_1S]
+                  -split rows into non-overlapping segments at most 1s long
+                  -each note row appears in exactly one segment
+             B) === peak by max duration ===
+                [BY_1S_PEAK]
                   -split rows into all possible segments starting with a note,
                      at most 1s long
                   -one segment for each row that contains at least one tap/hold/roll
@@ -1053,6 +1062,7 @@ sub calculateNotesPerSecondInfo($$$){
   #                    row immediately after the previous segment
   #                    (or the first note row of the song)
   my %varsBySuffix = (
+    BY_1S      => {MAX_DURATION_S => 1.0, PEAK => 0},
     BY_1S_PEAK => {MAX_DURATION_S => 1.0, PEAK => 1},
   );
 
