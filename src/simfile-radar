@@ -344,26 +344,33 @@ my $usage = "Usage:
       take the maximum count of non-empty rows of any contiguous chain
       if NOTE_ROWS has fewer than $ROWS_PER_MEASURE rows (song is shorter than one measure),
         count the total number of non-empty rows
-    MAX_NPS_BY_1S_PEAK
-      slice note rows into (roughly) 1-second segments,
-        allowing segments to overlap,
-        and select the segment with the most note rows
-      (roughly 1.0s, means max-note-rows-per-sec may be fractional)
-        -only consider segments of AT MOST one second
-        -only consider segments that start on a note
-          (i.e.: this results in a MINIMUM of note-rows-per=second = 1)
-        -never consider segments that are ENTIRELY part of another segment
-          (i.e.: only consider the longest possible segment, as close to 1.0s as possible)
-    AVG_NPS_BY_1S_PEAK
-      slice note rows into (roughly) 1-second segments,
-        allowing segments to overlap,
-        and take the mean of the number of note rows
-      (roughly 1.0s, means max-note-rows-per-sec may be fractional)
-        -only consider segments of AT MOST one second
-        -only consider segments that start on a note
-          (i.e.: this results in a MINIMUM of note-rows-per=second = 1)
-        -never consider segments that are ENTIRELY part of another segment
-          (i.e.: only consider the longest possible segment, as close to 1.0s as possible)
+
+    MAX_NPS_BY_1S_PEAK    AVG_NPS_BY_1S_PEAK
+      split NOTE_ROWS into segments, count the notes per second, and take the [MAX|AVG]
+
+      note:
+        segments are split by max duration
+           each segment will have APPROXIMATELY the same length
+             (since each segment is a fixed number of NOTE_ROWS, duration is to the closest row)
+
+
+        1) remove warps
+             -any note rows with a negative or extremely high BPM are REMOVED
+        2) split note rows into segments of a certain max duration
+                === peak by max duration ===
+                  -split rows into all possible segments starting with a note,
+                     at most 1s long
+                  -one segment for each row that contains at least one tap/hold/roll
+                  -each segment is extended as far as possible, and can overlap other segments
+                  -the peak NPS segment must start with a note
+        3) calculate each segment_duration
+             -start_time is the start of the first note row in the segment
+             -end_time is the start of the first note row AFTER the segment, or the end of the song
+             -segment_duration is end_time minus start_time
+        4) calculate note_count as the number of rows with at least one tap/hold/roll
+             -jumps count as one
+        5) take the [MAX|AVG] of note_count/segment_duration
+
     TOTAL_FREEZE_ROW_COUNT
       find every hold-row, count the number of rows until its released, and sum the counts
         a hold-row is a row with a single-arrow-hold-start or a multi-arrow-hold-start
