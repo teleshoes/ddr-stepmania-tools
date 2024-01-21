@@ -346,6 +346,9 @@ my $usage = "Usage:
         count the total number of non-empty rows
 
     MAX_NPS_BY_1MEAS      AVG_NPS_BY_1MEAS
+    MAX_NPS_BY_2MEAS      AVG_NPS_BY_2MEAS
+    MAX_NPS_BY_3MEAS      AVG_NPS_BY_3MEAS
+    MAX_NPS_BY_4MEAS      AVG_NPS_BY_4MEAS
     MAX_NPS_BY_1S         AVG_NPS_BY_1S
     MAX_NPS_BY_1S_PEAK    AVG_NPS_BY_1S_PEAK
       split NOTE_ROWS into segments, count the notes per second, and take the [MAX|AVG]
@@ -365,8 +368,8 @@ my $usage = "Usage:
              -any note rows with a negative or extremely high BPM are REMOVED
         2) split note rows into segments of a certain max duration or max measure count
              A) === by max measures ===
-                [BY_1MEAS]
-                  -split segments into non-overlapping segments at most 1 measure long
+                [BY_1MEAS|BY_2MEAS|BY_3MEAS|BY_4MEAS]
+                  -split segments into non-overlapping segments at most [1|2|3|4] measures long
                   -a measure is $ROWS_PER_MEASURE rows ($BEATS_PER_MEASURE beats per measure)
                   -each note row appears in exactly one segment
                   -each segment can have a very different duration, due to different BPMs
@@ -1066,6 +1069,9 @@ sub calculateNotesPerSecondInfo($$$){
   #
 
   my $MEAS1 = $ROWS_PER_MEASURE * 1;
+  my $MEAS2 = $ROWS_PER_MEASURE * 2;
+  my $MEAS3 = $ROWS_PER_MEASURE * 3;
+  my $MEAS4 = $ROWS_PER_MEASURE * 4;
 
   # MAX_NOTE_ROWS:  maximum number of rows per segment
   # MAX_DURATION_S: maximum length of segment in seconds
@@ -1076,6 +1082,9 @@ sub calculateNotesPerSecondInfo($$$){
   #                    (or the first note row of the song)
   my %varsBySuffix = (
     BY_1MEAS   => {MAX_NOTE_ROWS => $MEAS1, MAX_DURATION_S => undef, PEAK => 0},
+    BY_2MEAS   => {MAX_NOTE_ROWS => $MEAS2, MAX_DURATION_S => undef, PEAK => 0},
+    BY_3MEAS   => {MAX_NOTE_ROWS => $MEAS3, MAX_DURATION_S => undef, PEAK => 0},
+    BY_4MEAS   => {MAX_NOTE_ROWS => $MEAS4, MAX_DURATION_S => undef, PEAK => 0},
     BY_1S      => {MAX_NOTE_ROWS => undef,  MAX_DURATION_S => 1.0,   PEAK => 0},
     BY_1S_PEAK => {MAX_NOTE_ROWS => undef,  MAX_DURATION_S => 1.0,   PEAK => 1},
   );
