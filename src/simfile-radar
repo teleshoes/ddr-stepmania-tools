@@ -354,6 +354,16 @@ my $usage = "Usage:
           (i.e.: this results in a MINIMUM of note-rows-per=second = 1)
         -never consider segments that are ENTIRELY part of another segment
           (i.e.: only consider the longest possible segment, as close to 1.0s as possible)
+    AVG_NOTE_ROWS_PER_SEC
+      slice note rows into (roughly) 1-second segments,
+        allowing segments to overlap,
+        and take the mean of the number of note rows
+      (roughly 1.0s, means max-note-rows-per-sec may be fractional)
+        -only consider segments of AT MOST one second
+        -only consider segments that start on a note
+          (i.e.: this results in a MINIMUM of note-rows-per=second = 1)
+        -never consider segments that are ENTIRELY part of another segment
+          (i.e.: only consider the longest possible segment, as close to 1.0s as possible)
     TOTAL_FREEZE_ROW_COUNT
       find every hold-row, count the number of rows until its released, and sum the counts
         a hold-row is a row with a single-arrow-hold-start or a multi-arrow-hold-start
@@ -1039,6 +1049,8 @@ sub calculateNotesPerSecondInfo($$$){
     my %varInfo = %{$varsBySuffix{$varSuffix}};
     my $maxDurationS = $varInfo{MAX_DURATION_S};
 
+    my $npsTotal = 0;
+    my $segmentCount = 0;
     my $maxNps = 0;
     for(my $row=0; $row<$#$rows; $row++){
       #skip segments that do not start with a note row
@@ -1073,6 +1085,8 @@ sub calculateNotesPerSecondInfo($$$){
 
       if($segmentDurationS >= 0.01){
         my $nps = $segmentNoteCount / $segmentDurationS;
+        $npsTotal += $nps;
+        $segmentCount++;
         if($nps > $maxNps){
           $maxNps = $nps;
         }
@@ -1081,7 +1095,9 @@ sub calculateNotesPerSecondInfo($$$){
         next;
       }
     }
+    my $avgNps = $npsTotal/$segmentCount;
     $$npsInfo{"MAX_$varSuffix"} = $maxNps;
+    $$npsInfo{"AVG_$varSuffix"} = $avgNps;
   }
 
   return $npsInfo;
