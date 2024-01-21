@@ -351,6 +351,9 @@ my $usage = "Usage:
     MAX_NPS_BY_4MEAS      AVG_NPS_BY_4MEAS
     MAX_NPS_BY_1S         AVG_NPS_BY_1S
     MAX_NPS_BY_1S_PEAK    AVG_NPS_BY_1S_PEAK
+    MAX_NPS_BY_2S_PEAK    AVG_NPS_BY_2S_PEAK
+    MAX_NPS_BY_3S_PEAK    AVG_NPS_BY_3S_PEAK
+    MAX_NPS_BY_4S_PEAK    AVG_NPS_BY_4S_PEAK
       split NOTE_ROWS into segments, count the notes per second, and take the [MAX|AVG]
 
       note:
@@ -379,9 +382,9 @@ my $usage = "Usage:
                   -split rows into non-overlapping segments at most 1s long
                   -each note row appears in exactly one segment
              C) === peak by max duration ===
-                [BY_1S_PEAK]
+                [BY_1S_PEAK|BY_2S_PEAK|BY_3S_PEAK|BY_4S_PEAK]
                   -split rows into all possible segments starting with a note,
-                     at most 1s long
+                     at most [1S|2S|3S|4S] long
                   -one segment for each row that contains at least one tap/hold/roll
                   -each segment is extended as far as possible, and can overlap other segments
                   -the peak NPS segment must start with a note
@@ -1087,6 +1090,9 @@ sub calculateNotesPerSecondInfo($$$){
     BY_4MEAS   => {MAX_NOTE_ROWS => $MEAS4, MAX_DURATION_S => undef, PEAK => 0},
     BY_1S      => {MAX_NOTE_ROWS => undef,  MAX_DURATION_S => 1.0,   PEAK => 0},
     BY_1S_PEAK => {MAX_NOTE_ROWS => undef,  MAX_DURATION_S => 1.0,   PEAK => 1},
+    BY_2S_PEAK => {MAX_NOTE_ROWS => undef,  MAX_DURATION_S => 2.0,   PEAK => 1},
+    BY_3S_PEAK => {MAX_NOTE_ROWS => undef,  MAX_DURATION_S => 3.0,   PEAK => 1},
+    BY_4S_PEAK => {MAX_NOTE_ROWS => undef,  MAX_DURATION_S => 4.0,   PEAK => 1},
   );
 
   my $npsInfo = {};
