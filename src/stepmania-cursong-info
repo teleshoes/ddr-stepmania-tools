@@ -489,7 +489,7 @@ sub findXmlFiles($$$){
   my $songDirRegex = $songDir;
   $songDirRegex =~ s/^\/*//;
   $songDirRegex =~ s/\/*$//;
-  $songDirRegex =~ s/[^a-zA-Z0-9_\-\/]+/[^a-zA-Z0-9]*/g;
+  $songDirRegex =~ s/[^a-zA-Z0-9_\-\/ ]+/[^a-zA-Z0-9]*/g;
   $songDirRegex = "/*$songDirRegex/*";
 
   my $regex = ""
