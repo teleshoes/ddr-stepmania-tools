@@ -512,7 +512,7 @@ sub findXmlFiles($$$){
   close CMD;
 
   chomp foreach @files;
-  @files = grep {$_ =~ /\.xml$/i} @files;
+  @files = grep {$_ =~ /^$XML_UPLOAD_DIR\/[^\/]*\.xml$/i} @files;
   return @files;
 }
 
@@ -520,6 +520,7 @@ sub findRecentXmlFiles(){
   my $recentFractionalDays = sprintf "%.4f", $RECENT_MILLIS / 1000 / 60 / 60 / 24;
   my @findCmd = ("find",
     $XML_UPLOAD_DIR,
+    "-maxdepth", 1,
     "-mtime", "-$recentFractionalDays",
     "-iname", "*.xml",
   );
