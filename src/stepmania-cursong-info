@@ -492,10 +492,12 @@ sub findXmlFiles($$$){
   $songDirRegex =~ s/[^a-zA-Z0-9_\-\/ ]+/[^a-zA-Z0-9]*/g;
   $songDirRegex = "/*$songDirRegex/*";
 
+  my $stepsTypeRegex = $smGame;
+
   my $regex = ""
     . "<Song Dir='$songDirRegex'/>"
     . "[ \\t\\r\\n]*"
-    . "<Steps Difficulty='$smDiff' .*StepsType='$smGame'"
+    . "<Steps Difficulty='$smDiff' .*StepsType='$stepsTypeRegex'"
     ;
 
   my @grepCmd = ("pcre2grep",
