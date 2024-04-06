@@ -493,6 +493,8 @@ sub findXmlFiles($$$){
   $songDirRegex = "/*$songDirRegex/*";
 
   my $stepsTypeRegex = $smGame;
+  $stepsTypeRegex =~ s/[_-]/[_-]/g; #'_' => '[_-]',  '-' => '[_-]'
+  $stepsTypeRegex = "(?:StepsType[_-])?$stepsTypeRegex";
 
   my $regex = ""
     . "<Song Dir='$songDirRegex'/>"
