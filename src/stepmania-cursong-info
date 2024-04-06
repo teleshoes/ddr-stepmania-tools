@@ -497,7 +497,7 @@ sub findXmlFiles($$$){
   my $regex = ""
     . "<Song Dir='$songDirRegex'/>"
     . "[ \\t\\r\\n]*"
-    . "<Steps Difficulty='$smDiff' .*StepsType='$stepsTypeRegex'"
+    . "<Steps Difficulty='$smDiff'(?: .*)? StepsType='$stepsTypeRegex'"
     ;
 
   my @grepCmd = ("pcre2grep",
