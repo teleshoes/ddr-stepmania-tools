@@ -821,6 +821,11 @@ sub parseXmlFile($){
   $$info{bad} = $1            if $xml =~ /<W5>($int)<\/W5>/;
   $$info{miss} = $1           if $xml =~ /<Miss>($int)<\/Miss>/;
 
+  #convert new outfox format StepsType_Dance_Single => dance-single
+  $$info{game} =~ s/^StepsType_//;
+  $$info{game} =~ s/_/-/g;
+  $$info{game} = lc $$info{game};
+
   for my $key(sort keys %$info){
     my ($val) = $$info{$key};
     $val =~ s/&lt;/</g;
