@@ -170,7 +170,7 @@ sub formatXml($){
             <Grade>$grade</Grade>
             <Score></Score>
             <PercentDP>$percentDP</PercentDP>
-            <SurviveSeconds>$surviveSeconds</SurviveSeconds
+            <SurviveSeconds>$surviveSeconds</SurviveSeconds>
             <MaxCombo>0</MaxCombo>
             <StageAward></StageAward>
             <PeakComboAward></PeakComboAward>
