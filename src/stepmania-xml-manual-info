@@ -167,6 +167,7 @@ sub formatXml($){
           <Song Dir='$songDir'/>
           <Steps Difficulty='$$info{SM_DIFF}' StepsType='$$info{SM_GAME}'/>
           <HighScore>
+            <!--STAGE: $$info{STAGE}-->
             <Name></Name>
             <Grade>$grade</Grade>
             <Score></Score>
