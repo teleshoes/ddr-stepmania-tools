@@ -31,7 +31,7 @@ sub createXmlFromManualInfoFile($){
   my ($y, $m, $d, $hh, $mm, $ss) = ($1, $2, $3, $4, $5, $6);
   my $dtmFmt = "$y-$m-$d $hh:$mm:$ss";
 
-  my $targetXmlFile = "$TARGET_XML_DIR/${y}-${m}-${d}_manual_info_$hh$mm$ss.xml";
+  my $targetXmlFile = "$TARGET_XML_DIR/${y}-${m}-${d}_${hh}${mm}${ss}_manual_info.xml";
 
   my $info = parseManualInfoFile($manualInfoFile);
   $$info{DATETIME} = $dtmFmt;
