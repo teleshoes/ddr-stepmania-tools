@@ -175,7 +175,7 @@ sub formatXml($){
             <MaxCombo>0</MaxCombo>
             <StageAward></StageAward>
             <PeakComboAward></PeakComboAward>
-            <Modifiers></Modifiers>
+            <Modifiers>$$info{MODS}</Modifiers>
             <DateTime>$$info{DATETIME}</DateTime>
             <PlayerGuid></PlayerGuid>
             <MachineGuid></MachineGuid>
