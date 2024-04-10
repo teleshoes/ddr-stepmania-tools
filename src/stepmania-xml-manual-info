@@ -25,13 +25,14 @@ sub main(@){
 
 sub createXmlFromManualInfoFile($){
   my ($manualInfoFile) = @_;
-  if($manualInfoFile !~ /^(?:.*\/)?(\d\d\d\d)(\d\d)(\d\d)_(\d\d)(\d\d)(\d\d)\.info$/){
+  if($manualInfoFile !~ /^(?:.*\/)?(\d\d\d\d)(\d\d)(\d\d)_(\d\d)(\d\d)(\d\d)(_\w+)?\.info$/){
     die "ERROR: manual info file must be named YYYYMMDD_HHMMSS.info\n$manualInfoFile\n";
   }
-  my ($y, $m, $d, $hh, $mm, $ss) = ($1, $2, $3, $4, $5, $6);
+  my ($y, $m, $d, $hh, $mm, $ss, $name) = ($1, $2, $3, $4, $5, $6, $7);
   my $dtmFmt = "$y-$m-$d $hh:$mm:$ss";
+  $name = "" if not defined $name;
 
-  my $targetXmlFile = "$TARGET_XML_DIR/${y}-${m}-${d}_${hh}${mm}${ss}_manual_info.xml";
+  my $targetXmlFile = "$TARGET_XML_DIR/${y}-${m}-${d}_${hh}${mm}${ss}_manual_info${name}.xml";
 
   my $info = parseManualInfoFile($manualInfoFile);
   $$info{DATETIME} = $dtmFmt;
