@@ -38,6 +38,7 @@ sub createXmlFromManualInfoFile($){
   $$info{DATETIME} = $dtmFmt;
 
   my $xml = formatXml($info);
+  $xml =~ s/\n/\r\n/g; #stepmania uses non-POSIX line endings
 
   print "converting $manualInfoFile ($$info{SM_FILE})\n";
   open FH, "> $targetXmlFile" or die "ERROR: could not write $targetXmlFile\n$!\n";
