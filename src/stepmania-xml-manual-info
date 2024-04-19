@@ -5,8 +5,8 @@ use warnings;
 sub formatXml($);
 sub readProc(@);
 
-my $SRC_MANUAL_INFO_DIR = "$ENV{HOME}/.stepmania/Save/ManualInfo";
-my $TARGET_XML_DIR = "$ENV{HOME}/.stepmania/Save/Upload";
+my $SRC_MANUAL_INFO_DIR = "$ENV{HOME}/.cache/stepmania-score-xml/manual-info";
+my $TARGET_XML_DIR = "$ENV{HOME}/.cache/stepmania-score-xml/scores";
 
 my $USAGE = "Usage:
   $0
