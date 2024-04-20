@@ -20,7 +20,9 @@ sub nowMillis();
 sub run(@);
 
 sub main(@){
-  my @allXmlFiles = glob "$UPLOAD_DIR/*.xml";
+  my @allXmlFiles = grep {-f $_} (
+    glob("$UPLOAD_DIR/*.xml"),
+  );
   for my $oldName(sort keys %$RENAMES){
     my $newName = $$RENAMES{$oldName};
 
