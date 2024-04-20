@@ -26,8 +26,8 @@ sub main(@){
   for my $oldName(sort keys %$RENAMES){
     my $newName = $$RENAMES{$oldName};
 
-    my $oldRegex = "(?<=<Song Dir=')" . quotemeta($oldName) . "(?='/>)";
-    my $newRegex = "(?<=<Song Dir=')" . quotemeta($newName) . "(?='/>)";
+    my $oldRegex = "(?<=<Song Dir=')" . quotemeta($oldName) . "(?='/?>)";
+    my $newRegex = "(?<=<Song Dir=')" . quotemeta($newName) . "(?='/?>)";
     my $replacement = "$newName";
 
     my $startCountOld = grep {fileMatchesRegex($oldRegex, $_)} @allXmlFiles;
