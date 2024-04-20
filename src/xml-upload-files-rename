@@ -4,6 +4,7 @@ use warnings;
 use Time::HiRes qw(time);
 
 my $UPLOAD_DIR = "$ENV{HOME}/.stepmania/Save/Upload";
+my $BACKUP_RENAMES_DIR = "$ENV{HOME}/.cache/stepmania-score-xml/backup/backup-renames";
 
 my $RENAMES = {
   'Songs/test7/born_to_be_wild_fanfare_ciocarlia/'
@@ -41,7 +42,7 @@ sub main(@){
     $origDir =~ s/\/$//;
     $origDir =~ s/[^a-zA-Z0-9_\-]/_/g;
     $origDir = "orig-$origDir";
-    $origDir = "$UPLOAD_DIR/renames/$origDir";
+    $origDir = "$BACKUP_RENAMES_DIR/$origDir";
 
     run "rmdir", $origDir;
     if(-e $origDir){
