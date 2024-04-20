@@ -4,6 +4,7 @@ use warnings;
 use Time::HiRes qw(time);
 
 my $UPLOAD_DIR = "$ENV{HOME}/.cache/stepmania-score-xml/upload";
+my $STATS_DIR = "$ENV{HOME}/.cache/stepmania-score-xml/stats";
 my $BACKUP_RENAMES_DIR = "$ENV{HOME}/.cache/stepmania-score-xml/backup/backup-renames";
 
 my $RENAMES = {
@@ -22,6 +23,7 @@ sub run(@);
 sub main(@){
   my @allXmlFiles = grep {-f $_} (
     glob("$UPLOAD_DIR/*.xml"),
+    glob("$STATS_DIR/*.xml"),
   );
   for my $oldName(sort keys %$RENAMES){
     my $newName = $$RENAMES{$oldName};
