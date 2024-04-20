@@ -71,7 +71,7 @@ sub main(@){
         die "ERROR: $origXmlFile already exists\n";
       }
 
-      run "mv", "--no-clobber", $xmlFile, $origXmlFile;
+      run "mv", "--update=none", $xmlFile, $origXmlFile;
 
       if(-e $xmlFile){
         die "ERROR: $xmlFile still exists\n";
@@ -80,7 +80,7 @@ sub main(@){
         die "ERROR: $origXmlFile is not a file\n";
       }
 
-      run "cp", "--no-clobber", "-ar", $origXmlFile, $xmlFile;
+      run "cp", "--update=none", "-ar", $origXmlFile, $xmlFile;
 
       if(not -f $xmlFile){
         die "ERROR: $xmlFile is not a file\n";
