@@ -3,7 +3,7 @@ use strict;
 use warnings;
 use Time::HiRes qw(time);
 
-my $UPLOAD_DIR = "$ENV{HOME}/.stepmania/Save/Upload";
+my $UPLOAD_DIR = "$ENV{HOME}/.cache/stepmania-score-xml/upload";
 my $BACKUP_RENAMES_DIR = "$ENV{HOME}/.cache/stepmania-score-xml/backup/backup-renames";
 
 my $RENAMES = {
