@@ -60,9 +60,6 @@ sub main(@){
     for my $xmlFile(@xmlFiles){
       my $xmlFileName = $xmlFile;
       $xmlFileName =~ s/.*\///;
-      if($xmlFileName !~ /^\d\d\d\d-\d\d-\d\d \d\d\d\d\d\.xml$/){
-        die "ERROR: malformed xml file name $xmlFileName\n";
-      }
       my $origXmlFile = "$origDir/$xmlFileName";
 
       if(not -f $xmlFile){
