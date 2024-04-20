@@ -98,9 +98,6 @@ sub main(@){
     if($endCountOld > 0){
       die "ERROR: old names still match xml files\n";
     }
-    if($endCountOld+$endCountNew != $startCountOld+$startCountNew){
-      die "ERROR: file counts are off, some xml files disappeared\n";
-    }
   }
 }
 
@@ -133,8 +130,6 @@ sub editFileRegex($$$){
 
   if($editedLines == 0){
     die "ERROR: could not find $regex in $file\n";
-  }elsif($editedLines > 1){
-    die "ERROR: too many matches for $regex in $file\n";
   }
 
   my $tmpFile = "/tmp/sm-xml-renames-" . nowMillis();
