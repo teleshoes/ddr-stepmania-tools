@@ -2,6 +2,7 @@
 use strict;
 use warnings;
 use XML::LibXML;
+use Date::Parse qw(str2time);
 
 sub extractScoreEntries($);
 sub getSingleChildByTagName($$);
@@ -49,11 +50,15 @@ sub extractScoreEntries($){
 
       my $game = convertStepsTypeToGame($stepsType);
       for my $scoreNode(@scoreNodes){
+        my $dateTimeXML = $scoreNode->findvalue("./DateTime");
+        my $epoch = str2time($dateTimeXML);
+
         push @scoreEntries, {
           songDir     => $songDir,
           game        => $game,
           smDiff      => $smDiff,
           machineGuid => $machineGuid,
+          epoch       => $epoch,
 
           songNode    => $songNode,
           stepsNode   => $stepsNode,
@@ -74,14 +79,17 @@ sub extractScoreEntries($){
     my $songDir = $songNode->getAttribute("Dir");
     my $smDiff = $stepsNode->getAttribute("Difficulty");
     my $stepsType = $stepsNode->getAttribute("StepsType");
+    my $dateTimeXML = $scoreNode->findvalue("./DateTime");
 
     my $game = convertStepsTypeToGame($stepsType);
+    my $epoch = str2time($dateTimeXML);
 
     push @scoreEntries, {
       songDir     => $songDir,
       game        => $game,
       smDiff      => $smDiff,
       machineGuid => $machineGuid,
+      epoch       => $epoch,
 
       songNode    => $songNode,
       stepsNode   => $stepsNode,
