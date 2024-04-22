@@ -160,25 +160,30 @@ sub reduceScoreEntries(@){
     my @entries = @{$$scoreEntriesByEpoch{$epoch}};
 
     my @uniqScoreEntries;
-    #calculate unique score IDs
-    for my $entry(@entries){
-      $$entry{id} = calculateScoreEntryID($entry);
-    }
+    if(@entries == 1){
+      #skip de-dupe/reduce for performance
+      @uniqScoreEntries = @entries;
+    }else{
+      #calculate unique score IDs
+      for my $entry(@entries){
+        $$entry{id} = calculateScoreEntryID($entry);
+      }
 
-    #split dupes into buckets
-    my @scoreIDGroups;
-    while(@entries > 0){
-      my $id = ${$entries[0]}{id};
-      my @group = grep {$$_{id} eq $id} @entries;
-      @entries = grep {$$_{id} ne $id} @entries;
-      push @scoreIDGroups, [@group];
-    }
+      #split dupes into buckets
+      my @scoreIDGroups;
+      while(@entries > 0){
+        my $id = ${$entries[0]}{id};
+        my @group = grep {$$_{id} eq $id} @entries;
+        @entries = grep {$$_{id} ne $id} @entries;
+        push @scoreIDGroups, [@group];
+      }
 
-    #de-dupe, take first entry
-    for my $group(@scoreIDGroups){
-      my $entry = shift @$group;
+      #de-dupe, take first entry
+      for my $group(@scoreIDGroups){
+        my $entry = shift @$group;
 
-      push @uniqScoreEntries, $entry;
+        push @uniqScoreEntries, $entry;
+      }
     }
 
     if(@uniqScoreEntries > 1){
