@@ -13,6 +13,9 @@ sub calculateScoreEntryID($);
 sub getMoreFullStepsNode($$);
 sub getSingleChildByTagName($$);
 sub convertStepsTypeToGame($);
+sub formatAsUpload($$$$$);
+sub formatAttributeStr(@);
+sub formatHighScoreNode($);
 sub formatScoreEntryPrettyName($);
 sub cleanStr($);
 sub assertPresent($@);
@@ -70,8 +73,9 @@ sub main(@){
 
 sub writeScoreEntryFile($){
   my ($scoreEntry) = @_;
-  my $xml = "";
-
+  my $xml = formatAsUpload($$scoreEntry{machineGuid}, $$scoreEntry{playerNum},
+    $$scoreEntry{songNode}, $$scoreEntry{stepsNode}, $$scoreEntry{scoreNode});
+  $xml =~ s/\n/\r\n/g;
   my $playerNum = $$scoreEntry{playerNum};
 
   my $epoch = $$scoreEntry{epoch};
@@ -353,6 +357,54 @@ sub convertStepsTypeToGame($){
   }else{
     die "ERROR: unknown StepsType '$stepsType'\n";
   }
+}
+
+sub formatAsUpload($$$$$){
+  my ($machineGuid, $playerNum, $songNode, $stepsNode, $scoreNode) = @_;
+
+  my $highScoreXML = formatHighScoreNode($scoreNode);
+
+  return ""
+    . "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n"
+    . "\n"
+    . "<Stats>\n"
+    . "<MachineGuid>$machineGuid</MachineGuid>\n"
+    . "<RecentSongScores>\n"
+    . "<HighScoreForASongAndSteps>\n"
+    . "<Song" . formatAttributeStr($songNode->getAttributes()) . "/>\n"
+    . "<Steps" . formatAttributeStr($stepsNode->getAttributes()) . "/>\n"
+    . $highScoreXML
+    . "</HighScoreForASongAndSteps>\n"
+    . "</RecentSongScores>\n"
+    . "</Stats>\n"
+  ;
+}
+
+#use single-quotes for attributes
+sub formatAttributeStr(@){
+  my @atts = @_;
+  my $str = "";
+  for my $att(@atts){
+    my $attName = $att->getName();
+    my $attVal = $att->getValue();
+    $attVal =~ s/&/&amp;/g;
+    $attVal =~ s/'/&apos;/g;
+    $attVal =~ s/"/&quot;/g;
+    $attVal =~ s/</&lt;/g;
+    $attVal =~ s/>/&gt;/g;
+    $str .= " $attName='$attVal'";
+  }
+  return $str;
+}
+
+#expand all self-closed empty tags to match upload XML format
+sub formatHighScoreNode($){
+  my ($scoreNode) = @_;
+  my $xml = $scoreNode->toString();
+  $xml =~ s/^<(\w+)\/>$/<$1><\/$1>/gm;
+  chomp $xml;
+  $xml .= "\n";
+  return $xml;
 }
 
 sub formatScoreEntryPrettyName($){
