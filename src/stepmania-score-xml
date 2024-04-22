@@ -112,6 +112,17 @@ sub extractScoreEntries($){
     "/Stats/RecentSongScores/HighScoreForASongAndSteps");
   for(my $i=0; $i<@uploadFileContainerNodes; $i++){
     my $containerNode = $uploadFileContainerNodes[$i];
+    my $playerNum;
+    if($i == 0 and @uploadFileContainerNodes == 1){
+      $playerNum = 0; #only/center player
+    }elsif($i == 0 and @uploadFileContainerNodes == 2){
+      $playerNum = 1; #left player
+    }elsif($i == 1 and @uploadFileContainerNodes == 2){
+      $playerNum = 2; #right player
+    }else{
+      die "ERROR: more than two player scores in recent-scores file $filename\n";
+    }
+
     my $songNode = getSingleChildByTagName($containerNode, "Song");
     my $stepsNode = getSingleChildByTagName($containerNode, "Steps");
     my $scoreNode = getSingleChildByTagName($containerNode, "HighScore");
@@ -134,7 +145,7 @@ sub extractScoreEntries($){
       game        => $game,
       smDiff      => $smDiff,
       machineGuid => $machineGuid,
-      playerNum   => undef,
+      playerNum   => $playerNum,
       percentDP   => $percentDP,
       epoch       => $epoch,
 
@@ -205,6 +216,9 @@ sub reduceScoreEntries(@){
       my $entry = $uniqScoreEntries[$i];
       #p0 for only score, p1 for first score, p2 for second score
       my $playerNum = @uniqScoreEntries == 1 ? 0 : $i+1;
+      if(defined $$entry{playerNum} and $$entry{playerNum} != $playerNum){
+        die "ERROR: score epoch=$epoch is player#$$entry{playerNum}, expected p#$playerNum\n";
+      }
       $$entry{playerNum} = $playerNum;
     }
 
