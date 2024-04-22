@@ -1,6 +1,10 @@
 #!/usr/bin/perl
 use strict;
 use warnings;
+use XML::LibXML;
+
+sub extractScoreEntries($);
+sub getSingleChildByTagName($$);
 
 my $USAGE = "Usage:
   $0 -h | --help
@@ -16,6 +20,51 @@ sub main(@){
     }else{
       die "$USAGE\nERROR: unknown arg $arg\n";
     }
+  }
+
+  for my $scoreEntry(extractScoreEntries("/tmp/a.xml")){
+    print "$$scoreEntry{songDir}-$$scoreEntry{game}-$$scoreEntry{smDiff}\n";
+  }
+}
+
+sub extractScoreEntries($){
+  my ($filename) = @_;
+  my @scoreEntries;
+
+  my $dom = XML::LibXML->load_xml(location => $filename);
+
+  my @uploadFileContainerNodes = $dom->findnodes(
+    "/Stats/RecentSongScores/HighScoreForASongAndSteps");
+  for(my $i=0; $i<@uploadFileContainerNodes; $i++){
+    my $containerNode = $uploadFileContainerNodes[$i];
+    my $songNode = getSingleChildByTagName($containerNode, "Song");
+    my $stepsNode = getSingleChildByTagName($containerNode, "Steps");
+    my $scoreNode = getSingleChildByTagName($containerNode, "HighScore");
+
+    my $songDir = $songNode->getAttribute("Dir");
+    my $smDiff = $stepsNode->getAttribute("Difficulty");
+    my $stepsType = $stepsNode->getAttribute("StepsType");
+
+    push @scoreEntries, {
+      songDir     => $songDir,
+      game        => $stepsType,
+      smDiff      => $smDiff,
+
+      songNode    => $songNode,
+      stepsNode   => $stepsNode,
+      scoreNode   => $scoreNode,
+    };
+  }
+  return @scoreEntries;
+}
+
+sub getSingleChildByTagName($$){
+  my ($node, $tagName) = @_;
+  my $nodeList = $node->getChildrenByTagName($tagName);
+  if($nodeList->size() == 1){
+    return $nodeList->get_node(1);
+  }else{
+    return undef;
   }
 }
 
