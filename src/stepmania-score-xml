@@ -1,6 +1,7 @@
 #!/usr/bin/perl
 use strict;
 use warnings;
+use File::Basename qw(basename);
 use XML::LibXML;
 use Date::Parse qw(str2time);
 
@@ -12,11 +13,13 @@ sub assertDateTime($$);
 
 my $MODE_BUILD_SCORES = "build-scores";
 
+my $EXEC = basename $0;
+
 my $USAGE = "Usage:
-  $0 -h | --help
+  $EXEC -h | --help
     show this message
 
-  $0 --build-scores
+  $EXEC --build-scores
 ";
 
 sub main(@){
