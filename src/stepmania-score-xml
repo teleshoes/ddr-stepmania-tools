@@ -11,6 +11,9 @@ sub convertStepsTypeToGame($);
 sub assertPresent($@);
 sub assertDateTime($$);
 
+my $BAK_DIR = "$ENV{HOME}/.local/share/stepmania-score-xml";
+my $BAK_UPLOAD_DIR = "$BAK_DIR/upload";
+
 my $MODE_BUILD_SCORES = "build-scores";
 
 my $EXEC = basename $0;
@@ -20,6 +23,7 @@ my $USAGE = "Usage:
     show this message
 
   $EXEC --build-scores
+    -parse XML files in $BAK_UPLOAD_DIR/*.xml
 ";
 
 sub main(@){
@@ -37,8 +41,15 @@ sub main(@){
   }
 
   if($mode eq $MODE_BUILD_SCORES){
-    for my $scoreEntry(extractScoreEntries("/tmp/a.xml")){
-      print "$$scoreEntry{songDir}-$$scoreEntry{game}-$$scoreEntry{smDiff}\n";
+    my @files = grep {-f $_} glob "$BAK_UPLOAD_DIR/*.xml";
+
+    my @scoreEntries;
+    for my $file(@files){
+      @scoreEntries = (@scoreEntries, extractScoreEntries($file));
+    }
+
+    for my $scoreEntry(@scoreEntries){
+       print "$$scoreEntry{songDir}-$$scoreEntry{game}-$$scoreEntry{smDiff}\n";
     }
   }else{
     die "ERROR: unknown mode $mode\n";
