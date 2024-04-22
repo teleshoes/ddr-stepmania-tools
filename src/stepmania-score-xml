@@ -3,18 +3,23 @@ use strict;
 use warnings;
 use File::Basename qw(basename);
 use XML::LibXML;
+use Date::Format qw(time2str);
 use Date::Parse qw(str2time);
 
+sub writeScoreEntryFile($);
 sub extractScoreEntries($);
 sub reduceScoreEntries(@);
 sub calculateScoreEntryID($);
 sub getMoreFullStepsNode($$);
 sub getSingleChildByTagName($$);
 sub convertStepsTypeToGame($);
+sub formatScoreEntryPrettyName($);
+sub cleanStr($);
 sub assertPresent($@);
 sub assertDateTime($$);
 
 my $BAK_DIR = "$ENV{HOME}/.local/share/stepmania-score-xml";
+my $BAK_SCORES_DIR = "$BAK_DIR/scores";
 my $BAK_UPLOAD_DIR = "$BAK_DIR/upload";
 
 my $MODE_BUILD_SCORES = "build-scores";
@@ -27,6 +32,8 @@ my $USAGE = "Usage:
 
   $EXEC --build-scores
     -parse XML files in $BAK_UPLOAD_DIR/*.xml
+    -write all scores, one score per file, to
+      $BAK_SCORES_DIR/
 ";
 
 sub main(@){
@@ -54,11 +61,27 @@ sub main(@){
     @scoreEntries = reduceScoreEntries(@scoreEntries);
 
     for my $scoreEntry(@scoreEntries){
-       print "$$scoreEntry{songDir}-$$scoreEntry{game}-$$scoreEntry{smDiff}\n";
+      writeScoreEntryFile($scoreEntry);
     }
   }else{
     die "ERROR: unknown mode $mode\n";
   }
+}
+
+sub writeScoreEntryFile($){
+  my ($scoreEntry) = @_;
+  my $xml = "";
+
+  my $playerNum = $$scoreEntry{playerNum};
+
+  my $epoch = $$scoreEntry{epoch};
+  my $ymd = time2str("%Y-%m-%d", $epoch);
+
+  my $outFile = "$BAK_SCORES_DIR/${ymd}_${epoch}_p${playerNum}_"
+    . formatScoreEntryPrettyName($scoreEntry) . ".xml";
+  open FH, "> $outFile" or die "ERROR: could not write $outFile\n$!\n";
+  print FH $xml;
+  close FH;
 }
 
 sub extractScoreEntries($){
@@ -330,6 +353,27 @@ sub convertStepsTypeToGame($){
   }else{
     die "ERROR: unknown StepsType '$stepsType'\n";
   }
+}
+
+sub formatScoreEntryPrettyName($){
+  my ($scoreEntry) = @_;
+  my $songDir = $$scoreEntry{songDir};
+  $songDir =~ s/^(\/?Songs\/)//i;
+  my $game = $$scoreEntry{game};
+  my $smDiff = $$scoreEntry{smDiff};
+
+  return cleanStr($songDir) . "_" . cleanStr($game) . "_" . cleanStr($smDiff);
+}
+
+sub cleanStr($){
+  my ($str) = @_;
+  $str = lc $str;
+  $str =~ s/'//g;
+  $str =~ s/[^a-z0-9]+/-/g;
+  $str =~ s/-+/-/g;
+  $str =~ s/^-//;
+  $str =~ s/-$//;
+  return $str;
 }
 
 sub assertPresent($@){
