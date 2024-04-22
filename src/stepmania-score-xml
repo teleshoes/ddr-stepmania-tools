@@ -6,6 +6,8 @@ use XML::LibXML;
 use Date::Parse qw(str2time);
 
 sub extractScoreEntries($);
+sub reduceScoreEntries(@);
+sub calculateScoreEntryID($);
 sub getSingleChildByTagName($$);
 sub convertStepsTypeToGame($);
 sub assertPresent($@);
@@ -47,6 +49,8 @@ sub main(@){
     for my $file(@files){
       @scoreEntries = (@scoreEntries, extractScoreEntries($file));
     }
+
+    @scoreEntries = reduceScoreEntries(@scoreEntries);
 
     for my $scoreEntry(@scoreEntries){
        print "$$scoreEntry{songDir}-$$scoreEntry{game}-$$scoreEntry{smDiff}\n";
@@ -138,6 +142,88 @@ sub extractScoreEntries($){
     };
   }
   return @scoreEntries;
+}
+
+sub reduceScoreEntries(@){
+  my @scoreEntries = @_;
+  my $scoreEntriesByEpoch = {};
+  for my $scoreEntry(@scoreEntries){
+    my $epoch = $$scoreEntry{epoch};
+    if(not defined $$scoreEntriesByEpoch{$epoch}){
+      $$scoreEntriesByEpoch{$epoch} = [];
+    }
+    push @{$$scoreEntriesByEpoch{$epoch}}, $scoreEntry;
+  }
+
+  my @reducedScoreEntries;
+  for my $epoch(sort keys %$scoreEntriesByEpoch){
+    my @entries = @{$$scoreEntriesByEpoch{$epoch}};
+
+    my @uniqScoreEntries;
+    #calculate unique score IDs
+    for my $entry(@entries){
+      $$entry{id} = calculateScoreEntryID($entry);
+    }
+
+    #split dupes into buckets
+    my @scoreIDGroups;
+    while(@entries > 0){
+      my $id = ${$entries[0]}{id};
+      my @group = grep {$$_{id} eq $id} @entries;
+      @entries = grep {$$_{id} ne $id} @entries;
+      push @scoreIDGroups, [@group];
+    }
+
+    #de-dupe, take first entry
+    for my $group(@scoreIDGroups){
+      my $entry = shift @$group;
+
+      push @uniqScoreEntries, $entry;
+    }
+
+    if(@uniqScoreEntries > 1){
+      die "ERROR: more than one unique score entry for epoch=$epoch\n";
+    }
+
+    for my $entry(@uniqScoreEntries){
+      push @reducedScoreEntries, $entry;
+    }
+  }
+
+  return @reducedScoreEntries;
+}
+
+sub calculateScoreEntryID($){
+  my ($scoreEntry) = @_;
+
+  my @atts = qw(
+    Grade
+    PercentDP
+    TapNoteScores/W1
+    TapNoteScores/W2
+    TapNoteScores/W3
+    TapNoteScores/W4
+    TapNoteScores/W5
+    TapNoteScores/Miss
+    TapNoteScores/AvoidMine
+    TapNoteScores/HitMine
+    HoldNoteScores/Held
+    HoldNoteScores/LetGo
+    HoldNoteScores/MissedHold
+  );
+
+  my $id = "";
+  $id .= "$$scoreEntry{epoch}|";
+  $id .= "$$scoreEntry{game}|";
+  $id .= "$$scoreEntry{smDiff}|";
+  for my $att(@atts){
+    my $scoreVal = $$scoreEntry{scoreNode}->findvalue($att);
+    $scoreVal = "" if not defined $scoreVal;
+    $id .= "$scoreVal|";
+  }
+  $id .= "$$scoreEntry{songDir}|";
+
+  return $id;
 }
 
 sub getSingleChildByTagName($$){
