@@ -96,6 +96,7 @@ sub extractScoreEntries($){
           game        => $game,
           smDiff      => $smDiff,
           machineGuid => $machineGuid,
+          playerNum   => undef,
           epoch       => $epoch,
           percentDP   => $percentDP,
 
@@ -133,6 +134,7 @@ sub extractScoreEntries($){
       game        => $game,
       smDiff      => $smDiff,
       machineGuid => $machineGuid,
+      playerNum   => undef,
       percentDP   => $percentDP,
       epoch       => $epoch,
 
@@ -196,6 +198,14 @@ sub reduceScoreEntries(@){
       if($$entry{songDir} ne $songDir){
         die "ERROR: different simfiles for scores with the same epoch=$epoch\n";
       }
+    }
+
+    #assign player num
+    for(my $i=0; $i<@uniqScoreEntries; $i++){
+      my $entry = $uniqScoreEntries[$i];
+      #p0 for only score, p1 for first score, p2 for second score
+      my $playerNum = @uniqScoreEntries == 1 ? 0 : $i+1;
+      $$entry{playerNum} = $playerNum;
     }
 
     for my $entry(@uniqScoreEntries){
