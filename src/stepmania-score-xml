@@ -10,24 +10,35 @@ sub convertStepsTypeToGame($);
 sub assertPresent($@);
 sub assertDateTime($$);
 
+my $MODE_BUILD_SCORES = "build-scores";
+
 my $USAGE = "Usage:
   $0 -h | --help
     show this message
+
+  $0 --build-scores
 ";
 
 sub main(@){
+  my $mode = $MODE_BUILD_SCORES;
   while(@_ > 0){
     my $arg = shift @_;
     if($arg =~ /^(-h|--help)$/){
       print $USAGE;
       exit 0;
+    }elsif($arg =~ /^(--build-scores)$/){
+      $mode = $MODE_BUILD_SCORES;
     }else{
       die "$USAGE\nERROR: unknown arg $arg\n";
     }
   }
 
-  for my $scoreEntry(extractScoreEntries("/tmp/a.xml")){
-    print "$$scoreEntry{songDir}-$$scoreEntry{game}-$$scoreEntry{smDiff}\n";
+  if($mode eq $MODE_BUILD_SCORES){
+    for my $scoreEntry(extractScoreEntries("/tmp/a.xml")){
+      print "$$scoreEntry{songDir}-$$scoreEntry{game}-$$scoreEntry{smDiff}\n";
+    }
+  }else{
+    die "ERROR: unknown mode $mode\n";
   }
 }
 
