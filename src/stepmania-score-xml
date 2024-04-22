@@ -33,6 +33,11 @@ sub extractScoreEntries($){
 
   my $dom = XML::LibXML->load_xml(location => $filename);
 
+  my $machineGuid = undef;
+  $machineGuid = $dom->findvalue("Stats/GeneralData/Guid") if not $machineGuid;
+  $machineGuid = $dom->findvalue("Stats/MachineGuid") if not $machineGuid;
+  $machineGuid = "" if not $machineGuid;
+
   #stats file
   for my $songNode($dom->findnodes("/Stats/SongScores/Song")){
     my $songDir = $songNode->getAttribute("Dir");
@@ -46,6 +51,7 @@ sub extractScoreEntries($){
           songDir     => $songDir,
           game        => $stepsType,
           smDiff      => $smDiff,
+          machineGuid => $machineGuid,
 
           songNode    => $songNode,
           stepsNode   => $stepsNode,
@@ -71,6 +77,7 @@ sub extractScoreEntries($){
       songDir     => $songDir,
       game        => $stepsType,
       smDiff      => $smDiff,
+      machineGuid => $machineGuid,
 
       songNode    => $songNode,
       stepsNode   => $stepsNode,
