@@ -186,8 +186,8 @@ sub reduceScoreEntries(@){
       }
     }
 
-    if(@uniqScoreEntries > 1){
-      die "ERROR: more than one unique score entry for epoch=$epoch\n";
+    if(@uniqScoreEntries > 2){
+      die "ERROR: more than two unique score entries for epoch=$epoch\n";
     }
 
     for my $entry(@uniqScoreEntries){
