@@ -7,6 +7,8 @@ use Date::Parse qw(str2time);
 sub extractScoreEntries($);
 sub getSingleChildByTagName($$);
 sub convertStepsTypeToGame($);
+sub assertPresent($@);
+sub assertDateTime($$);
 
 my $USAGE = "Usage:
   $0 -h | --help
@@ -40,17 +42,23 @@ sub extractScoreEntries($){
   $machineGuid = $dom->findvalue("Stats/MachineGuid") if not $machineGuid;
   $machineGuid = "" if not $machineGuid;
 
+  my $errorMsg = "ERROR: error in file $filename";
+
   #stats file
   for my $songNode($dom->findnodes("/Stats/SongScores/Song")){
     my $songDir = $songNode->getAttribute("Dir");
+    assertPresent("$errorMsg - missing song dir", $songDir);
     for my $stepsNode($songNode->getChildrenByTagName("Steps")){
       my $smDiff = $stepsNode->getAttribute("Difficulty");
       my $stepsType = $stepsNode->getAttribute("StepsType");
       my @scoreNodes = $stepsNode->findnodes("HighScoreList/HighScore");
 
+      assertPresent("$errorMsg [$songDir] - missing diff/game", $songDir, $smDiff);
+
       my $game = convertStepsTypeToGame($stepsType);
       for my $scoreNode(@scoreNodes){
         my $dateTimeXML = $scoreNode->findvalue("./DateTime");
+        assertDateTime("$errorMsg [$songDir] invalid/missing DateTime", $dateTimeXML);
         my $epoch = str2time($dateTimeXML);
         my $percentDP = $scoreNode->findvalue("./PercentDP");
 
@@ -77,12 +85,16 @@ sub extractScoreEntries($){
     my $songNode = getSingleChildByTagName($containerNode, "Song");
     my $stepsNode = getSingleChildByTagName($containerNode, "Steps");
     my $scoreNode = getSingleChildByTagName($containerNode, "HighScore");
+    assertPresent("$errorMsg - missing song/steps/score node", $songNode, $stepsNode, $scoreNode);
 
     my $songDir = $songNode->getAttribute("Dir");
     my $smDiff = $stepsNode->getAttribute("Difficulty");
     my $stepsType = $stepsNode->getAttribute("StepsType");
     my $dateTimeXML = $scoreNode->findvalue("./DateTime");
     my $percentDP = $scoreNode->findvalue("./PercentDP");
+
+    assertPresent("$errorMsg - missing songDir/game/diff\n", $songDir, $smDiff, $stepsType);
+    assertDateTime("$errorMsg - invalid/missing DateTime\n", $dateTimeXML);
 
     my $game = convertStepsTypeToGame($stepsType);
     my $epoch = str2time($dateTimeXML);
@@ -129,6 +141,19 @@ sub convertStepsTypeToGame($){
     return "doubles";
   }else{
     die "ERROR: unknown StepsType '$stepsType'\n";
+  }
+}
+
+sub assertPresent($@){
+  my ($msg, @elems) = @_;
+  for my $elem(@elems){
+    die $msg if not $elem;
+  }
+}
+sub assertDateTime($$){
+  my ($msg, $timeXML) = @_;
+  if($timeXML !~ /^\d\d\d\d-\d\d-\d\d \d\d:\d\d:\d\d$/){
+    die $msg;
   }
 }
 
