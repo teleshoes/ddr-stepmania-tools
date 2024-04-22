@@ -5,6 +5,7 @@ use XML::LibXML;
 
 sub extractScoreEntries($);
 sub getSingleChildByTagName($$);
+sub convertStepsTypeToGame($);
 
 my $USAGE = "Usage:
   $0 -h | --help
@@ -46,10 +47,11 @@ sub extractScoreEntries($){
       my $stepsType = $stepsNode->getAttribute("StepsType");
       my @scoreNodes = $stepsNode->findnodes("HighScoreList/HighScore");
 
+      my $game = convertStepsTypeToGame($stepsType);
       for my $scoreNode(@scoreNodes){
         push @scoreEntries, {
           songDir     => $songDir,
-          game        => $stepsType,
+          game        => $game,
           smDiff      => $smDiff,
           machineGuid => $machineGuid,
 
@@ -73,9 +75,11 @@ sub extractScoreEntries($){
     my $smDiff = $stepsNode->getAttribute("Difficulty");
     my $stepsType = $stepsNode->getAttribute("StepsType");
 
+    my $game = convertStepsTypeToGame($stepsType);
+
     push @scoreEntries, {
       songDir     => $songDir,
-      game        => $stepsType,
+      game        => $game,
       smDiff      => $smDiff,
       machineGuid => $machineGuid,
 
@@ -94,6 +98,25 @@ sub getSingleChildByTagName($$){
     return $nodeList->get_node(1);
   }else{
     return undef;
+  }
+}
+
+#dance-single           => singles
+#StepsType_Dance_Single => singles
+#dance-double           => doubles
+#StepsType_Dance_Double => doubles
+sub convertStepsTypeToGame($){
+  my ($stepsType) = @_;
+  my $game = $stepsType;
+  $game =~ s/^StepsType[_\-]//i;
+  $game =~ s/^dance[_\-]//i;
+  $game =~ s/s$//; #singles/doubles => single/double, just in case
+  if($game =~ /^single$/i){
+    return "singles";
+  }elsif($game =~ /^double$/i){
+    return "doubles";
+  }else{
+    die "ERROR: unknown StepsType '$stepsType'\n";
   }
 }
 
