@@ -33,6 +33,28 @@ sub extractScoreEntries($){
 
   my $dom = XML::LibXML->load_xml(location => $filename);
 
+  #stats file
+  for my $songNode($dom->findnodes("/Stats/SongScores/Song")){
+    my $songDir = $songNode->getAttribute("Dir");
+    for my $stepsNode($songNode->getChildrenByTagName("Steps")){
+      my $smDiff = $stepsNode->getAttribute("Difficulty");
+      my $stepsType = $stepsNode->getAttribute("StepsType");
+      my @scoreNodes = $stepsNode->findnodes("HighScoreList/HighScore");
+
+      for my $scoreNode(@scoreNodes){
+        push @scoreEntries, {
+          songDir     => $songDir,
+          game        => $stepsType,
+          smDiff      => $smDiff,
+
+          songNode    => $songNode,
+          stepsNode   => $stepsNode,
+          scoreNode   => $scoreNode,
+        };
+      }
+    }
+  }
+
   my @uploadFileContainerNodes = $dom->findnodes(
     "/Stats/RecentSongScores/HighScoreForASongAndSteps");
   for(my $i=0; $i<@uploadFileContainerNodes; $i++){
