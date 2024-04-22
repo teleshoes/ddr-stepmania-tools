@@ -190,6 +190,14 @@ sub reduceScoreEntries(@){
       die "ERROR: more than two unique score entries for epoch=$epoch\n";
     }
 
+    #ensure every score at this epoch is for the same song (different difficulty is fine)
+    my $songDir = ${$uniqScoreEntries[0]}{songDir};
+    for my $entry(@uniqScoreEntries){
+      if($$entry{songDir} ne $songDir){
+        die "ERROR: different simfiles for scores with the same epoch=$epoch\n";
+      }
+    }
+
     for my $entry(@uniqScoreEntries){
       push @reducedScoreEntries, $entry;
     }
