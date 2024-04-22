@@ -52,6 +52,7 @@ sub extractScoreEntries($){
       for my $scoreNode(@scoreNodes){
         my $dateTimeXML = $scoreNode->findvalue("./DateTime");
         my $epoch = str2time($dateTimeXML);
+        my $percentDP = $scoreNode->findvalue("./PercentDP");
 
         push @scoreEntries, {
           songDir     => $songDir,
@@ -59,6 +60,7 @@ sub extractScoreEntries($){
           smDiff      => $smDiff,
           machineGuid => $machineGuid,
           epoch       => $epoch,
+          percentDP   => $percentDP,
 
           songNode    => $songNode,
           stepsNode   => $stepsNode,
@@ -80,6 +82,7 @@ sub extractScoreEntries($){
     my $smDiff = $stepsNode->getAttribute("Difficulty");
     my $stepsType = $stepsNode->getAttribute("StepsType");
     my $dateTimeXML = $scoreNode->findvalue("./DateTime");
+    my $percentDP = $scoreNode->findvalue("./PercentDP");
 
     my $game = convertStepsTypeToGame($stepsType);
     my $epoch = str2time($dateTimeXML);
@@ -89,6 +92,7 @@ sub extractScoreEntries($){
       game        => $game,
       smDiff      => $smDiff,
       machineGuid => $machineGuid,
+      percentDP   => $percentDP,
       epoch       => $epoch,
 
       songNode    => $songNode,
