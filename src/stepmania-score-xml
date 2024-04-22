@@ -219,6 +219,9 @@ sub calculateScoreEntryID($){
   for my $att(@atts){
     my $scoreVal = $$scoreEntry{scoreNode}->findvalue($att);
     $scoreVal = "" if not defined $scoreVal;
+    if($scoreVal eq "" and $att =~ /HoldNoteScores\/MissedHold/){
+      $scoreVal = 0; #some scores predate <MissedHold>, and were updated in stats but not upload
+    }
     $id .= "$scoreVal|";
   }
   $id .= "$$scoreEntry{songDir}|";
