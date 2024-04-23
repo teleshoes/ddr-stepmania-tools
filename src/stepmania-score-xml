@@ -24,12 +24,16 @@ sub assertPresent($@);
 sub assertDateTime($$);
 sub readFile($);
 
+my $SM_SAVE_DIR = "$ENV{HOME}/.stepmania/Save";
+my $SM_STATS_XML_FILE = "$SM_SAVE_DIR/MachineProfile/Stats.xml";
+
 my $BAK_DIR = "$ENV{HOME}/.local/share/stepmania-score-xml";
 my $BAK_SCORES_DIR = "$BAK_DIR/scores";
 my $BAK_STATS_DIR = "$BAK_DIR/stats";
 my $BAK_UPLOAD_DIR = "$BAK_DIR/upload";
 
 my $MODE_BUILD_SCORES = "build-scores";
+my $MODE_BACKUP_STATS = "backup-stats";
 
 my $EXEC = basename $0;
 
@@ -45,6 +49,9 @@ my $USAGE = "Usage:
         $BAK_STATS_DIR/*.xml
     -write all scores, one score per file, to
       $BAK_SCORES_DIR/
+
+  $EXEC [OPTS] --backup-stats
+    -parse $SM_STATS_XML_FILE
 
   OPTS
     --use-upload
@@ -71,6 +78,8 @@ sub main(@){
       exit 0;
     }elsif($arg =~ /^(--build-scores)$/){
       $mode = $MODE_BUILD_SCORES;
+    }elsif($arg =~ /^(--backup-stats)$/){
+      $mode = $MODE_BACKUP_STATS;
     }elsif($arg =~ /^(--use-upload)$/){
       $useUpload = 1;
     }elsif($arg =~ /^(--no-use-upload)$/){
@@ -103,6 +112,10 @@ sub main(@){
     for my $scoreEntry(@scoreEntries){
       writeScoreEntryFile($scoreEntry);
     }
+  }elsif($mode eq $MODE_BACKUP_STATS){
+    my $statsXmlFile = $SM_STATS_XML_FILE;
+
+    my @scores = sort {$$a{epoch} <=> $$b{epoch}} extractScoreEntries $statsXmlFile;
   }else{
     die "ERROR: unknown mode $mode\n";
   }
