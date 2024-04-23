@@ -10,6 +10,7 @@ use Digest::MD5;
 
 sub writeScoreEntryFile($);
 sub isEmptyUploadFile($);
+sub extractEpochFromScoresFile($);
 sub extractScoreEntriesFromStats($);
 sub extractScoreEntriesFromUpload($);
 sub reduceScoreEntries(@);
@@ -28,6 +29,7 @@ sub assertMd5sumMatches($$);
 sub readFile($);
 sub md5sum($);
 sub mtime($);
+sub touch($$);
 
 my $SM_SAVE_DIR = "$ENV{HOME}/.stepmania/Save";
 my $SM_STATS_XML_FILE = "$SM_SAVE_DIR/MachineProfile/Stats.xml";
@@ -41,6 +43,7 @@ my $STATS_MACHINE_NAME_FILE = "$BAK_DIR/stats-machine-name";
 my $MODE_BUILD_SCORES = "build-scores";
 my $MODE_BACKUP_STATS = "backup-stats";
 my $MODE_RENAME_EMPTY_UPLOAD = "rename-empty-upload";
+my $MODE_TOUCH_XML = "touch-xml";
 
 my $EXEC = basename $0;
 
@@ -82,6 +85,12 @@ my $USAGE = "Usage:
         -get <MTIME_EPOCH> of XML_FILE
         -rename XML_FILE => XML_FILE.empty.<MTIME_EPOCH>
 
+  $EXEC [OPTS] --touch-xml
+    -update mtime=EPOCH for $BAK_SCORES_DIR/*.xml
+      -if filenanme matches: YYYY-MM-DD_<EPOCH>_*.xml
+        -extract EPOCH from file
+      -otherwise: FAIL immediately
+
   OPTS
     --use-upload
       include $BAK_UPLOAD_DIR/*.xml when building scores
@@ -116,6 +125,8 @@ sub main(@){
       $mode = $MODE_BACKUP_STATS;
     }elsif($arg =~ /^(--rename-empty-upload)$/){
       $mode = $MODE_RENAME_EMPTY_UPLOAD;
+    }elsif($arg =~ /^(--touch-xml)$/){
+      $mode = $MODE_TOUCH_XML;
     }elsif($arg =~ /^(--use-upload)$/){
       $useUpload = 1;
     }elsif($arg =~ /^(--no-use-upload)$/){
@@ -210,6 +221,26 @@ sub main(@){
         }
       }
     }
+  }elsif($mode eq $MODE_TOUCH_XML){
+    my @allXmlFiles = grep {-f $_} (
+      glob("$BAK_SCORES_DIR/*.xml"),
+    );
+    for my $xmlFile(@allXmlFiles){
+      my $epoch;
+      if($xmlFile =~ /^$BAK_SCORES_DIR/){
+        $epoch = extractEpochFromScoresFile($xmlFile);
+      }else{
+        die "ERROR: could not categorize $xmlFile\n";
+      }
+      if(not defined $epoch or $epoch !~ /^\d+$/){
+        die "ERROR: could not read epoch from $xmlFile\n";
+      }
+      my $mtime = mtime($xmlFile);
+      if($mtime != $epoch){
+        print "mtime: $xmlFile $mtime => $epoch\n";
+        touch($xmlFile, $epoch);
+      }
+    }
   }else{
     die "ERROR: unknown mode $mode\n";
   }
@@ -249,6 +280,15 @@ sub isEmptyUploadFile($){
   }else{
     return 0;
   }
+}
+
+sub extractEpochFromScoresFile($){
+  my ($scoresFile) = @_;
+  my $epoch;
+  if($scoresFile =~ /^(?:.*\/)?\d\d\d\d-\d\d-\d\d_(\d+)_/){
+    return $1;
+  }
+  return $epoch;
 }
 
 sub extractScoreEntriesFromStats($){
@@ -654,6 +694,11 @@ sub mtime($){
   my ($file) = @_;
   my @stat = stat $file;
   return $stat[9];
+}
+
+sub touch($$){
+  my ($file, $epoch) = @_;
+  utime($epoch, $epoch, $file);
 }
 
 &main(@ARGV);
