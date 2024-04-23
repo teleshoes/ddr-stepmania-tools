@@ -39,7 +39,7 @@ my $USAGE = "Usage:
 
   $EXEC [OPTS] --build-scores
     -parse scores from XML files
-      -include upload files
+      -include upload files (included by default), unless --no-use-upload is given
         $BAK_UPLOAD_DIR/*.xml
       -include stats files (NOT included by default), only if --use-stats is given
         $BAK_STATS_DIR/*.xml
@@ -47,6 +47,12 @@ my $USAGE = "Usage:
       $BAK_SCORES_DIR/
 
   OPTS
+    --use-upload
+      include $BAK_UPLOAD_DIR/*.xml when building scores
+      (this is the default)
+    --no-use-upload
+      do not include $BAK_UPLOAD_DIR/*.xml when building scores
+
     --use-stats
       include $BAK_STATS_DIR/*.xml when building scores
     --no-use-stats
@@ -56,6 +62,7 @@ my $USAGE = "Usage:
 
 sub main(@){
   my $mode = $MODE_BUILD_SCORES;
+  my $useUpload = 1;
   my $useStats = 0;
   while(@_ > 0){
     my $arg = shift @_;
@@ -64,6 +71,10 @@ sub main(@){
       exit 0;
     }elsif($arg =~ /^(--build-scores)$/){
       $mode = $MODE_BUILD_SCORES;
+    }elsif($arg =~ /^(--use-upload)$/){
+      $useUpload = 1;
+    }elsif($arg =~ /^(--no-use-upload)$/){
+      $useUpload = 0;
     }elsif($arg =~ /^(--use-stats)$/){
       $useStats = 1;
     }elsif($arg =~ /^(--no-use-stats)$/){
@@ -74,7 +85,10 @@ sub main(@){
   }
 
   if($mode eq $MODE_BUILD_SCORES){
-    my @files = grep {-f $_} glob "$BAK_UPLOAD_DIR/*.xml";
+    my @files;
+    if($useUpload){
+      @files = (@files, grep {-f $_} glob "$BAK_UPLOAD_DIR/*.xml");
+    }
     if($useStats){
       @files = (@files, grep {-f $_} glob "$BAK_STATS_DIR/*.xml");
     }
