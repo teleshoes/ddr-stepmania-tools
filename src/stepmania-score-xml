@@ -9,7 +9,8 @@ use Date::Parse qw(str2time);
 
 sub writeScoreEntryFile($);
 sub isEmptyUploadFile($);
-sub extractScoreEntries($);
+sub extractScoreEntriesFromStats($);
+sub extractScoreEntriesFromUpload($);
 sub reduceScoreEntries(@);
 sub calculateScoreEntryID($);
 sub getMoreFullStepsNode($$);
@@ -94,17 +95,17 @@ sub main(@){
   }
 
   if($mode eq $MODE_BUILD_SCORES){
-    my @files;
+    my @scoreEntries;
     if($useUpload){
-      @files = (@files, grep {-f $_} glob "$BAK_UPLOAD_DIR/*.xml");
-    }
-    if($useStats){
-      @files = (@files, grep {-f $_} glob "$BAK_STATS_DIR/*.xml");
+      for my $file(grep {-f $_} glob "$BAK_UPLOAD_DIR/*.xml"){
+        @scoreEntries = (@scoreEntries, extractScoreEntriesFromUpload($file));
+      }
     }
 
-    my @scoreEntries;
-    for my $file(@files){
-      @scoreEntries = (@scoreEntries, extractScoreEntries($file));
+    if($useStats){
+      for my $file(grep {-f $_} glob "$BAK_STATS_DIR/*.xml"){
+        @scoreEntries = (@scoreEntries, extractScoreEntriesFromStats($file));
+      }
     }
 
     @scoreEntries = reduceScoreEntries(@scoreEntries);
@@ -115,7 +116,7 @@ sub main(@){
   }elsif($mode eq $MODE_BACKUP_STATS){
     my $statsXmlFile = $SM_STATS_XML_FILE;
 
-    my @scores = sort {$$a{epoch} <=> $$b{epoch}} extractScoreEntries $statsXmlFile;
+    my @scores = sort {$$a{epoch} <=> $$b{epoch}} extractScoreEntriesFromStats $statsXmlFile;
   }else{
     die "ERROR: unknown mode $mode\n";
   }
@@ -157,20 +158,17 @@ sub isEmptyUploadFile($){
   }
 }
 
-sub extractScoreEntries($){
-  my ($filename) = @_;
+sub extractScoreEntriesFromStats($){
+  my ($statsFile) = @_;
   my @scoreEntries;
 
-  my $dom = XML::LibXML->load_xml(location => $filename);
+  my $dom = XML::LibXML->load_xml(location => $statsFile);
 
-  my $machineGuid = undef;
-  $machineGuid = $dom->findvalue("Stats/GeneralData/Guid") if not $machineGuid;
-  $machineGuid = $dom->findvalue("Stats/MachineGuid") if not $machineGuid;
+  my $machineGuid = $dom->findvalue("Stats/GeneralData/Guid");
   $machineGuid = "" if not $machineGuid;
 
-  my $errorMsg = "ERROR: error in file $filename";
+  my $errorMsg = "ERROR: error in stats file $statsFile";
 
-  #stats file
   for my $songNode($dom->findnodes("/Stats/SongScores/Song")){
     my $songDir = $songNode->getAttribute("Dir");
     assertPresent("$errorMsg - missing song dir", $songDir);
@@ -205,6 +203,24 @@ sub extractScoreEntries($){
     }
   }
 
+  if(@scoreEntries == 0){
+    print STDERR "WARNING: no score entries found in stats file $statsFile\n";
+  }
+
+  return @scoreEntries;
+}
+
+sub extractScoreEntriesFromUpload($){
+  my ($uploadFile) = @_;
+  my @scoreEntries;
+
+  my $dom = XML::LibXML->load_xml(location => $uploadFile);
+
+  my $machineGuid = $dom->findvalue("Stats/MachineGuid");
+  $machineGuid = "" if not $machineGuid;
+
+  my $errorMsg = "ERROR: error in upload file $uploadFile";
+
   my @uploadFileContainerNodes = $dom->findnodes(
     "/Stats/RecentSongScores/HighScoreForASongAndSteps");
   for(my $i=0; $i<@uploadFileContainerNodes; $i++){
@@ -217,7 +233,7 @@ sub extractScoreEntries($){
     }elsif($i == 1 and @uploadFileContainerNodes == 2){
       $playerNum = 2; #right player
     }else{
-      die "ERROR: more than two player scores in recent-scores file $filename\n";
+      die "ERROR: more than two player scores in recent-scores file $uploadFile\n";
     }
 
     my $songNode = getSingleChildByTagName($containerNode, "Song");
@@ -252,8 +268,8 @@ sub extractScoreEntries($){
     };
   }
 
-  if(@scoreEntries == 0 and not isEmptyUploadFile($filename)){
-    die "ERROR: no score entries found in non-empty-upload-file $filename\n";
+  if(@scoreEntries == 0 and not isEmptyUploadFile($uploadFile)){
+    die "ERROR: no score entries found in non-empty upload-file $uploadFile\n";
   }
 
   return @scoreEntries;
