@@ -26,6 +26,7 @@ sub readFile($);
 
 my $BAK_DIR = "$ENV{HOME}/.local/share/stepmania-score-xml";
 my $BAK_SCORES_DIR = "$BAK_DIR/scores";
+my $BAK_STATS_DIR = "$BAK_DIR/stats";
 my $BAK_UPLOAD_DIR = "$BAK_DIR/upload";
 
 my $MODE_BUILD_SCORES = "build-scores";
@@ -36,14 +37,26 @@ my $USAGE = "Usage:
   $EXEC -h | --help
     show this message
 
-  $EXEC --build-scores
-    -parse XML files in $BAK_UPLOAD_DIR/*.xml
+  $EXEC [OPTS] --build-scores
+    -parse scores from XML files
+      -include upload files
+        $BAK_UPLOAD_DIR/*.xml
+      -include stats files (NOT included by default), only if --use-stats is given
+        $BAK_STATS_DIR/*.xml
     -write all scores, one score per file, to
       $BAK_SCORES_DIR/
+
+  OPTS
+    --use-stats
+      include $BAK_STATS_DIR/*.xml when building scores
+    --no-use-stats
+      do not include $BAK_STATS_DIR/*.xml when building scores
+      (this is the default)
 ";
 
 sub main(@){
   my $mode = $MODE_BUILD_SCORES;
+  my $useStats = 0;
   while(@_ > 0){
     my $arg = shift @_;
     if($arg =~ /^(-h|--help)$/){
@@ -51,6 +64,10 @@ sub main(@){
       exit 0;
     }elsif($arg =~ /^(--build-scores)$/){
       $mode = $MODE_BUILD_SCORES;
+    }elsif($arg =~ /^(--use-stats)$/){
+      $useStats = 1;
+    }elsif($arg =~ /^(--no-use-stats)$/){
+      $useStats = 0;
     }else{
       die "$USAGE\nERROR: unknown arg $arg\n";
     }
@@ -58,6 +75,9 @@ sub main(@){
 
   if($mode eq $MODE_BUILD_SCORES){
     my @files = grep {-f $_} glob "$BAK_UPLOAD_DIR/*.xml";
+    if($useStats){
+      @files = (@files, grep {-f $_} glob "$BAK_STATS_DIR/*.xml");
+    }
 
     my @scoreEntries;
     for my $file(@files){
