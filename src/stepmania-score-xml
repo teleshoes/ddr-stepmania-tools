@@ -13,6 +13,7 @@ sub isEmptyUploadFile($);
 sub extractEpochFromScoresFile($);
 sub extractEpochFromStatsFile($);
 sub extractEpochFromUploadFile($);
+sub getScoreEntries($$);
 sub extractScoreEntriesFromStats($);
 sub extractScoreEntriesFromUpload($);
 sub reduceScoreEntries(@);
@@ -174,21 +175,7 @@ sub main(@){
   }
 
   if($mode eq $MODE_BUILD_SCORES){
-    my @scoreEntries;
-    if($useUpload){
-      for my $file(grep {-f $_} glob "$BAK_UPLOAD_DIR/*.xml"){
-        @scoreEntries = (@scoreEntries, extractScoreEntriesFromUpload($file));
-      }
-    }
-
-    if($useStats){
-      for my $file(grep {-f $_} glob "$BAK_STATS_DIR/*.xml"){
-        @scoreEntries = (@scoreEntries, extractScoreEntriesFromStats($file));
-      }
-    }
-
-    @scoreEntries = reduceScoreEntries(@scoreEntries);
-
+    my @scoreEntries = getScoreEntries($useUpload, $useStats);
     for my $scoreEntry(@scoreEntries){
       writeScoreEntryFile($scoreEntry);
     }
@@ -367,6 +354,26 @@ sub extractEpochFromUploadFile($){
     }
   }
   return $epoch;
+}
+
+sub getScoreEntries($$){
+  my ($useUpload, $useStats) = @_;
+  my @scoreEntries;
+  if($useUpload){
+    for my $file(grep {-f $_} glob "$BAK_UPLOAD_DIR/*.xml"){
+      @scoreEntries = (@scoreEntries, extractScoreEntriesFromUpload($file));
+    }
+  }
+
+  if($useStats){
+    for my $file(grep {-f $_} glob "$BAK_STATS_DIR/*.xml"){
+      @scoreEntries = (@scoreEntries, extractScoreEntriesFromStats($file));
+    }
+  }
+
+  @scoreEntries = reduceScoreEntries(@scoreEntries);
+
+  return @scoreEntries;
 }
 
 sub extractScoreEntriesFromStats($){
