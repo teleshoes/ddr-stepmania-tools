@@ -71,6 +71,9 @@ my $USAGE = "Usage:
     -copy to $BAK_STATS_DIR/<BAK_STATS_MACHINE_SUMMARY_FILE>
       BAK_STATS_MACHINE_SUMMARY_FILE
         stats_<MACHINE_NAME>.xml
+    -add a git commit if backup is new:
+      -run `git add <BAK_STATS_FILE> <BAK_STATS_MACHINE_SUMMARY_FILE>`
+      -run `git commit -m 'automatic commit'
 
   OPTS
     --use-upload
@@ -167,6 +170,8 @@ sub main(@){
     }else{
       system "cp", "-a", $statsXmlFile, $destFile;
       system "cp", "-a", $statsXmlFile, $machineSummaryFile;
+      system "git", "-C", $BAK_STATS_DIR, "add", $destFile, $machineSummaryFile;
+      system "git", "-C", $BAK_STATS_DIR, "commit", "-m", "automatic commit", "--date", "\@$mtime";
     }
   }else{
     die "ERROR: unknown mode $mode\n";
