@@ -8,6 +8,7 @@ use Date::Format qw(time2str);
 use Date::Parse qw(str2time);
 
 sub writeScoreEntryFile($);
+sub isEmptyUploadFile($);
 sub extractScoreEntries($);
 sub reduceScoreEntries(@);
 sub calculateScoreEntryID($);
@@ -21,6 +22,7 @@ sub formatScoreEntryPrettyName($);
 sub cleanStr($);
 sub assertPresent($@);
 sub assertDateTime($$);
+sub readFile($);
 
 my $BAK_DIR = "$ENV{HOME}/.local/share/stepmania-score-xml";
 my $BAK_SCORES_DIR = "$BAK_DIR/scores";
@@ -87,6 +89,25 @@ sub writeScoreEntryFile($){
   open FH, "> $outFile" or die "ERROR: could not write $outFile\n$!\n";
   print FH $xml;
   close FH;
+}
+
+sub isEmptyUploadFile($){
+  my ($uploadFile) = @_;
+  my $contents = readFile($uploadFile);
+  if($contents =~ /
+    ^
+    <\?xml.*\?>                             [\r\n]*
+                                            [\r\n]*
+    <Stats>                                 [\r\n]*
+    <MachineGuid> [0-9a-f]+ <\/MachineGuid> [\r\n]*
+    <RecentSongScores\/>                    [\r\n]*
+    <\/Stats>                               [\r\n]*
+    $
+  /x){
+    return 1;
+  }else{
+    return 0;
+  }
 }
 
 sub extractScoreEntries($){
@@ -183,6 +204,11 @@ sub extractScoreEntries($){
       scoreNode   => $scoreNode,
     };
   }
+
+  if(@scoreEntries == 0 and not isEmptyUploadFile($filename)){
+    die "ERROR: no score entries found in non-empty-upload-file $filename\n";
+  }
+
   return @scoreEntries;
 }
 
@@ -440,6 +466,14 @@ sub assertDateTime($$){
   if($timeXML !~ /^\d\d\d\d-\d\d-\d\d \d\d:\d\d:\d\d$/){
     die $msg;
   }
+}
+
+sub readFile($){
+  my ($file) = @_;
+  open my $fh, "< $file" or die "ERROR: could not read $file\n$!\n";
+  my $contents = join '', <$fh>;
+  close $fh;
+  return $contents;
 }
 
 &main(@ARGV);
