@@ -36,6 +36,7 @@ my $BAK_DIR = "$ENV{HOME}/.local/share/stepmania-score-xml";
 my $BAK_SCORES_DIR = "$BAK_DIR/scores";
 my $BAK_STATS_DIR = "$BAK_DIR/stats";
 my $BAK_UPLOAD_DIR = "$BAK_DIR/upload";
+my $STATS_MACHINE_NAME_FILE = "$BAK_DIR/stats-machine-name";
 
 my $MODE_BUILD_SCORES = "build-scores";
 my $MODE_BACKUP_STATS = "backup-stats";
@@ -60,9 +61,10 @@ my $USAGE = "Usage:
     -get xml file MTIME
     -extract MIN_SCORE_DATE and MAX_SCORE_DATE
       -formatted YYYY-MM-DD, 0000-00-00 if no scores present
+    -get MACHINE_NAME name from $STATS_MACHINE_NAME_FILE
     -copy to $BAK_STATS_DIR/<BAK_STATS_FILE>
       BAK_STATS_FILE
-        stats_<MTIME>_<MIN_SCORE_DATE>_<MAX_SCORE_DATE>.xml
+        stats_<MTIME>_<MACHINE_NAME>_<MIN_SCORE_DATE>_<MAX_SCORE_DATE>.xml
 
   OPTS
     --use-upload
@@ -134,8 +136,15 @@ sub main(@){
     my $minDate = defined $minEpoch ? time2str("%Y-%m-%d", $minEpoch) : "0000-00-00";
     my $maxDate = defined $maxEpoch ? time2str("%Y-%m-%d", $maxEpoch) : "0000-00-00";
 
+    my $machineName = readFile $STATS_MACHINE_NAME_FILE;
+    chomp $machineName;
+    if($machineName !~ /^([a-z0-9_\-]+)$/){
+      die "ERROR: invalid/missing MACHINE_NAME in $STATS_MACHINE_NAME_FILE\n";
+    }
+
     my $fileName = "stats";
     $fileName .= "_${mtime}";
+    $fileName .= "_${machineName}";
     $fileName .= "_${minDate}_${maxDate}";
     $fileName .= ".xml";
 
