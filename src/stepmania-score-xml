@@ -56,7 +56,7 @@ my $USAGE = "Usage:
     -write all scores, one score per file, to
       $BAK_SCORES_DIR/
 
-  $EXEC [OPTS] --backup-stats
+  $EXEC [OPTS] --backup-stats [BAK_NAME]
     -parse $SM_STATS_XML_FILE
     -get xml file MTIME
     -extract MIN_SCORE_DATE and MAX_SCORE_DATE
@@ -64,7 +64,10 @@ my $USAGE = "Usage:
     -get MACHINE_NAME name from $STATS_MACHINE_NAME_FILE
     -copy to $BAK_STATS_DIR/<BAK_STATS_FILE>
       BAK_STATS_FILE
-        stats_<MTIME>_<MACHINE_NAME>_<MIN_SCORE_DATE>_<MAX_SCORE_DATE>.xml
+        if BAK_NAME given:
+          stats_<MTIME>_<MACHINE_NAME>_<MIN_SCORE_DATE>_<MAX_SCORE_DATE>_<BAK_NAME>.xml
+        otherwise:
+          stats_<MTIME>_<MACHINE_NAME>_<MIN_SCORE_DATE>_<MAX_SCORE_DATE>.xml
 
   OPTS
     --use-upload
@@ -82,6 +85,7 @@ my $USAGE = "Usage:
 
 sub main(@){
   my $mode = $MODE_BUILD_SCORES;
+  my $statsBakName = undef;
   my $useUpload = 1;
   my $useStats = 0;
   while(@_ > 0){
@@ -101,6 +105,8 @@ sub main(@){
       $useStats = 1;
     }elsif($arg =~ /^(--no-use-stats)$/){
       $useStats = 0;
+    }elsif($mode eq $MODE_BACKUP_STATS and not defined $statsBakName and $arg =~ /^\w+$/){
+      $statsBakName = $arg;
     }else{
       die "$USAGE\nERROR: unknown arg $arg\n";
     }
@@ -146,6 +152,7 @@ sub main(@){
     $fileName .= "_${mtime}";
     $fileName .= "_${machineName}";
     $fileName .= "_${minDate}_${maxDate}";
+    $fileName .= "_${statsBakName}" if defined $statsBakName;
     $fileName .= ".xml";
 
     my $destFile = "$BAK_STATS_DIR/$fileName";
