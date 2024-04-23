@@ -58,9 +58,11 @@ my $USAGE = "Usage:
   $EXEC [OPTS] --backup-stats
     -parse $SM_STATS_XML_FILE
     -get xml file MTIME
+    -extract MIN_SCORE_DATE and MAX_SCORE_DATE
+      -formatted YYYY-MM-DD, 0000-00-00 if no scores present
     -copy to $BAK_STATS_DIR/<BAK_STATS_FILE>
       BAK_STATS_FILE
-        stats_<MTIME>.xml
+        stats_<MTIME>_<MIN_SCORE_DATE>_<MAX_SCORE_DATE>.xml
 
   OPTS
     --use-upload
@@ -127,9 +129,14 @@ sub main(@){
     my $mtime = mtime $statsXmlFile;
 
     my @scores = sort {$$a{epoch} <=> $$b{epoch}} extractScoreEntriesFromStats $statsXmlFile;
+    my $minEpoch = @scores > 0 ? ${$scores[0]}{epoch} : undef;
+    my $maxEpoch = @scores > 0 ? ${$scores[-1]}{epoch} : undef;
+    my $minDate = defined $minEpoch ? time2str("%Y-%m-%d", $minEpoch) : "0000-00-00";
+    my $maxDate = defined $maxEpoch ? time2str("%Y-%m-%d", $maxEpoch) : "0000-00-00";
 
     my $fileName = "stats";
     $fileName .= "_${mtime}";
+    $fileName .= "_${minDate}_${maxDate}";
     $fileName .= ".xml";
 
     my $destFile = "$BAK_STATS_DIR/$fileName";
