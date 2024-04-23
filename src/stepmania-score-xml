@@ -6,6 +6,7 @@ use File::Basename qw(basename);
 use XML::LibXML;
 use Date::Format qw(time2str);
 use Date::Parse qw(str2time);
+use Digest::MD5;
 
 sub writeScoreEntryFile($);
 sub isEmptyUploadFile($);
@@ -23,7 +24,9 @@ sub formatScoreEntryPrettyName($);
 sub cleanStr($);
 sub assertPresent($@);
 sub assertDateTime($$);
+sub assertMd5sumMatches($$);
 sub readFile($);
+sub md5sum($);
 sub mtime($);
 
 my $SM_SAVE_DIR = "$ENV{HOME}/.stepmania/Save";
@@ -131,7 +134,12 @@ sub main(@){
 
     my $destFile = "$BAK_STATS_DIR/$fileName";
 
-    system "cp", "-a", $statsXmlFile, $destFile;
+    if(-e $destFile){
+      assertMd5sumMatches($statsXmlFile, $destFile);
+      print "skipping, already backed up to $destFile\n";
+    }else{
+      system "cp", "-a", $statsXmlFile, $destFile;
+    }
   }else{
     die "ERROR: unknown mode $mode\n";
   }
@@ -546,12 +554,30 @@ sub assertDateTime($$){
   }
 }
 
+sub assertMd5sumMatches($$){
+  my ($f1, $f2) = @_;
+  my $csum1 = md5sum $f1;
+  my $csum2 = md5sum $f2;
+  if(not defined $csum1 or not defined $csum2 or $csum1 ne $csum2){
+    die "ERROR: checksum mismatch '$f1' vs '$f2'\n";
+  }
+}
+
 sub readFile($){
   my ($file) = @_;
   open my $fh, "< $file" or die "ERROR: could not read $file\n$!\n";
   my $contents = join '', <$fh>;
   close $fh;
   return $contents;
+}
+
+sub md5sum($){
+  my ($file) = @_;
+  open my $fh, "< $file" or die "ERROR: could not read $file\n$!\n";
+  my $md5sum = Digest::MD5->new->addfile($fh)->hexdigest;
+  close $fh;
+  die "ERROR: could not get md5sum of $file\n" if $md5sum !~ /^[0-9a-f]{32}$/;
+  return $md5sum;
 }
 
 sub mtime($){
