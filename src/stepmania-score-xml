@@ -11,6 +11,7 @@ use Digest::MD5;
 sub writeScoreEntryFile($);
 sub isEmptyUploadFile($);
 sub extractEpochFromScoresFile($);
+sub extractEpochFromStatsFile($);
 sub extractScoreEntriesFromStats($);
 sub extractScoreEntriesFromUpload($);
 sub reduceScoreEntries(@);
@@ -90,6 +91,13 @@ my $USAGE = "Usage:
       -if filenanme matches: YYYY-MM-DD_<EPOCH>_*.xml
         -extract EPOCH from file
       -otherwise: FAIL immediately
+    -update mtime=EPOCH for $BAK_STATS_DIR/*.xml
+      -if filename matches stats_<EPOCH>_*.xml:
+        -extract EPOCH from filename
+      -otherwise:
+        -list other stats XML files with identical contents
+        -extract EPOCH from the first one that contains EPOCH
+        -if no file with EPOCH is identical, FAIL immediately
 
   OPTS
     --use-upload
@@ -224,11 +232,14 @@ sub main(@){
   }elsif($mode eq $MODE_TOUCH_XML){
     my @allXmlFiles = grep {-f $_} (
       glob("$BAK_SCORES_DIR/*.xml"),
+      glob("$BAK_STATS_DIR/*.xml"),
     );
     for my $xmlFile(@allXmlFiles){
       my $epoch;
       if($xmlFile =~ /^$BAK_SCORES_DIR/){
         $epoch = extractEpochFromScoresFile($xmlFile);
+      }elsif($xmlFile =~ /^$BAK_STATS_DIR/){
+        $epoch = extractEpochFromStatsFile($xmlFile);
       }else{
         die "ERROR: could not categorize $xmlFile\n";
       }
@@ -287,6 +298,25 @@ sub extractEpochFromScoresFile($){
   my $epoch;
   if($scoresFile =~ /^(?:.*\/)?\d\d\d\d-\d\d-\d\d_(\d+)_/){
     return $1;
+  }
+  return $epoch;
+}
+
+sub extractEpochFromStatsFile($){
+  my ($statsFile) = @_;
+  my $epoch;
+  if($statsFile =~ /^(?:.*\/)?stats_(\d+)_/){
+    $epoch = $1;
+  }else{
+    my $md5 = md5sum($statsFile);
+    my @otherStatsFiles = grep {-f $_} glob "$BAK_STATS_DIR/*.xml";
+    for my $otherStatsFile(@otherStatsFiles){
+      my $otherMD5 = md5sum($otherStatsFile);
+      if($md5 eq $otherMD5 and $otherStatsFile =~ /^(?:.*\/)?stats_(\d+)_/){
+        $epoch = $1;
+        last;
+      }
+    }
   }
   return $epoch;
 }
