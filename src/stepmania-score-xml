@@ -71,7 +71,7 @@ my $USAGE = "Usage:
     -copy to $BAK_STATS_DIR/<BAK_STATS_MACHINE_SUMMARY_FILE>
       BAK_STATS_MACHINE_SUMMARY_FILE
         stats_<MACHINE_NAME>.xml
-    -add a git commit if backup is new:
+    -add a git commit if backup is new, unless --no-git is given:
       -run `git add <BAK_STATS_FILE> <BAK_STATS_MACHINE_SUMMARY_FILE>`
       -run `git commit -m 'automatic commit'
 
@@ -87,6 +87,9 @@ my $USAGE = "Usage:
     --no-use-stats
       do not include $BAK_STATS_DIR/*.xml when building scores
       (this is the default)
+
+    --no-git
+      never run `git add` or `git commit`
 ";
 
 sub main(@){
@@ -94,6 +97,7 @@ sub main(@){
   my $statsBakName = undef;
   my $useUpload = 1;
   my $useStats = 0;
+  my $useGit = 1;
   while(@_ > 0){
     my $arg = shift @_;
     if($arg =~ /^(-h|--help)$/){
@@ -111,6 +115,8 @@ sub main(@){
       $useStats = 1;
     }elsif($arg =~ /^(--no-use-stats)$/){
       $useStats = 0;
+    }elsif($arg =~ /^(--no-git)$/){
+      $useGit = 0;
     }elsif($mode eq $MODE_BACKUP_STATS and not defined $statsBakName and $arg =~ /^\w+$/){
       $statsBakName = $arg;
     }else{
@@ -170,8 +176,10 @@ sub main(@){
     }else{
       system "cp", "-a", $statsXmlFile, $destFile;
       system "cp", "-a", $statsXmlFile, $machineSummaryFile;
-      system "git", "-C", $BAK_STATS_DIR, "add", $destFile, $machineSummaryFile;
-      system "git", "-C", $BAK_STATS_DIR, "commit", "-m", "automatic commit", "--date", "\@$mtime";
+      if($useGit){
+        system "git", "-C", $BAK_STATS_DIR, "add", $destFile, $machineSummaryFile;
+        system "git", "-C", $BAK_STATS_DIR, "commit", "-m", "automatic commit", "--date", "\@$mtime";
+      }
     }
   }else{
     die "ERROR: unknown mode $mode\n";
