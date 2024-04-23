@@ -12,6 +12,7 @@ sub writeScoreEntryFile($);
 sub isEmptyUploadFile($);
 sub extractEpochFromScoresFile($);
 sub extractEpochFromStatsFile($);
+sub extractEpochFromUploadFile($);
 sub extractScoreEntriesFromStats($);
 sub extractScoreEntriesFromUpload($);
 sub reduceScoreEntries(@);
@@ -98,6 +99,15 @@ my $USAGE = "Usage:
         -list other stats XML files with identical contents
         -extract EPOCH from the first one that contains EPOCH
         -if no file with EPOCH is identical, FAIL immediately
+    -update mtime=EPOCH for $BAK_UPLOAD_DIR/*.xml
+      -if file is an empty upload file
+        -if filename matches: *.empty.<EPOCH>.xml
+          -extract EPOCH from file
+        -otherwise: FAIL immediately
+      -otherwise:
+        -parse XML contents of file
+        -extract '<DateTime>' tag from first score entry, convert to EPOCH
+        -if no score entry exists, FAIL immediately
 
   OPTS
     --use-upload
@@ -233,6 +243,7 @@ sub main(@){
     my @allXmlFiles = grep {-f $_} (
       glob("$BAK_SCORES_DIR/*.xml"),
       glob("$BAK_STATS_DIR/*.xml"),
+      glob("$BAK_UPLOAD_DIR/*.xml"),
     );
     for my $xmlFile(@allXmlFiles){
       my $epoch;
@@ -240,6 +251,8 @@ sub main(@){
         $epoch = extractEpochFromScoresFile($xmlFile);
       }elsif($xmlFile =~ /^$BAK_STATS_DIR/){
         $epoch = extractEpochFromStatsFile($xmlFile);
+      }elsif($xmlFile =~ /^$BAK_UPLOAD_DIR/){
+        $epoch = extractEpochFromUploadFile($xmlFile);
       }else{
         die "ERROR: could not categorize $xmlFile\n";
       }
@@ -315,6 +328,28 @@ sub extractEpochFromStatsFile($){
       if($md5 eq $otherMD5 and $otherStatsFile =~ /^(?:.*\/)?stats_(\d+)_/){
         $epoch = $1;
         last;
+      }
+    }
+  }
+  return $epoch;
+}
+
+sub extractEpochFromUploadFile($){
+  my ($uploadFile) = @_;
+  my $epoch;
+  if(isEmptyUploadFile($uploadFile)){
+    if($uploadFile =~ /\.empty\.(\d+)\.xml$/){
+      $epoch = $1;
+    }
+  }else{
+    my @scoreEntries = extractScoreEntriesFromUpload($uploadFile);
+    if(@scoreEntries == 0){
+      die "ERROR: could not read scores from non-empty upload file $uploadFile\n";
+    }
+    $epoch = ${$scoreEntries[0]}{epoch};
+    for my $scoreEntry(@scoreEntries){
+      if($epoch ne $$scoreEntry{epoch}){
+        die "ERROR: mismatched <DateTime> in scores for $uploadFile\n";
       }
     }
   }
