@@ -24,6 +24,7 @@ sub cleanStr($);
 sub assertPresent($@);
 sub assertDateTime($$);
 sub readFile($);
+sub mtime($);
 
 my $SM_SAVE_DIR = "$ENV{HOME}/.stepmania/Save";
 my $SM_STATS_XML_FILE = "$SM_SAVE_DIR/MachineProfile/Stats.xml";
@@ -53,6 +54,10 @@ my $USAGE = "Usage:
 
   $EXEC [OPTS] --backup-stats
     -parse $SM_STATS_XML_FILE
+    -get xml file MTIME
+    -copy to $BAK_STATS_DIR/<BAK_STATS_FILE>
+      BAK_STATS_FILE
+        stats_<MTIME>.xml
 
   OPTS
     --use-upload
@@ -116,7 +121,17 @@ sub main(@){
   }elsif($mode eq $MODE_BACKUP_STATS){
     my $statsXmlFile = $SM_STATS_XML_FILE;
 
+    my $mtime = mtime $statsXmlFile;
+
     my @scores = sort {$$a{epoch} <=> $$b{epoch}} extractScoreEntriesFromStats $statsXmlFile;
+
+    my $fileName = "stats";
+    $fileName .= "_${mtime}";
+    $fileName .= ".xml";
+
+    my $destFile = "$BAK_STATS_DIR/$fileName";
+
+    system "cp", "-a", $statsXmlFile, $destFile;
   }else{
     die "ERROR: unknown mode $mode\n";
   }
@@ -537,6 +552,12 @@ sub readFile($){
   my $contents = join '', <$fh>;
   close $fh;
   return $contents;
+}
+
+sub mtime($){
+  my ($file) = @_;
+  my @stat = stat $file;
+  return $stat[9];
 }
 
 &main(@ARGV);
