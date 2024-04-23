@@ -54,12 +54,22 @@ my $USAGE = "Usage:
     show this message
 
   $EXEC [OPTS] --build-scores
-    -parse scores from XML files
+    -parse scores from stepmania XML files
       -include upload files (included by default), unless --no-use-upload is given
         $BAK_UPLOAD_DIR/*.xml
       -include stats files (NOT included by default), only if --use-stats is given
         $BAK_STATS_DIR/*.xml
-    -write all scores, one score per file, to
+    -extract epoch from <DateTime> tag, and extract score details
+    -remove duplicate scores
+      -check for same epoch, PercentDP, simfile+game+difficulty, and tap/hold note counts
+    -ensure that at most two unique scores exist for a given epoch
+      -both scores must be for the same simfile
+      -scores may have different difficulties
+      -if only one score exists for an epoch:
+        -assign player=p0
+      -if two scores exist for an epoch:
+        -assign the first encountered player=p1 and the second player=p2
+    -write scores, one score per file, to
       $BAK_SCORES_DIR/
     -set mtime of score files to parsed epoch
 
