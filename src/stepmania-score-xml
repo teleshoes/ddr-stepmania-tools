@@ -68,6 +68,9 @@ my $USAGE = "Usage:
           stats_<MTIME>_<MACHINE_NAME>_<MIN_SCORE_DATE>_<MAX_SCORE_DATE>_<BAK_NAME>.xml
         otherwise:
           stats_<MTIME>_<MACHINE_NAME>_<MIN_SCORE_DATE>_<MAX_SCORE_DATE>.xml
+    -copy to $BAK_STATS_DIR/<BAK_STATS_MACHINE_SUMMARY_FILE>
+      BAK_STATS_MACHINE_SUMMARY_FILE
+        stats_<MACHINE_NAME>.xml
 
   OPTS
     --use-upload
@@ -156,12 +159,14 @@ sub main(@){
     $fileName .= ".xml";
 
     my $destFile = "$BAK_STATS_DIR/$fileName";
+    my $machineSummaryFile = "$BAK_STATS_DIR/stats_$machineName.xml";
 
     if(-e $destFile){
       assertMd5sumMatches($statsXmlFile, $destFile);
       print "skipping, already backed up to $destFile\n";
     }else{
       system "cp", "-a", $statsXmlFile, $destFile;
+      system "cp", "-a", $statsXmlFile, $machineSummaryFile;
     }
   }else{
     die "ERROR: unknown mode $mode\n";
