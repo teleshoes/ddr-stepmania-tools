@@ -17,7 +17,8 @@ sub getScoreEntries($$);
 sub extractScoreEntriesFromStats($);
 sub extractScoreEntriesFromUpload($);
 sub reduceScoreEntries(@);
-sub calculateScoreEntryID($);
+sub parseScoreDetails($);
+sub getScoreEntryID($);
 sub getMoreFullStepsNode($$);
 sub getSingleChildByTagName($$);
 sub convertStepsTypeToGame($);
@@ -47,6 +48,25 @@ my $MODE_BUILD_SCORES = "build-scores";
 my $MODE_BACKUP_STATS = "backup-stats";
 my $MODE_RENAME_EMPTY_UPLOAD = "rename-empty-upload";
 my $MODE_TOUCH_XML = "touch-xml";
+
+my @SCORE_DETAILS_ATT_ARR = (
+  grade               => "Grade",
+  percentDP           => "PercentDP",
+  countW1             => "TapNoteScores/W1",
+  countW2             => "TapNoteScores/W2",
+  countW3             => "TapNoteScores/W3",
+  countW4             => "TapNoteScores/W4",
+  countW5             => "TapNoteScores/W5",
+  countMiss           => "TapNoteScores/Miss",
+  countAvoidMine      => "TapNoteScores/AvoidMine",
+  countHitMine        => "TapNoteScores/HitMine",
+  countHeld           => "HoldNoteScores/Held",
+  countLetGo          => "HoldNoteScores/LetGo",
+  countMissedHold     => "HoldNoteScores/MissedHold",
+);
+my @SCORE_DETAILS_ATT_NAMES = map {$SCORE_DETAILS_ATT_ARR[$_]}
+                              grep {$_%2==0} 0..$#SCORE_DETAILS_ATT_ARR;
+my %SCORE_DETAILS_ATT_PATHS_BY_NAME = @SCORE_DETAILS_ATT_ARR;
 
 my $EXEC = basename $0;
 
@@ -515,7 +535,8 @@ sub reduceScoreEntries(@){
     }else{
       #calculate unique score IDs
       for my $entry(@entries){
-        $$entry{id} = calculateScoreEntryID($entry);
+        parseScoreDetails($entry); #parses XML
+        $$entry{id} = getScoreEntryID($entry);
       }
 
       #split dupes into buckets
@@ -570,36 +591,46 @@ sub reduceScoreEntries(@){
   return @reducedScoreEntries;
 }
 
-sub calculateScoreEntryID($){
+sub parseScoreDetails($){
   my ($scoreEntry) = @_;
 
-  my @atts = qw(
-    Grade
-    PercentDP
-    TapNoteScores/W1
-    TapNoteScores/W2
-    TapNoteScores/W3
-    TapNoteScores/W4
-    TapNoteScores/W5
-    TapNoteScores/Miss
-    TapNoteScores/AvoidMine
-    TapNoteScores/HitMine
-    HoldNoteScores/Held
-    HoldNoteScores/LetGo
-    HoldNoteScores/MissedHold
-  );
+  if(defined $$scoreEntry{scoreDetails}){
+    return;
+  }
+
+  my $details = {};
+
+  for my $attName(@SCORE_DETAILS_ATT_NAMES){
+    my $attPath = $SCORE_DETAILS_ATT_PATHS_BY_NAME{$attName};
+    my $val = $$scoreEntry{scoreNode}->findvalue($attPath);
+    $val = "" if not defined $val;
+    $$details{$attName} = $val;
+  }
+
+  #fill in <MissedHold>=0 if <LetGo> is present and <MissedHold> is not
+  #  some old scores predate <MissedHold>, and were updated in stats but not upload
+  if($$details{countLetGo} =~ /\d+/ and $$details{countMissedHold} eq ""){
+    $$details{countMissedHold} = 0;
+  }
+
+  $$scoreEntry{scoreDetails} = $details;
+}
+
+sub getScoreEntryID($){
+  my ($scoreEntry) = @_;
 
   my $id = "";
   $id .= "$$scoreEntry{epoch}|";
   $id .= "$$scoreEntry{game}|";
   $id .= "$$scoreEntry{smDiff}|";
-  for my $att(@atts){
-    my $scoreVal = $$scoreEntry{scoreNode}->findvalue($att);
-    $scoreVal = "" if not defined $scoreVal;
-    if($scoreVal eq "" and $att =~ /HoldNoteScores\/MissedHold/){
-      $scoreVal = 0; #some scores predate <MissedHold>, and were updated in stats but not upload
-    }
-    $id .= "$scoreVal|";
+
+  if(not defined $$scoreEntry{scoreDetails}){
+    die "ERROR: cannot get score entry ID before parsing score details\n";
+  }
+
+  for my $attName(@SCORE_DETAILS_ATT_NAMES){
+    my $val = $$scoreEntry{scoreDetails}{$attName};
+    $id .= "$val|";
   }
   $id .= "$$scoreEntry{songDir}|";
 
