@@ -8,6 +8,7 @@ use Date::Format qw(time2str);
 use Date::Parse qw(str2time);
 use Digest::MD5;
 
+sub buildStatsXML($$@);
 sub writeScoreEntryFile($);
 sub isEmptyUploadFile($);
 sub extractEpochFromScoresFile($);
@@ -22,6 +23,7 @@ sub reduceScoreEntries(@);
 sub parseScoreDetails($);
 sub getScoreEntryID($);
 sub getMoreFullStepsNode($$);
+sub getSingleNode($$);
 sub getSingleChildByTagName($$);
 sub convertStepsTypeToGame($);
 sub formatAsUpload($$$$$);
@@ -224,6 +226,10 @@ sub main(@){
     if(not -e $srcStatsFile){
       die "ERROR: missing source stats file $srcStatsFile\n";
     }
+    my @scoreEntries = getScoreEntries(0, 0, 1);
+
+    my $xml = buildStatsXML($srcStatsFile, $maxCalsByDate, @scoreEntries);
+
   }elsif($mode eq $MODE_BACKUP_STATS){
     my $statsXmlFile = $SM_STATS_XML_FILE;
 
@@ -311,6 +317,27 @@ sub main(@){
   }else{
     die "ERROR: unknown mode $mode\n";
   }
+}
+
+sub buildStatsXML($$@){
+  my ($srcStatsFile, $caloriesByDate, @scoreEntries) = @_;
+
+  my $dom = XML::LibXML->load_xml(location => $srcStatsFile);
+  my $statsNode = getSingleNode($dom, "Stats");
+
+  my $xml = ""
+    . "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n"
+    . "\n"
+    . "<Stats>"
+  ;
+
+  for my $node($statsNode->childNodes()){
+    $xml .= $node->toString();
+  }
+
+  $xml .= "</Stats>\n";
+
+  return $xml;
 }
 
 sub writeScoreEntryFile($){
@@ -734,6 +761,16 @@ sub getMoreFullStepsNode($$){
     return $n2;
   }else{
     return $n1;
+  }
+}
+
+sub getSingleNode($$){
+  my ($node, $xpath) = @_;
+  my $nodeList = $node->findnodes($xpath);
+  if($nodeList->size() == 1){
+    return $nodeList->get_node(1);
+  }else{
+    return undef;
   }
 }
 
