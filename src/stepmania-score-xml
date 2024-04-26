@@ -46,6 +46,7 @@ my $BAK_UPLOAD_DIR = "$BAK_DIR/upload";
 my $STATS_MACHINE_NAME_FILE = "$BAK_DIR/stats-machine-name";
 
 my $MODE_BUILD_SCORES = "build-scores";
+my $MODE_BUILD_STATS = "build-stats";
 my $MODE_BACKUP_STATS = "backup-stats";
 my $MODE_RENAME_EMPTY_UPLOAD = "rename-empty-upload";
 my $MODE_TOUCH_XML = "touch-xml";
@@ -94,6 +95,8 @@ my $USAGE = "Usage:
     -write scores, one score per file, to
       $BAK_SCORES_DIR/
     -set mtime of score files to parsed epoch
+
+  $EXEC [OPTS] --build-stats
 
   $EXEC [OPTS] --backup-stats [BAK_NAME]
     -parse $SM_STATS_XML_FILE
@@ -172,6 +175,8 @@ sub main(@){
       exit 0;
     }elsif($arg =~ /^(--build-scores)$/){
       $mode = $MODE_BUILD_SCORES;
+    }elsif($arg =~ /^(--build-stats)$/){
+      $mode = $MODE_BUILD_STATS;
     }elsif($arg =~ /^(--backup-stats)$/){
       $mode = $MODE_BACKUP_STATS;
     }elsif($arg =~ /^(--rename-empty-upload)$/){
@@ -200,6 +205,7 @@ sub main(@){
     for my $scoreEntry(@scoreEntries){
       writeScoreEntryFile($scoreEntry);
     }
+  }elsif($mode eq $MODE_BUILD_STATS){
   }elsif($mode eq $MODE_BACKUP_STATS){
     my $statsXmlFile = $SM_STATS_XML_FILE;
 
