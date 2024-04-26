@@ -13,9 +13,10 @@ sub isEmptyUploadFile($);
 sub extractEpochFromScoresFile($);
 sub extractEpochFromStatsFile($);
 sub extractEpochFromUploadFile($);
-sub getScoreEntries($$);
+sub getScoreEntries($$$);
 sub extractScoreEntriesFromStats($);
 sub extractScoreEntriesFromUpload($);
+sub extractScoreEntriesFromScore($);
 sub reduceScoreEntries(@);
 sub parseScoreDetails($);
 sub getScoreEntryID($);
@@ -195,7 +196,7 @@ sub main(@){
   }
 
   if($mode eq $MODE_BUILD_SCORES){
-    my @scoreEntries = getScoreEntries($useUpload, $useStats);
+    my @scoreEntries = getScoreEntries($useUpload, $useStats, 0);
     for my $scoreEntry(@scoreEntries){
       writeScoreEntryFile($scoreEntry);
     }
@@ -376,8 +377,8 @@ sub extractEpochFromUploadFile($){
   return $epoch;
 }
 
-sub getScoreEntries($$){
-  my ($useUpload, $useStats) = @_;
+sub getScoreEntries($$$){
+  my ($useUpload, $useStats, $useScores) = @_;
   my @scoreEntries;
   if($useUpload){
     for my $file(grep {-f $_} glob "$BAK_UPLOAD_DIR/*.xml"){
@@ -391,6 +392,11 @@ sub getScoreEntries($$){
     }
   }
 
+  if($useScores){
+    for my $file(grep {-f $_} glob "$BAK_SCORES_DIR/*.xml"){
+      @scoreEntries = (@scoreEntries, extractScoreEntriesFromScore($file));
+    }
+  }
   @scoreEntries = reduceScoreEntries(@scoreEntries);
 
   return @scoreEntries;
@@ -508,6 +514,29 @@ sub extractScoreEntriesFromUpload($){
 
   if(@scoreEntries == 0 and not isEmptyUploadFile($uploadFile)){
     die "ERROR: no score entries found in non-empty upload-file $uploadFile\n";
+  }
+
+  return @scoreEntries;
+}
+
+#same syntax as upload file, except one per file max
+sub extractScoreEntriesFromScore($){
+  my ($scoreFile) = @_;
+  my @scoreEntries = extractScoreEntriesFromUpload($scoreFile);
+
+  if(@scoreEntries != 1){
+    die "ERROR: score file must contain exactly one score '$scoreFile'\n";
+  }
+
+  my $playerNumFromFilename;
+  if($scoreFile =~ /_p([012])_/){
+    $playerNumFromFilename = $1;
+  }else{
+    die "ERROR: could not parse PLAYER_NUM from $scoreFile\n";
+  }
+
+  for my $scoreEntry(@scoreEntries){
+    $$scoreEntry{playerNum} = $playerNumFromFilename;
   }
 
   return @scoreEntries;
