@@ -13,6 +13,7 @@ sub isEmptyUploadFile($);
 sub extractEpochFromScoresFile($);
 sub extractEpochFromStatsFile($);
 sub extractEpochFromUploadFile($);
+sub extractCaloriesByDateFromStats($);
 sub getScoreEntries($$$);
 sub extractScoreEntriesFromStats($);
 sub extractScoreEntriesFromUpload($);
@@ -206,6 +207,16 @@ sub main(@){
       writeScoreEntryFile($scoreEntry);
     }
   }elsif($mode eq $MODE_BUILD_STATS){
+    my $maxCalsByDate = {};
+    for my $file(grep {-f $_} glob "$BAK_STATS_DIR/*.xml"){
+      my $calsByDate = extractCaloriesByDateFromStats($file);
+      for my $date(sort keys %$calsByDate){
+        my $cals = $$calsByDate{$date};
+        if(not defined $$maxCalsByDate{$date} or $$maxCalsByDate{$date} <= $cals){
+          $$maxCalsByDate{$date} = $cals;
+        }
+      }
+    }
   }elsif($mode eq $MODE_BACKUP_STATS){
     my $statsXmlFile = $SM_STATS_XML_FILE;
 
@@ -381,6 +392,21 @@ sub extractEpochFromUploadFile($){
     }
   }
   return $epoch;
+}
+
+sub extractCaloriesByDateFromStats($){
+  my ($statsFile) = @_;
+  my $caloriesByDate = {};
+  my $dom = XML::LibXML->load_xml(location => $statsFile);
+  for my $cbNode($dom->findnodes("Stats/CalorieData/CaloriesBurned")){
+    my $date = $cbNode->getAttribute("Date");
+    my $cal = $cbNode->findvalue(".");
+    if(defined $$caloriesByDate{$date}){
+      die "ERROR: duplicate <CaloriesBurned> Date value $date in $statsFile\n";
+    }
+    $$caloriesByDate{$date} = $cal;
+  }
+  return $caloriesByDate;
 }
 
 sub getScoreEntries($$$){
