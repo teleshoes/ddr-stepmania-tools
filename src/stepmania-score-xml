@@ -217,6 +217,13 @@ sub main(@){
         }
       }
     }
+
+    my $machineName = readFile $STATS_MACHINE_NAME_FILE;
+    chomp $machineName;
+    my $srcStatsFile = "$BAK_STATS_DIR/stats_$machineName.xml";
+    if(not -e $srcStatsFile){
+      die "ERROR: missing source stats file $srcStatsFile\n";
+    }
   }elsif($mode eq $MODE_BACKUP_STATS){
     my $statsXmlFile = $SM_STATS_XML_FILE;
 
