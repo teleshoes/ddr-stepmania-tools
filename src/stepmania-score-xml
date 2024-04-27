@@ -406,6 +406,17 @@ sub buildStatsGeneralDataXML($$@){
         . "</Style>\n"
         . "</NumSongsPlayedByStyle>"
       ;
+    }elsif($tagName eq "NumSongsPlayedByDifficulty"){
+      $xml .= ""
+        . "<NumSongsPlayedByDifficulty>\n"
+        .   wrapTag("Beginner", int(grep {$$_{smDiff} eq "Beginner"} @scoreEntries)) . "\n"
+        .   wrapTag("Easy", int(grep {$$_{smDiff} eq "Easy"} @scoreEntries)) . "\n"
+        .   wrapTag("Medium", int(grep {$$_{smDiff} eq "Medium"} @scoreEntries)) . "\n"
+        .   wrapTag("Hard", int(grep {$$_{smDiff} eq "Hard"} @scoreEntries)) . "\n"
+        .   wrapTag("Challenge", int(grep {$$_{smDiff} eq "Challenge"} @scoreEntries)) . "\n"
+        .   wrapTag("Edit", int(grep {$$_{smDiff} eq "Edit"} @scoreEntries)) . "\n"
+        . "</NumSongsPlayedByDifficulty>"
+      ;
     }else{
       $xml .= $node->toString();
     }
