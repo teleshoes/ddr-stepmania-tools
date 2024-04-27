@@ -395,6 +395,17 @@ sub buildStatsGeneralDataXML($$@){
         .   wrapTag("Regular", 0+@scoreEntries) . "\n"
         . "</NumSongsPlayedByPlayMode>"
       ;
+    }elsif($tagName eq "NumSongsPlayedByStyle"){
+      $xml .= ""
+        . "<NumSongsPlayedByStyle>\n"
+        . "<Style Game='dance' Style='double'>"
+        .   int(grep {$$_{game} eq "doubles"} @scoreEntries)
+        . "</Style>\n"
+        . "<Style Game='dance' Style='single'>"
+        .   int(grep {$$_{game} eq "singles"} @scoreEntries)
+        . "</Style>\n"
+        . "</NumSongsPlayedByStyle>"
+      ;
     }else{
       $xml .= $node->toString();
     }
