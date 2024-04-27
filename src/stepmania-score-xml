@@ -116,6 +116,19 @@ my $USAGE = "Usage:
     -set mtime of score files to parsed epoch
 
   $EXEC [OPTS] --build-stats
+    -re-parse scores from generated scores XML files
+      $BAK_SCORES_DIR/*.xml
+    -extract max <CaloriesBurned> by date from all <CalorieData> in stats XML files
+      $BAK_STATS_DIR/*.xml
+    -get MACHINE_NAME name from $STATS_MACHINE_NAME_FILE
+    -find the CURRENT_MACHINE_STATS_XML file for the current MACHINE_NAME
+      $BAK_STATS_DIR/stats_<MACHINE_NAME>.xml
+    -generate new stats XML
+      -copy <CURRENT_MACHINE_STATS_XML>
+      -replace score+calorie statistic related elements in <GeneralData>
+      -completely remove and replace <SongScores> element with parsed scores
+      -remove and replace <CalorieData> element
+    -write to $SM_STATS_XML_FILE.generated
 
   $EXEC [OPTS] --backup-stats [BAK_NAME]
     -parse $SM_STATS_XML_FILE
@@ -242,10 +255,17 @@ sub main(@){
     if(not -e $srcStatsFile){
       die "ERROR: missing source stats file $srcStatsFile\n";
     }
+
     my @scoreEntries = getScoreEntries(0, 0, 1);
 
     my $xml = buildStatsXML($srcStatsFile, $maxCalsByDate, @scoreEntries);
+    $xml =~ s/\n/\r\n/g;
 
+    my $targetStatsFile = "$SM_STATS_XML_FILE.generated";
+    print "writing $targetStatsFile\n";
+    open FH, "> $targetStatsFile" or die "ERROR: could not write $targetStatsFile\n$!\n";
+    print FH $xml;
+    close FH;
   }elsif($mode eq $MODE_BACKUP_STATS){
     my $statsXmlFile = $SM_STATS_XML_FILE;
 
