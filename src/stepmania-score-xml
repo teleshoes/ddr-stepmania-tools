@@ -7,9 +7,12 @@ use XML::LibXML;
 use Date::Format qw(time2str);
 use Date::Parse qw(str2time);
 use Digest::MD5;
+use List::Util qw(sum);
 
 sub buildStatsXML($$@);
 sub buildStatsGeneralDataXml($$@);
+sub wrapTag($$);
+sub sumScoreAtt($@);
 sub writeScoreEntryFile($);
 sub isEmptyUploadFile($);
 sub extractEpochFromScoresFile($);
@@ -324,6 +327,10 @@ sub main(@){
 sub buildStatsXML($$@){
   my ($srcStatsFile, $caloriesByDate, @scoreEntries) = @_;
 
+  for my $scoreEntry(@scoreEntries){
+    parseScoreDetails($scoreEntry);
+  }
+
   my $dom = XML::LibXML->load_xml(location => $srcStatsFile);
   my $statsNode = getSingleNode($dom, "Stats");
 
@@ -352,11 +359,26 @@ sub buildStatsGeneralDataXML($$@){
   my $xml = "";
   $xml .= "<GeneralData>";
   for my $node($genDataNode->childNodes()){
-    $xml .= $node->toString();
+    my $tagName = $node->nodeName();
+    if($tagName eq "TotalGameplaySeconds"){
+      $xml .= wrapTag($tagName, int(sumScoreAtt("surviveSeconds", @scoreEntries)));
+    }else{
+      $xml .= $node->toString();
+    }
   }
   $xml .= "</GeneralData>";
 
   return $xml;
+}
+
+sub wrapTag($$){
+  my ($tagName, $value) = @_;
+  return "<$tagName>$value</$tagName>";
+}
+
+sub sumScoreAtt($@){
+  my ($scoreDetailsAttName, @scoreEntries) = @_;
+  return sum(map {$$_{scoreDetails}{$scoreDetailsAttName}} @scoreEntries);
 }
 
 sub writeScoreEntryFile($){
