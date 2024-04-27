@@ -7,7 +7,7 @@ use XML::LibXML;
 use Date::Format qw(time2str);
 use Date::Parse qw(str2time);
 use Digest::MD5;
-use List::Util qw(sum);
+use List::Util qw(reduce sum);
 
 sub buildStatsXML($$@);
 sub buildStatsGeneralDataXml($$@);
@@ -40,6 +40,7 @@ sub cleanStr($);
 sub assertPresent($@);
 sub assertDateTime($$);
 sub assertMd5sumMatches($$);
+sub maxBy($@);
 sub readFile($);
 sub md5sum($);
 sub mtime($);
@@ -503,9 +504,15 @@ sub buildStatsSongScoresXML(@){
       for my $smDiff(@smDiffs){
         my @stepScores = @{$$scoresByGameByDiff{$game}{$smDiff}};
 
+        my $latestScoreEntryByEpoch =
+          maxBy(sub {${$_[0]}{epoch}}, @stepScores);
+
+        my $lastPlayed = time2str("%Y-%m-%d", $$latestScoreEntryByEpoch{epoch});
+
         $xml .= ""
           . "<Steps Difficulty='$smDiff' StepsType='$gameStepsType'>\n"
           . "<HighScoreList>\n"
+          . "<LastPlayed>$lastPlayed</LastPlayed>\n"
         ;
         for my $scoreEntry(@stepScores){
           $xml .= formatHighScoreNode($$scoreEntry{scoreNode});
@@ -1100,6 +1107,11 @@ sub assertMd5sumMatches($$){
   if(not defined $csum1 or not defined $csum2 or $csum1 ne $csum2){
     die "ERROR: checksum mismatch '$f1' vs '$f2'\n";
   }
+}
+
+sub maxBy($@){
+  my ($fct, @elems) = @_;
+  return reduce(sub{&$fct($a) >= &$fct($b) ? $a : $b}, @elems);
 }
 
 sub readFile($){
