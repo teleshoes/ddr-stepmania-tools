@@ -477,6 +477,10 @@ sub buildStatsSongScoresXML(@){
 
   for my $songDir(@songDirs){
     my @songScores = @{$$scoreEntriesBySongDir{$songDir}};
+    my $firstSongScore = $songScores[0];
+
+    $xml .= "<Song" . formatAttributeStr($$firstSongScore{songNode}->getAttributes()) . ">\n";
+
     my $scoresByGameByDiff = {};
     for my $scoreEntry(@songScores){
       my ($game, $smDiff) = ($$scoreEntry{game}, $$scoreEntry{smDiff});
@@ -492,14 +496,30 @@ sub buildStatsSongScoresXML(@){
     my @games = sort keys %$scoresByGameByDiff;
 
     for my $game(@games){
+      my $gameStepsType = $game =~ /double/ ? "dance-double" : "dance-single";
+
       my @smDiffs = sort keys %{$$scoresByGameByDiff{$game}};
 
       for my $smDiff(@smDiffs){
         my @stepScores = @{$$scoresByGameByDiff{$game}{$smDiff}};
+
+        $xml .= ""
+          . "<Steps Difficulty='$smDiff' StepsType='$gameStepsType'>\n"
+          . "<HighScoreList>\n"
+        ;
         for my $scoreEntry(@stepScores){
+          $xml .= formatHighScoreNode($$scoreEntry{scoreNode});
         }
+        $xml .= ""
+          . "</HighScoreList>\n"
+          . "</Steps>\n"
+        ;
       }
     }
+
+    $xml .= ""
+      . "</Song>\n"
+    ;
   }
 
   $xml .= "</SongScores>";
