@@ -29,7 +29,6 @@ sub reduceScoreEntries(@);
 sub parseScoreDetails($);
 sub calculateDancePoints($);
 sub getScoreEntryID($);
-sub getMoreFullStepsNode($$);
 sub getSingleNode($$);
 sub getSingleChildByTagName($$);
 sub convertStepsTypeToGame($);
@@ -903,14 +902,9 @@ sub reduceScoreEntries(@){
         push @scoreIDGroups, [@group];
       }
 
-      #de-dupe and combine
+      #take the first score from each group as-is
       for my $group(@scoreIDGroups){
         my $entry = shift @$group;
-
-        #include the most full stepsNode from all the dupes
-        for my $otherEntry(@$group){
-          $$entry{stepsNode} = getMoreFullStepsNode($$entry{stepsNode}, $$otherEntry{stepsNode});
-        }
         push @uniqScoreEntries, $entry;
       }
     }
@@ -1001,38 +995,6 @@ sub getScoreEntryID($){
   $id .= "$$scoreEntry{songDir}|";
 
   return $id;
-}
-
-sub getMoreFullStepsNode($$){
-  my ($n1, $n2) = @_;
-  my $desc1 = $n1->getAttribute("OnlineDescription");
-  my $desc2 = $n2->getAttribute("OnlineDescription");
-  my $ct1 = $n1->getAttribute("ChartType");
-  my $ct2 = $n2->getAttribute("ChartType");
-
-  $desc1 = "" if not defined $desc1;
-  $desc2 = "" if not defined $desc2;
-  $ct1 = "" if not defined $ct1;
-  $ct2 = "" if not defined $ct2;
-
-  my $len1 = length $n1->toString();
-  my $len2 = length $n2->toString();
-
-  if($desc1 ne "" and $desc2 eq ""){
-    return $n1;
-  }elsif($desc1 eq "" and $desc2 ne ""){
-    return $n2;
-  }elsif($ct1 ne "" and $ct2 eq ""){
-    return $n1;
-  }elsif($ct1 eq "" and $ct2 ne ""){
-    return $n2;
-  }elsif($len1 > $len2){
-    return $n1;
-  }elsif($len1 < $len2){
-    return $n2;
-  }else{
-    return $n1;
-  }
 }
 
 sub getSingleNode($$){
