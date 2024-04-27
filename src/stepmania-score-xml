@@ -362,6 +362,8 @@ sub buildStatsGeneralDataXML($$@){
     my $tagName = $node->nodeName();
     if($tagName eq "TotalGameplaySeconds"){
       $xml .= wrapTag($tagName, int(sumScoreAtt("surviveSeconds", @scoreEntries)));
+    }elsif($tagName eq "TotalCaloriesBurned"){
+      $xml .= wrapTag($tagName, sprintf("%.6f", sum(values %$caloriesByDate)));
     }else{
       $xml .= $node->toString();
     }
