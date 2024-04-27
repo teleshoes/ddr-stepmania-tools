@@ -367,6 +367,13 @@ sub buildStatsGeneralDataXML($$@){
   my ($genDataNode, $caloriesByDate, @scoreEntries) = @_;
   my @passedEntries = grep{$$_{scoreDetails}{grade} !~ /fail/i} @scoreEntries;
 
+  my %gradeCounts;
+  for my $scoreEntry(@scoreEntries){
+    my $grade = $$scoreEntry{scoreDetails}{grade};
+    $gradeCounts{$grade} = 0 if not defined $gradeCounts{$grade};
+    $gradeCounts{$grade}++;
+  }
+
   my $xml = "";
   $xml .= "<GeneralData>";
   for my $node($genDataNode->childNodes()){
@@ -427,6 +434,14 @@ sub buildStatsGeneralDataXML($$@){
         .   wrapTag("Regular", int(@passedEntries)) . "\n"
         . "</NumSongsPassedByPlayMode>"
       ;
+    }elsif($tagName eq "NumStagesPassedByGrade"){
+      $xml .= "<NumStagesPassedByGrade>\n";
+      for my $grade(sort keys %gradeCounts){
+        next if $grade =~ /fail/i;
+        my $count = $gradeCounts{$grade};
+        $xml .= wrapTag($grade, $count) . "\n";
+      }
+      $xml .= "</NumStagesPassedByGrade>";
     }else{
       $xml .= $node->toString();
     }
