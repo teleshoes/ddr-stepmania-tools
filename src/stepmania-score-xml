@@ -74,6 +74,14 @@ my @SCORE_DETAILS_ATT_ARR = (
   countHeld           => "HoldNoteScores/Held",
   countLetGo          => "HoldNoteScores/LetGo",
   countMissedHold     => "HoldNoteScores/MissedHold",
+  radarTapsAndHolds   => "RadarValues/TapsAndHolds",
+  radarJumps          => "RadarValues/Jumps",
+  radarHolds          => "RadarValues/Holds",
+  radarMines          => "RadarValues/Mines",
+  radarHands          => "RadarValues/Hands",
+  radarRolls          => "RadarValues/Rolls",
+  radarLifts          => "RadarValues/Lifts",
+  radarFakes          => "RadarValues/Fakes",
 );
 my @SCORE_DETAILS_ATT_NAMES = map {$SCORE_DETAILS_ATT_ARR[$_]}
                               grep {$_%2==0} 0..$#SCORE_DETAILS_ATT_ARR;
