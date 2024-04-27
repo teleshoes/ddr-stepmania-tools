@@ -443,7 +443,13 @@ sub buildStatsGeneralDataXML($$@){
       }
       $xml .= "</NumStagesPassedByGrade>";
     }else{
-      $xml .= $node->toString();
+      my $xmlStr = $node->toString();
+      if($tagName =~ /(DisplayName|CharacterID|LastUsedHighScoreName)$/){
+        $xmlStr =~ s/^<$tagName\/>$/<$tagName><\/$tagName>/;
+      }elsif($tagName eq "Song"){
+        $xmlStr =~ s/Dir=""/Dir=''/;
+      }
+      $xml .= $xmlStr;
     }
   }
   $xml .= "</GeneralData>";
