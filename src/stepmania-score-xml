@@ -389,6 +389,12 @@ sub buildStatsGeneralDataXML($$@){
       $xml .= wrapTag($tagName, int(sumScoreAtt("radarHands", @scoreEntries)));
     }elsif($tagName eq "TotalLifts"){
       $xml .= wrapTag($tagName, int(sumScoreAtt("radarLifts", @scoreEntries)));
+    }elsif($tagName eq "NumSongsPlayedByPlayMode"){
+      $xml .= ""
+        . "<NumSongsPlayedByPlayMode>\n"
+        .   wrapTag("Regular", 0+@scoreEntries) . "\n"
+        . "</NumSongsPlayedByPlayMode>"
+      ;
     }else{
       $xml .= $node->toString();
     }
