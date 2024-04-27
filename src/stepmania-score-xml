@@ -523,6 +523,7 @@ sub buildStatsSongScoresXML(@){
         $xml .= ""
           . "<Steps Difficulty='$smDiff' StepsType='$gameStepsType'>\n"
           . "<HighScoreList>\n"
+          . "<NumTimesPlayed>" . (0+@stepScores) . "</NumTimesPlayed>\n"
           . "<LastPlayed>$lastPlayed</LastPlayed>\n"
           . "<HighGrade>$highGrade</HighGrade>\n"
         ;
