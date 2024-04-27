@@ -528,6 +528,10 @@ sub buildStatsSongScoresXML(@){
 
       for my $smDiff(@smDiffs){
         my @stepScores = @{$$scoresByGameByDiff{$game}{$smDiff}};
+        @stepScores = sort {
+          $$b{percentDP} <=> $$a{percentDP}  #highest score first
+          || $$b{epoch} <=> $$a{epoch}       #newest first as tie-breaker
+        } @stepScores;
 
         my @passedStepScores = grep{$$_{scoreDetails}{grade} !~ /fail/i} @stepScores;
 
