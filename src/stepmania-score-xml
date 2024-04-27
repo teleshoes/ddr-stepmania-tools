@@ -9,6 +9,7 @@ use Date::Parse qw(str2time);
 use Digest::MD5;
 
 sub buildStatsXML($$@);
+sub buildStatsGeneralDataXml($$@);
 sub writeScoreEntryFile($);
 sub isEmptyUploadFile($);
 sub extractEpochFromScoresFile($);
@@ -332,10 +333,27 @@ sub buildStatsXML($$@){
   ;
 
   for my $node($statsNode->childNodes()){
-    $xml .= $node->toString();
+    my $tagName = $node->nodeName();
+    if($tagName eq "GeneralData"){
+      $xml .= buildStatsGeneralDataXML($node, $caloriesByDate, @scoreEntries);
+    }else{
+      $xml .= $node->toString();
+    }
   }
 
   $xml .= "</Stats>\n";
+
+  return $xml;
+}
+
+sub buildStatsGeneralDataXML($$@){
+  my ($genDataNode, $caloriesByDate, @scoreEntries) = @_;
+  my $xml = "";
+  $xml .= "<GeneralData>";
+  for my $node($genDataNode->childNodes()){
+    $xml .= $node->toString();
+  }
+  $xml .= "</GeneralData>";
 
   return $xml;
 }
