@@ -12,6 +12,7 @@ use List::Util qw(reduce sum);
 sub buildStatsXML($$@);
 sub buildStatsGeneralDataXml($$@);
 sub buildStatsSongScoresXML(@);
+sub buildStatsCalorieDataXML($);
 sub wrapTag($$);
 sub sumScoreAtt($@);
 sub writeScoreEntryFile($);
@@ -357,6 +358,8 @@ sub buildStatsXML($$@){
       $xml .= buildStatsGeneralDataXML($node, $caloriesByDate, @scoreEntries);
     }elsif($tagName eq "SongScores"){
       $xml .= buildStatsSongScoresXML(@scoreEntries);
+    }elsif($tagName eq "CalorieData"){
+      $xml .= buildStatsCalorieDataXML($caloriesByDate);
     }else{
       $xml .= $node->toString();
     }
@@ -573,6 +576,17 @@ sub buildStatsSongScoresXML(@){
 
   $xml .= "</SongScores>";
 
+  return $xml;
+}
+
+sub buildStatsCalorieDataXML($){
+  my ($caloriesByDate) = @_;
+  my $xml = "<CalorieData>\n";
+  for my $date(sort keys %$caloriesByDate){
+    my $cal = $$caloriesByDate{$date};
+    $xml .= "<CaloriesBurned Date='$date'>$cal<\/CaloriesBurned>\n";
+  }
+  $xml .= "</CalorieData>";
   return $xml;
 }
 
