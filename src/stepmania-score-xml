@@ -25,6 +25,7 @@ sub extractScoreEntriesFromUpload($);
 sub extractScoreEntriesFromScore($);
 sub reduceScoreEntries(@);
 sub parseScoreDetails($);
+sub calculateDancePoints($);
 sub getScoreEntryID($);
 sub getMoreFullStepsNode($$);
 sub getSingleNode($$);
@@ -364,6 +365,8 @@ sub buildStatsGeneralDataXML($$@){
       $xml .= wrapTag($tagName, int(sumScoreAtt("surviveSeconds", @scoreEntries)));
     }elsif($tagName eq "TotalCaloriesBurned"){
       $xml .= wrapTag($tagName, sprintf("%.6f", sum(values %$caloriesByDate)));
+    }elsif($tagName eq "TotalDancePoints"){
+      $xml .= wrapTag($tagName, sum(map {calculateDancePoints($_)} @scoreEntries));
     }else{
       $xml .= $node->toString();
     }
@@ -752,6 +755,17 @@ sub parseScoreDetails($){
   }
 
   $$scoreEntry{scoreDetails} = $details;
+}
+
+sub calculateDancePoints($){
+  my ($scoreEntry) = @_;
+  return 0
+    + $$scoreEntry{scoreDetails}{countW1}      * 3
+    + $$scoreEntry{scoreDetails}{countW2}      * 2
+    + $$scoreEntry{scoreDetails}{countW3}      * 1
+    + $$scoreEntry{scoreDetails}{countHeld}    * 3
+    + $$scoreEntry{scoreDetails}{countHitMine} * -2
+  ;
 }
 
 sub getScoreEntryID($){
