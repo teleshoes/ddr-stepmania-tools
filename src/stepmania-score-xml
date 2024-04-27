@@ -375,6 +375,20 @@ sub buildStatsGeneralDataXML($$@){
       $xml .= wrapTag($tagName, sprintf("%.6f", sum(values %$caloriesByDate)));
     }elsif($tagName eq "TotalDancePoints"){
       $xml .= wrapTag($tagName, sum(map {calculateDancePoints($_)} @scoreEntries));
+    }elsif($tagName eq "TotalTapsAndHolds"){
+      $xml .= wrapTag($tagName, int(sumScoreAtt("radarTapsAndHolds", @scoreEntries)));
+    }elsif($tagName eq "TotalJumps"){
+      $xml .= wrapTag($tagName, int(sumScoreAtt("radarJumps", @scoreEntries)));
+    }elsif($tagName eq "TotalHolds"){
+      $xml .= wrapTag($tagName, int(sumScoreAtt("radarHolds", @scoreEntries)));
+    }elsif($tagName eq "TotalRolls"){
+      $xml .= wrapTag($tagName, int(sumScoreAtt("radarRolls", @scoreEntries)));
+    }elsif($tagName eq "TotalMines"){
+      $xml .= wrapTag($tagName, int(sumScoreAtt("radarMines", @scoreEntries)));
+    }elsif($tagName eq "TotalHands"){
+      $xml .= wrapTag($tagName, int(sumScoreAtt("radarHands", @scoreEntries)));
+    }elsif($tagName eq "TotalLifts"){
+      $xml .= wrapTag($tagName, int(sumScoreAtt("radarLifts", @scoreEntries)));
     }else{
       $xml .= $node->toString();
     }
