@@ -464,6 +464,19 @@ sub buildStatsGeneralDataXML($$@){
 sub buildStatsSongScoresXML(@){
   my @scoreEntries = @_;
 
+  my $gameSortOrder = {
+    singles => 1,
+    doubles => 2,
+  };
+  my $smDiffSortOrder = {
+    Beginner  => 1,
+    Easy      => 2,
+    Medium    => 3,
+    Hard      => 4,
+    Challenge => 5,
+    Edit      => 6,
+  };
+
   my $scoreEntriesBySongDir = {};
   for my $scoreEntry(@scoreEntries){
     my $songDir = $$scoreEntry{songDir};
@@ -494,12 +507,24 @@ sub buildStatsSongScoresXML(@){
       push @{$$scoresByGameByDiff{$game}{$smDiff}}, $scoreEntry;
     }
 
-    my @games = sort keys %$scoresByGameByDiff;
+    my @games = sort {
+      my $aOrder = $$gameSortOrder{$a};
+      my $bOrder = $$gameSortOrder{$b};
+      $aOrder = 0 if not defined $aOrder;
+      $bOrder = 0 if not defined $bOrder;
+      return $aOrder <=> $bOrder;
+    } keys %$scoresByGameByDiff;
 
     for my $game(@games){
       my $gameStepsType = $game =~ /double/ ? "dance-double" : "dance-single";
 
-      my @smDiffs = sort keys %{$$scoresByGameByDiff{$game}};
+      my @smDiffs = sort {
+        my $aOrder = $$smDiffSortOrder{$a};
+        my $bOrder = $$smDiffSortOrder{$b};
+        $aOrder = 0 if not defined $aOrder;
+        $bOrder = 0 if not defined $bOrder;
+        return $aOrder <=> $bOrder;
+      } keys %{$$scoresByGameByDiff{$game}};
 
       for my $smDiff(@smDiffs){
         my @stepScores = @{$$scoresByGameByDiff{$game}{$smDiff}};
