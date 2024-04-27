@@ -504,15 +504,27 @@ sub buildStatsSongScoresXML(@){
       for my $smDiff(@smDiffs){
         my @stepScores = @{$$scoresByGameByDiff{$game}{$smDiff}};
 
+        my @passedStepScores = grep{$$_{scoreDetails}{grade} !~ /fail/i} @stepScores;
+
         my $latestScoreEntryByEpoch =
           maxBy(sub {${$_[0]}{epoch}}, @stepScores);
+        my $maxAnyScoreEntryByPercentDP =
+          maxBy(sub {${$_[0]}{scoreDetails}{percentDP}}, @stepScores);
+        my $maxPassedScoreEntryByPercentDP =
+          maxBy(sub {${$_[0]}{scoreDetails}{percentDP}}, @passedStepScores);
 
         my $lastPlayed = time2str("%Y-%m-%d", $$latestScoreEntryByEpoch{epoch});
+
+        my $highScoreEntry = $maxPassedScoreEntryByPercentDP;
+        $highScoreEntry = $maxAnyScoreEntryByPercentDP if not defined $highScoreEntry;
+
+        my $highGrade = $$highScoreEntry{scoreDetails}{grade};
 
         $xml .= ""
           . "<Steps Difficulty='$smDiff' StepsType='$gameStepsType'>\n"
           . "<HighScoreList>\n"
           . "<LastPlayed>$lastPlayed</LastPlayed>\n"
+          . "<HighGrade>$highGrade</HighGrade>\n"
         ;
         for my $scoreEntry(@stepScores){
           $xml .= formatHighScoreNode($$scoreEntry{scoreNode});
