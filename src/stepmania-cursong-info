@@ -378,6 +378,8 @@ sub getSongInfo($$$){
     $$info{smartTimings} = "?";
   }
 
+  system "stepmania-score-xml", "--build-scores", "--fast";
+
   my @xmlFiles = findXmlFiles($songDir, $smGame, $smDiff);
   @xmlFiles = reverse @xmlFiles;
   if(@xmlFiles > $XML_SCORE_LIMIT){
