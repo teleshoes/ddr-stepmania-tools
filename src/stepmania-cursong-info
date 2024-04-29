@@ -10,7 +10,7 @@ my $DEFAULT_USE_TERM_COLOR = -t STDOUT;
 my $CURSONG_FILE_P1 = "$ENV{HOME}/.cache/stepmania-selected-song-p1";
 my $PREFS_INI = "$ENV{HOME}/.stepmania/Save/Preferences.ini";
 my $OUTFOX_PREFS_INI = "$ENV{HOME}/.stepmania/Save/OutFoxPrefs.ini";
-my $XML_UPLOAD_DIR = "$ENV{HOME}/.stepmania/Save/Upload";
+my $XML_UPLOAD_DIR = "$ENV{HOME}/.cache/stepmania-score-xml/upload";
 my $SONG_PARENT_DIR = "$ENV{HOME}/Games/stepmania/latest";
 
 my $RECENT_MILLIS = 6 * 60 * 60 * 1000; #SIX HOURS
