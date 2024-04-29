@@ -7,7 +7,7 @@ use XML::LibXML;
 use Date::Format qw(time2str);
 use Date::Parse qw(str2time);
 use Digest::MD5;
-use List::Util qw(reduce sum);
+use List::Util qw(max reduce sum);
 
 sub buildStatsXML($$@);
 sub buildStatsGeneralDataXml($$@);
@@ -21,7 +21,7 @@ sub extractEpochFromScoresFile($);
 sub extractEpochFromStatsFile($);
 sub extractEpochFromUploadFile($);
 sub extractCaloriesByDateFromStats($);
-sub getScoreEntries($$$);
+sub getScoreEntries($$$$);
 sub extractScoreEntriesFromStats($);
 sub extractScoreEntriesFromUpload($);
 sub extractScoreEntriesFromScore($);
@@ -101,6 +101,9 @@ my $USAGE = "Usage:
         $BAK_UPLOAD_DIR/*.xml
       -include stats files (NOT included by default), only if --use-stats is given
         $BAK_STATS_DIR/*.xml
+    -if --skip-old is given:
+      -skip any files older than the latest file in:
+        $BAK_SCORES_DIR/*.xml
     -extract epoch from <DateTime> tag, and extract score details
     -remove duplicate scores
       -check for same epoch, PercentDP, simfile+game+difficulty, and tap/hold note counts
@@ -184,6 +187,13 @@ my $USAGE = "Usage:
     --no-use-upload
       do not include $BAK_UPLOAD_DIR/*.xml when building scores
 
+    --skip-old | --fast
+      in --build-scores:
+        skip parsing any XML input file older than the newest score in:
+          $BAK_SCORES_DIR/*.xml
+    --no-skip-old | --slow | --all
+      do not skip any XML files in --build-scores
+
     --use-stats
       include $BAK_STATS_DIR/*.xml when building scores
     --no-use-stats
@@ -199,6 +209,7 @@ sub main(@){
   my $statsBakName = undef;
   my $useUpload = 1;
   my $useStats = 0;
+  my $skipOld = 0;
   my $useGit = 1;
   while(@_ > 0){
     my $arg = shift @_;
@@ -223,6 +234,10 @@ sub main(@){
       $useStats = 1;
     }elsif($arg =~ /^(--no-use-stats)$/){
       $useStats = 0;
+    }elsif($arg =~ /^(--skip-old|--fast)$/){
+      $skipOld = 1;
+    }elsif($arg =~ /^(--no-skip-old|--slow|--all)$/){
+      $skipOld = 0;
     }elsif($arg =~ /^(--no-git)$/){
       $useGit = 0;
     }elsif($mode eq $MODE_BACKUP_STATS and not defined $statsBakName and $arg =~ /^\w+$/){
@@ -233,7 +248,7 @@ sub main(@){
   }
 
   if($mode eq $MODE_BUILD_SCORES){
-    my @scoreEntries = getScoreEntries($useUpload, $useStats, 0);
+    my @scoreEntries = getScoreEntries($useUpload, $useStats, 0, $skipOld);
     for my $scoreEntry(@scoreEntries){
       writeScoreEntryFile($scoreEntry);
     }
@@ -256,7 +271,7 @@ sub main(@){
       die "ERROR: missing source stats file $srcStatsFile\n";
     }
 
-    my @scoreEntries = getScoreEntries(0, 0, 1);
+    my @scoreEntries = getScoreEntries(0, 0, 1, 0);
 
     my $xml = buildStatsXML($srcStatsFile, $maxCalsByDate, @scoreEntries);
     $xml =~ s/\n/\r\n/g;
@@ -722,23 +737,32 @@ sub extractCaloriesByDateFromStats($){
   return $caloriesByDate;
 }
 
-sub getScoreEntries($$$){
-  my ($useUpload, $useStats, $useScores) = @_;
+sub getScoreEntries($$$$){
+  my ($useUpload, $useStats, $useScores, $skipOld) = @_;
   my @scoreEntries;
+
+  my $maxMtime = undef;
+  if($skipOld){
+    $maxMtime = max(map {mtime($_)} glob "$BAK_SCORES_DIR/*.xml");
+  }
+
   if($useUpload){
     for my $file(grep {-f $_} glob "$BAK_UPLOAD_DIR/*.xml"){
+      next if defined $maxMtime and mtime($file) < $maxMtime;
       @scoreEntries = (@scoreEntries, extractScoreEntriesFromUpload($file));
     }
   }
 
   if($useStats){
     for my $file(grep {-f $_} glob "$BAK_STATS_DIR/*.xml"){
+      next if defined $maxMtime and mtime($file) < $maxMtime;
       @scoreEntries = (@scoreEntries, extractScoreEntriesFromStats($file));
     }
   }
 
   if($useScores){
     for my $file(grep {-f $_} glob "$BAK_SCORES_DIR/*.xml"){
+      next if defined $maxMtime and mtime($file) < $maxMtime;
       @scoreEntries = (@scoreEntries, extractScoreEntriesFromScore($file));
     }
   }
