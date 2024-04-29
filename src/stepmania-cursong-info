@@ -155,8 +155,13 @@ sub main(@){
         $CURSONG_FILE_P1,    #song selected in stepmania
         $XML_UPLOAD_DIR,     #new score file appeared in stepmania
       ;
-      if($? != 0){
-        die "inotifywait quit unexpectedly\n";
+      my $exitCode = $? >> 8;
+      if($exitCode == 1){
+        print STDERR "\n\nWARNING: inotifywait indicated an error, like file deletion\n";
+      }elsif($exitCode == 2){
+        print STDERR "\n\nWARNING: inotifywait timed out\n";
+      }elsif($exitCode != 0){
+        die "ERROR: inotifywait quit unexpectedly\n";
       }
       @xmlFiles = findRecentXmlFiles();
       my $newXmlCount = @xmlFiles;
