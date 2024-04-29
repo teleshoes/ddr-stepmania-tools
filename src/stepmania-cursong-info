@@ -10,6 +10,7 @@ my $DEFAULT_USE_TERM_COLOR = -t STDOUT;
 my $CURSONG_FILE_P1 = "$ENV{HOME}/.cache/stepmania-selected-song-p1";
 my $PREFS_INI = "$ENV{HOME}/.stepmania/Save/Preferences.ini";
 my $OUTFOX_PREFS_INI = "$ENV{HOME}/.stepmania/Save/OutFoxPrefs.ini";
+my $XML_SCORES_DIR = "$ENV{HOME}/.cache/stepmania-score-xml/scores";
 my $XML_UPLOAD_DIR = "$ENV{HOME}/.cache/stepmania-score-xml/upload";
 my $SONG_PARENT_DIR = "$ENV{HOME}/Games/stepmania/latest";
 
@@ -488,40 +489,34 @@ sub getDDRStepmaniaScoreAtts($$){
   return $xmlScores;
 }
 
+sub formatScoreFileSuffix($$$){
+  my ($songDir, $smGame, $smDiff) = @_;
+  $songDir =~ s/^(\/?Songs\/)//i;
+
+  my $game = undef;
+  $game = "singles" if $smGame =~ /single/i;
+  $game = "doubles" if $smGame =~ /double/i;
+  die "ERROR: cannot parse game $smGame\n" if not defined $game;
+
+  return cleanStr($songDir) . "_" . cleanStr($game) . "_" . cleanStr($smDiff);
+}
+
+sub cleanStr($){
+  my ($str) = @_;
+  $str = lc $str;
+  $str =~ s/'//g;
+  $str =~ s/[^a-z0-9]+/-/g;
+  $str =~ s/-+/-/g;
+  $str =~ s/^-//;
+  $str =~ s/-$//;
+  return $str;
+}
+
 sub findXmlFiles($$$){
   my ($songDir, $smGame, $smDiff) = @_;
 
-  my $songDirRegex = $songDir;
-  $songDirRegex =~ s/^\/*//;
-  $songDirRegex =~ s/\/*$//;
-  $songDirRegex =~ s/[^a-zA-Z0-9_\-\/ ]+/[^a-zA-Z0-9]*/g;
-  $songDirRegex = "/*$songDirRegex/*";
-
-  my $stepsTypeRegex = $smGame;
-  $stepsTypeRegex =~ s/[_-]/[_-]/g; #'_' => '[_-]',  '-' => '[_-]'
-  $stepsTypeRegex = "(?:StepsType[_-])?$stepsTypeRegex";
-
-  my $regex = ""
-    . "<Song Dir='$songDirRegex'/>"
-    . "[ \\t\\r\\n]*"
-    . "<Steps(?: .*)? Difficulty='$smDiff'(?: .*)? StepsType='$stepsTypeRegex'"
-    ;
-
-  my @grepCmd = ("pcre2grep",
-    "--multiline",
-    "--ignore-case",
-    "--files-with-matches",
-    "--recursive",
-    $regex,
-    $XML_UPLOAD_DIR,
-  );
-
-  open CMD, "-|", @grepCmd or die "ERROR: could not run @grepCmd\n";
-  my @files = <CMD>;
-  close CMD;
-
-  chomp foreach @files;
-  @files = grep {$_ =~ /^$XML_UPLOAD_DIR\/[^\/]*\.xml$/i} @files;
+  my $scoreFileSuffix = formatScoreFileSuffix($songDir, $smGame, $smDiff);
+  my @files = glob("$XML_SCORES_DIR/????-??-??_??????????_p?_$scoreFileSuffix.xml");
   return @files;
 }
 
