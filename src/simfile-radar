@@ -1167,7 +1167,14 @@ sub calculateNotesPerSecondInfo($$$){
         die "ERROR: segment max note rows exceeded\n";
       }
       if(defined $maxDurationNanoS and $segmentDurationNanoS > $maxDurationNanoS){
-        die "ERROR: segment max duration exceeded\n";
+        my $durSFmt = sprintf "%.1fs", $segmentDurationNanoS/1000000000;
+        my $maxDurSFmt = sprintf "%.1fs", $varInfo{MAX_DURATION_S};
+        print STDERR ""
+          . "\n"
+          . "WARNING: segment max duration exceeded for $varSuffix\n"
+          . "  $durSFmt > $maxDurSFmt"
+          . "  (this can happen if there is a large gap between notes)\n"
+        ;
       }
 
       my $segmentNoteCount = grep {$okNoteRows{$_}} $segmentStartRow..$segmentEndRow;
