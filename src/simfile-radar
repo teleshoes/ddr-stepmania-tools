@@ -287,6 +287,11 @@ my $usage = "Usage:
       this list is expanded from the measure-separated rows in the simfile
         (the simfile has between 4 and $ROWS_PER_MEASURE rows per measure,
          which is expanded to exactly $ROWS_PER_MEASURE rows per measure)
+      adjacent empty rows may be collapsed into a single row, formatted
+        <EMPTY_ROW>x<COUNT_OF_EMPTY_ROWS>
+        where EMPTY_ROW is all 0s, e.g.: 0000
+          and COUNT_OF_EMPTY_ROWS is the number of empty rows collapsed
+            e.g.:  ['1111', '0000', '0000', '0000', '1111'] => ['1111', '0000x3', '1111']
       a single row is a list of characters (4 for singles, 5 for pump, 6 for solo, 8 for doubles)
       each character represents one arrow/panel, and is one of: $SM_CHARS
       these characters are used for calculations:
@@ -840,14 +845,19 @@ sub formatStats($$$){
 sub getSongRowCount($){
   my ($rows) = @_;
 
-  my $rowCount = @$rows;
-  #remove trailing 0-only-rows (empty rows after the last note)
-  #  leading rows before the first note DO count for the song duration
-  for(my $i=$#$rows; $i>=0; $i--){
-    if($$rows[$i] !~ /^0+$/){
-      last;
+  my $rowCount = 0;
+  my $prevEmptyRowCount = 0;
+  for my $row(@$rows){
+    if($row =~ /^0+(?:x(\d+))?$/){
+      #do not add empty rows unless a non-empty row comes after
+      #  empty rows after the last note do NOT count for song duration
+      #  (however, leading rows before the first note DO count for the song duration)
+      $prevEmptyRowCount += (defined $1 ? $1 : 1);
+    }else{
+      $rowCount++;
+      $rowCount += $prevEmptyRowCount;
+      $prevEmptyRowCount = 0;
     }
-    $rowCount--;
   }
 
   return $rowCount;
@@ -902,6 +912,8 @@ sub getNoteCounts($){
     COUNT_MINES      => 0,
   };
   for my $row(@$rows){
+    next if $row =~ /^0+(x\d+)?$/;
+
     $$noteCounts{COUNT_NOTE_ROWS}++  if $row =~ /[124]/;
     $$noteCounts{COUNT_TAP_ROWS}++   if $row =~ /[1]/;
     $$noteCounts{COUNT_HOLD_ROWS}++  if $row =~ /[2]/;
@@ -928,18 +940,29 @@ sub getTotalFreezeRowCount($){
     my @holdArrows;
     my @releaseArrows;
 
-    my @arrows = split '', $row;
-    for(my $i=0; $i<@arrows; $i++){
-      if($arrows[$i] =~ /[24]/){    #hold or roll start
-        push @holdArrows, $i;
-      }elsif($arrows[$i] =~ /[3]/){ #hold or roll end
-        push @releaseArrows, $i;
+    my @chars = split '', $row;
+    for(my $arrowIdx=0; $arrowIdx<@chars; $arrowIdx++){
+      my $ch = $chars[$arrowIdx];
+      last if $ch =~ /x/; #past the end of the arrows
+
+      if($ch eq '2'){
+        #hold start
+        push @holdArrows, $arrowIdx;
+      }elsif($ch eq '4'){
+        #roll start
+        push @holdArrows, $arrowIdx;
+      }elsif($ch eq '3'){
+        #hold/roll end
+        push @releaseArrows, $arrowIdx;
       }
     }
 
+    my $realRowCount = $1 if $row =~ /^0+x(\d+)$/;
+    $realRowCount = 1 if not defined $realRowCount;
+
     #count this new row for all current freezes, regardless of holds/releases
     for my $freeze(@curFreezes){
-      $frozenRowCount++;
+      $frozenRowCount += $realRowCount;
     }
 
     #remove released freezes
@@ -962,27 +985,49 @@ sub getTotalFreezeRowCount($){
 sub getMaxMeasureDensity($){
   my ($rows) = @_;
 
-  my $startRow = 0;
-  my $endRow = $ROWS_PER_MEASURE-1;
+  my %rowIsActive = map {$_ => ($$rows[$_] =~ /^$SM_CHARS*[124M]/ ? 1  : 0)} 0..$#$rows;
+  my %rowSize     = map {$_ => ($$rows[$_] =~ /x(\d+)$/           ? $1 : 1)} 0..$#$rows;
 
-  if($endRow > $#$rows){
-    $endRow = $#$rows;
-  }
+  my $maxDensity = 0;
 
-  my $curDensity = 0 + grep {/[124M]/} @$rows[$startRow..$endRow];
+  my ($prevStartIdx, $prevEndIdx, $prevSegmentSize, $prevDensity);
+  for(my $curStartIdx=0; $curStartIdx<@$rows; $curStartIdx++){
+    my $curEndIdx;
+    my $curSegmentSize;
+    my $curDensity;
+    if(not defined $prevStartIdx){
+      #add the first row as the start row of the floating segment
+      $curEndIdx = $curStartIdx;
+      $curSegmentSize = 0 + $rowSize{$curStartIdx};
+      $curDensity = 0 + ($rowIsActive{$curStartIdx} ? 1 : 0);
+    }else{
+      #remove the previous start row from the floating segment
+      $curEndIdx = $prevEndIdx;
+      $curSegmentSize = $prevSegmentSize - $rowSize{$prevStartIdx};
+      $curDensity = $prevDensity - ($rowIsActive{$prevStartIdx} ? 1 : 0);
+    }
 
-  my $maxDensity = $curDensity;
-  while($endRow < @$rows - 1){
-    my $removedMeasure = $$rows[$startRow];
-    $startRow++;
-    $endRow++;
-    my $addedMeasure = $$rows[$endRow];
+    #append end-rows until the segment is full
+    #  if previous last row is a multi-empty-row, zero or one rows may be appended
+    #  if previous first row is a multi-empty-row, many rows may be appended
+    #  otherwise, exactly one row will be appended
+    while($curEndIdx+1 < @$rows and $curSegmentSize < $ROWS_PER_MEASURE){
+      $curEndIdx++;
+      $curSegmentSize += $rowSize{$curEndIdx};
+      $curDensity += 1 if $rowIsActive{$curEndIdx};
+    }
 
-    $curDensity-- if $removedMeasure =~ /[124M]/;
-    $curDensity++ if $addedMeasure =~ /[124M]/;
     if($curDensity > $maxDensity){
       $maxDensity = $curDensity;
     }
+
+    if($curEndIdx >= $#$rows){
+      #the last row is in this measure-segment, no need to keep checking
+      last;
+    }
+
+    ($prevStartIdx, $prevEndIdx, $prevSegmentSize, $prevDensity) = (
+      $curStartIdx, $curEndIdx, $curSegmentSize, $curDensity);
   }
 
   return $maxDensity;
@@ -996,13 +1041,71 @@ sub bpmToNanoSecondsPerRow($){
   return int($nanosecPerRow + 0.5);
 }
 
+sub collapseEmptyMultiRows($){
+  my ($rows) = @_;
+  my $newRows = [];
+  my $curEmptyRow = undef;
+  my $curEmptyRowCount = 0;
+  for my $row(@$rows){
+    if($row =~ /^(0+)(?:x(\d+))?$/){
+      my ($emptyRow, $emptyRowCount) = ($1, $2);
+      $emptyRowCount = 1 if not defined $emptyRowCount;
+      $curEmptyRow = $emptyRow;
+      $curEmptyRowCount += $emptyRowCount;
+    }else{
+      if($curEmptyRowCount > 0){
+        my $emptyMultiRow = "${curEmptyRow}x${curEmptyRowCount}";
+        $emptyMultiRow = $curEmptyRow if $curEmptyRowCount == 1;
+        push @$newRows, "${curEmptyRow}x${curEmptyRowCount}";
+        $curEmptyRow = undef;
+        $curEmptyRowCount = 0;
+      }
+      push @$newRows, $row;
+    }
+  }
+  if($curEmptyRowCount > 0){
+    push @$newRows, "${curEmptyRow}x${curEmptyRowCount}";
+  }
+
+  return $newRows;
+}
+
+sub expandEmptyMultiRows($){
+  my ($rows) = @_;
+  my $newRows = [];
+  for my $row(@$rows){
+    if($row =~ /^(0+)x(\d+)$/){
+      my ($emptyRow, $emptyRowCount) = ($1, $2);
+      for(my $i=0; $i<$emptyRowCount; $i++){
+        push @$newRows, $emptyRow;
+      }
+    }else{
+      push @$newRows, $row;
+    }
+  }
+  return $newRows;
+}
+
 #remove rows with negative or very large bpms
 #  fairly expensive if there are warps, but fast if there are no warps
 sub removeWarps($$$){
   my ($rows, $bpmsByRow, $stopsByRow) = @_;
 
-  my $isWarp = 0;
   my $anyWarps = 0;
+  for my $bpm(sort values %$bpmsByRow){
+    if($bpm < 0 || $bpm > 109713){
+      $anyWarps = 1;
+      last;
+    }
+  }
+
+  if(not $anyWarps){
+    return ($rows, $bpmsByRow, $stopsByRow);
+  }
+
+  $rows = expandEmptyMultiRows($rows);
+
+  my $isWarp = 0;
   my $indexOffset = 0;
   my %indexOldToNew;
   for(my $row=0; $row<@$rows; $row++){
@@ -1010,7 +1113,6 @@ sub removeWarps($$$){
     if(defined $bpm){
       if($bpm < 0 || $bpm > 109713){
         $isWarp = 1;
-        $anyWarps = 1;
       }else{
         $isWarp = 0;
       }
@@ -1022,21 +1124,21 @@ sub removeWarps($$$){
     }
   }
 
-  if($anyWarps){
-    my @newRows;
-    my %newBpmsByRow;
-    my %newStopsByRow;
-    for my $oldIndex(sort {$a <=> $b} keys %indexOldToNew){
-      push @newRows, $$rows[$oldIndex];
-      my $newIndex = $indexOldToNew{$oldIndex};
-      $newBpmsByRow{$newIndex} = $$bpmsByRow{$oldIndex};
-      $newStopsByRow{$newIndex} = $$stopsByRow{$oldIndex};
-    }
-
-    $rows = \@newRows;
-    $bpmsByRow = \%newBpmsByRow;
-    $stopsByRow = \%newStopsByRow;
+  my @newRows;
+  my %newBpmsByRow;
+  my %newStopsByRow;
+  for my $oldIndex(sort {$a <=> $b} keys %indexOldToNew){
+    push @newRows, $$rows[$oldIndex];
+    my $newIndex = $indexOldToNew{$oldIndex};
+    $newBpmsByRow{$newIndex} = $$bpmsByRow{$oldIndex};
+    $newStopsByRow{$newIndex} = $$stopsByRow{$oldIndex};
   }
+
+  $rows = \@newRows;
+  $bpmsByRow = \%newBpmsByRow;
+  $stopsByRow = \%newStopsByRow;
+
+  $rows = collapseEmptyMultiRows($rows);
 
   return ($rows, $bpmsByRow, $stopsByRow);
 }
@@ -1045,33 +1147,44 @@ sub calculateNotesPerSecondInfo($$$){
   my ($rows, $bpmsByRow, $stopsByRow) = @_;
   my $songDurS = 0;
 
- ($rows, $bpmsByRow, $stopsByRow) = removeWarps($rows, $bpmsByRow, $stopsByRow);
+  ($rows, $bpmsByRow, $stopsByRow) = removeWarps($rows, $bpmsByRow, $stopsByRow);
+
+  #nanoseconds until the next row (not the next note)
+  #  defined for the last row as if there was an empty row after it, at the same bpm
+  my @rowDursNanoS;
+
+  #rows with notes
+  my %okNoteRows;
 
   my @bpmChangeRows = sort {$a <=> $b} keys %$bpmsByRow;
   my $firstBpm = $$bpmsByRow{$bpmChangeRows[0]};
 
-  #seconds until the next row (not the next note)
-  #  defined for the last row as if there was an empty row after it, at the same bpm
-  my @rowDursNanoS;
-
   my $curNanoSecPerRow = bpmToNanoSecondsPerRow($firstBpm);
-  for(my $row=0; $row<=@$rows; $row++){
-    $curNanoSecPerRow = bpmToNanoSecondsPerRow($$bpmsByRow{$row}) if defined $$bpmsByRow{$row};
+  my $rowIdx = 0;
+  for my $row(@$rows){
+    my $rowSize = $row =~ /x(\d+)$/ ? $1 : 1;
+    my $isNoteRow = $row =~ /^$SM_CHARS*[124]/; #taps/holds/rolls, not mines
+    for(my $i=0; $i<$rowSize; $i++){
+      if(defined $$bpmsByRow{$rowIdx}){
+        #BPM change, occurs at the same instant as the row
+        $curNanoSecPerRow = bpmToNanoSecondsPerRow($$bpmsByRow{$rowIdx});
+      }
 
-    my $durNanoS = $curNanoSecPerRow;
-    if(defined $$stopsByRow{$row}){
-      #stops are immediately AFTER the row, so add directly to this row duration
-      $durNanoS += int($NANOSEC_PER_SEC * $$stopsByRow{$row} + 0.5);
+      my $durNanoS = $curNanoSecPerRow;
+
+      if(defined $$stopsByRow{$rowIdx}){
+        #stops are immediately AFTER the row, so add directly to this row duration
+        $durNanoS += int($NANOSEC_PER_SEC * $$stopsByRow{$rowIdx} + 0.5);
+      }
+
+      push @rowDursNanoS, $durNanoS;
+      if($isNoteRow){
+        $okNoteRows{$rowIdx} = 1;
+      }
+
+      $rowIdx += 1;
     }
-    push @rowDursNanoS, $durNanoS;
   }
-
-  my %okNoteRows;
-  for(my $row=0; $row<@$rows; $row++){
-    $okNoteRows{$row} = 1 if $$rows[$row] =~ /[124]/;
-  }
-
-  my $maxNps = 0;
 
   # slice note rows into (roughly) 1-second segments,
   #   allowing segments to overlap,
@@ -1125,22 +1238,22 @@ sub calculateNotesPerSecondInfo($$$){
     my $npsTotal = 0;
     my $segmentCount = 0;
     my $maxNps = 0;
-    for(my $row=0; $row<$#$rows; $row++){
+    for(my $rowIdx=0; $rowIdx<$#rowDursNanoS; $rowIdx++){
       if($isPeak){
         #skip segments that do not start with a note row
         #    -at least one segment that has the peak-NPS-per-segment
         #      will necessarily start with a note row
         #    -if a segment doesn't start with a note row, moving the segment down
         #      a note row can only increase NPS
-        next if not $okNoteRows{$row};
+        next if not $okNoteRows{$rowIdx};
       }else{
         #do not allow overlap
         #    -consider only note rows that do not appear in previous segments
-        next if defined $prevSegmentEndRow and $row <= $prevSegmentEndRow;
+        next if defined $prevSegmentEndRow and $rowIdx <= $prevSegmentEndRow;
       }
 
-      my $segmentStartRow = $row;
-      my $segmentEndRow = $row;
+      my $segmentStartRow = $rowIdx;
+      my $segmentEndRow = $rowIdx;
 
       #segment ends after the END of the last note row
       #  i.e.: infinitesimally before the start of the next note row after the segment
@@ -1148,9 +1261,14 @@ sub calculateNotesPerSecondInfo($$$){
       while(1){
         my $segmentEndRowAfterNextRow = $segmentEndRow + 1;
         my $noteRowCountAfterNextRow = $segmentEndRowAfterNextRow-$segmentStartRow + 1;
-        my $durAfterNextRowNanoS =
-          $segmentDurationNanoS + $rowDursNanoS[$segmentEndRowAfterNextRow];
-        if($segmentEndRowAfterNextRow > $#$rows){
+        my $durAfterNextRowNanoS;
+        if($segmentEndRowAfterNextRow > $#rowDursNanoS){
+          #last row, pretend there is an empty row of the same duration
+          $durAfterNextRowNanoS = $segmentDurationNanoS + $rowDursNanoS[$segmentEndRow];
+        }else{
+          $durAfterNextRowNanoS = $segmentDurationNanoS + $rowDursNanoS[$segmentEndRowAfterNextRow];
+        }
+        if($segmentEndRowAfterNextRow > $#rowDursNanoS){
           #last segment
           last;
         }elsif(defined $maxNoteRows and $noteRowCountAfterNextRow > $maxNoteRows){
@@ -1206,21 +1324,28 @@ sub getTotalNoteIrregularity($){
   my $totalIrregularity = 0;
 
   my $previousNoteIndex = undef;
-  for(my $i=0; $i<@$rows; $i++){
-    my $row = $$rows[$i];
-    next if $row !~ /[124M]/; #ignore rows without jumps, taps or mines
+  my $rowIdx = 0;
+  for my $row(@$rows){
+    #ignore rows without taps/jumps/rolls/mines
+    if($row =~ /^0+x(\d+)$/){
+      $rowIdx += $1;
+      next;
+    }elsif($row !~ /[124M]/){
+      $rowIdx += 1;
+      next;
+    }
 
     #timing of the notes within a measure
     #  this corresponds to arrow 'color' in certain noteskins,
     #  although mines/shocks work the same way and dont have color
     my $noteTypeIrregularity;
-    if($i % int($ROWS_PER_MEASURE/4) == 0){
+    if($rowIdx % int($ROWS_PER_MEASURE/4) == 0){
       #1/4 note row => red arrows
       $noteTypeIrregularity = 0; #1/4 notes have zero irregularity
-    }elsif($i % int($ROWS_PER_MEASURE/8) == 0){
+    }elsif($rowIdx % int($ROWS_PER_MEASURE/8) == 0){
       #1/8 note row => blue arrows
       $noteTypeIrregularity = 0.5;
-    }elsif($i % int($ROWS_PER_MEASURE/16) == 0){
+    }elsif($rowIdx % int($ROWS_PER_MEASURE/16) == 0){
       #1/16 note row => yellow arrows
       $noteTypeIrregularity = 1.0;
     }else{
@@ -1231,7 +1356,7 @@ sub getTotalNoteIrregularity($){
     my $irregularity;
     if(defined $previousNoteIndex){
       #how many rows of 1/192 notes between this note and the previous
-      my $intervalRows = $i-$previousNoteIndex;
+      my $intervalRows = $rowIdx-$previousNoteIndex;
 
       #how much of a measure is between this note and the previous
       #larger values mean less irregularity
@@ -1252,7 +1377,9 @@ sub getTotalNoteIrregularity($){
     }
 
     $totalIrregularity += $irregularity;
-    $previousNoteIndex = $i;
+    $previousNoteIndex = $rowIdx;
+
+    $rowIdx += 1;
   }
   return $totalIrregularity;
 }
@@ -1381,7 +1508,6 @@ sub calculateNoteSetStats($$){
   $$s{DIFF_ABBREV} = abbrevDiff($$s{DIFF});
 
   my $rows = $$noteSetInfo{expandedNoteRows};
-
   my $bpmsByRow;
   if(defined $$noteSetInfo{bpmsByRow}){
     $bpmsByRow = $$noteSetInfo{bpmsByRow};
@@ -2052,38 +2178,47 @@ sub isGameDiffSkipped($$){
 #    by inserting all-zero blank rows,
 #    and then joins all the rows together in a simple list, ignoring MEASURE
 #
+#  adjacent empty rows (e.g. [0000, 0000, 0000]) may be condensed to a single row,
+#    formatted as EMPTY_ROWxROW_COUNT (e.g.: 0000x3)
+#
 #  e.g.:
-#    this measure:
-#      1000
-#      0100
-#      0010
+#    this 3-measure stepchart
+#      1000  //one quarter note on beat one
+#      ,
+#      0001  //two eighth notes on beat five
 #      0001
 #      ,
-#    will expand from 4 to 192 rows, inserting 47 rows of '0000' after each of the 4 rows
-#    the resulting rows will be all '0000's, except for:
-#      row#0, row#48, row#96, and row#144
+#      0001  //one quarter note on beat nine
+#    will expand from 4 rows to 192*3=576 rows
+#    the resulting rows will be:
+#      1000
+#      0000x191
+#      0001
+#      0000x95
+#      0001
+#      0000x95
+#      0001
+#      0000x191
+#
 sub getExpandedNoteRows($){
   my ($noteSetText) = @_;
 
-  #remove empty last measure(s)
-  $noteSetText =~ s/,\s*$//;
-  #remove comments
-  $noteSetText =~ s/\/\/.*(\n|$)/$1/g;
+  $noteSetText =~ tr/F/0/;      #remove fakes
+  $noteSetText =~ s/,\s*$//;    #remove empty last measure
+  $noteSetText =~ s/\/\/.*//g;  #remove comments
+  $noteSetText =~ tr/ //d;      #remove whitespace
 
-  my @measures = split /,/, $noteSetText;
+  my @measures = split ",", $noteSetText;
 
   my @noteRows;
   for my $measure(@measures){
     my @lines = split /[\r\n]+/, $measure;
 
-    s/F/0/g foreach @lines;               #remove fakes
-    @lines = grep {$_ !~ /^\s*$/} @lines; #remove whitespace-only/empty lines
+    @lines = grep {$_ ne ""} @lines;
 
     for my $line(@lines){
-      $line =~ s/^\s*//;
-      $line =~ s/\s*$//;
       if($line !~ /^${SM_CHARS}+$/){
-        die "ERROR: malformed measure row $line\n";
+        die "ERROR: malformed measure row '$line'\n";
       }
     }
 
@@ -2092,31 +2227,37 @@ sub getExpandedNoteRows($){
 
     die "ERROR: empty measure $measure\n" if $collapsedMeasureRowCount == 0;
 
-    my $firstRow = $collapsedMeasureRows[0];
-    my $emptyRow = $firstRow;
-    $emptyRow =~ s/${SM_CHARS}/0/g;
-    if($emptyRow !~ /^0+$/){
-      die "ERROR: malformed first measure row $firstRow\n";
-    }
+    my $emptyRow = '0'x(length $collapsedMeasureRows[0]);
 
-    my $repeatRowCount = int($ROWS_PER_MEASURE/$collapsedMeasureRowCount);
+    my $expandedRowsPerRow = int($ROWS_PER_MEASURE/$collapsedMeasureRowCount);
+    my $rowCountToAddAfterEachRow = $expandedRowsPerRow - 1;
 
+    my $newRowCount = 0;
     my @expandedMeasureRows;
     for my $row(@collapsedMeasureRows){
       if($row !~ /^${SM_CHARS}+$/){
         die "ERROR: malformed note row: $row\n";
       }
       push @expandedMeasureRows, $row;
-      for(my $i=0; $i<$repeatRowCount-1; $i++){
-        push @expandedMeasureRows, $emptyRow;
+      $newRowCount++;
+
+      if($rowCountToAddAfterEachRow > 0){
+        my $spacerRow = $emptyRow;
+        if($rowCountToAddAfterEachRow > 1){
+          $spacerRow .= "x$rowCountToAddAfterEachRow";
+        }
+        push @expandedMeasureRows, $spacerRow;
+        $newRowCount += $rowCountToAddAfterEachRow;
       }
     }
 
-    if(@expandedMeasureRows != $ROWS_PER_MEASURE){
+    if($newRowCount != $ROWS_PER_MEASURE){
       die "ERROR: malformed measure (rowCount=$collapsedMeasureRowCount):\n$measure";
     }
     @noteRows = (@noteRows, @expandedMeasureRows);
   }
+
+  @noteRows = @{collapseEmptyMultiRows(\@noteRows)};
 
   return \@noteRows;
 }
