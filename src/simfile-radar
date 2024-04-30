@@ -959,6 +959,8 @@ sub getTotalFreezeRowCount($){
   return $frozenRowCount;
 }
 
+#find the 192-row segment with the most tap/hold/roll/mine rows
+#  return the number of tap/hold/roll/mine/rows in that segment
 sub getMaxMeasureDensity($){
   my ($rows) = @_;
 
