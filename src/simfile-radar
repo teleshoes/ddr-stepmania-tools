@@ -306,6 +306,10 @@ my $usage = "Usage:
         E - ???
         T - ???
         U - ???
+      NOTE: this variable is large
+              it used to calculate most other variables,
+              but it is cached in a separate gzip'd file,
+              and can only be printed with --include-note-rows
     BPM_ROWS
       a comma-separated list of ROW=BPM pairs
       (this is converted from the BEAT=BPM pairs stored in the simfile)
@@ -608,14 +612,17 @@ my $usage = "Usage:
             => STREAM = STREAM_DDRSN2
 
     --dump
-      print all variables for each GAME and DIFF (overrides --format)
+      print all variables (except NOTE_ROWS) for each GAME and DIFF (overrides --format)
+        -to print 'NOTE_ROWS', you must use '--include-note-rows'
+        -without --include-note-rows, NOTE_ROWS is set to 'note-rows-skipped'
       equivalent to setting FORMAT_SPEC to the concatentation of:
         %GAME.%DIFF.<VARIABLE>=%<VARIABLE>%n
       for each VARIABLE (one per line, sorted asciibetically)
 
-    --skip-note-rows
-      when formatting stats for printing, use the empty string for 'NOTE_ROWS' variable
-      (NOTE_ROWS are still calculated and cached, only printing is affected)
+    --include-note-rows
+      include the full expanded note rows in variable NOTE_ROWS
+        without this flag, when formatting stats for printing,
+          the variable NOTE_ROWS will be set to 'NOTE-ROWS-SKIPPED'
 
     --format=FORMAT_SPEC
       FORMAT_SPEC can be any string, with the following printf-like replacements:
@@ -629,6 +636,9 @@ my $usage = "Usage:
                                    e.g.: %05.2f-STREAM
       default=$DEFAULT_FORMAT_SPEC
          e.g.: singles | expert     | S122 | V109 | A0   | F0   | C108
+
+      NOTE: the variable 'NOTE_ROWS' is by default set to 'note-rows-skipped'
+            use --include-note-rows to print the full value
 
       if format does not end in at least one newline, one is appended,
         unless --no-force-newline is given
@@ -676,7 +686,7 @@ sub main(@){
   };
   my $defaultVarsMachine = $DEFAULT_MACHINE;
   my $dump = 0;
-  my $skipNoteRowsPrinting = 0;
+  my $includeNoteRowsPrinting = 0;
   my $formatSpec = $DEFAULT_FORMAT_SPEC;
   my $forceNewlines = 1;
   my $readCache = 1;
@@ -707,8 +717,8 @@ sub main(@){
       $defaultVarsMachine = uc $1;
     }elsif($arg =~ /^--dump$/){
       $dump = 1;
-    }elsif($arg =~ /^--skip-note-rows$/){
-      $skipNoteRowsPrinting = 1;
+    }elsif($arg =~ /^--include-note-rows$/){
+      $includeNoteRowsPrinting = 1;
     }elsif($arg =~ /^--format=(.+)$/){
       $formatSpec = $1;
     }elsif($arg =~ /^(--info)$/){
@@ -717,7 +727,7 @@ sub main(@){
       $forceNewlines = 0;
     }elsif($arg =~ /^(-d)$/){
       $dump = 1;
-      $skipNoteRowsPrinting = 1;
+      $includeNoteRowsPrinting = 1;
       $readCache = 0;
       $writeCache = 0;
     }elsif(-f $arg){
@@ -734,7 +744,7 @@ sub main(@){
       $gameDiffFilters,
       $defaultVarsMachine,
       $dump,
-      $skipNoteRowsPrinting,
+      $includeNoteRowsPrinting,
       $formatSpec,
       $forceNewlines,
       $readCache,
@@ -749,7 +759,7 @@ sub handleSimfile($$$$$$$$$){
     $gameDiffFilters,
     $defaultVarsMachine,
     $dump,
-    $skipNoteRowsPrinting,
+    $includeNoteRowsPrinting,
     $formatSpec,
     $forceNewlines,
     $readCache,
@@ -781,14 +791,7 @@ sub handleSimfile($$$$$$$$$){
     next if isGameDiffSkipped($gameDiffFilters, $gameDiffKey);
     next if not defined $s;
 
-    if($dump){
-      $formatSpec = "";
-      for my $varName(sort keys %$s){
-        $formatSpec .= "%GAME.%DIFF.$varName=%$varName%n";
-      }
-    }
-
-    if(not $skipNoteRowsPrinting){
+    if($includeNoteRowsPrinting){
       if(not defined $$smInfo{expandedNoteRowsByGameDiffKey}{$gameDiffKey}){
         if($readCache){
           $$smInfo{expandedNoteRowsByGameDiffKey}{$gameDiffKey} =
@@ -799,7 +802,14 @@ sub handleSimfile($$$$$$$$$){
       }
       $$s{NOTE_ROWS} = join ",", @{$$smInfo{expandedNoteRowsByGameDiffKey}{$gameDiffKey}};
     }else{
-      $$s{NOTE_ROWS} = '';
+      $$s{NOTE_ROWS} = 'note-rows-skipped';
+    }
+
+    if($dump){
+      $formatSpec = "";
+      for my $varName(sort keys %$s){
+        $formatSpec .= "%GAME.%DIFF.$varName=%$varName%n";
+      }
     }
 
     print formatStats($formatSpec, $forceNewlines, $s);
