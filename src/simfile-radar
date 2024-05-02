@@ -1725,16 +1725,16 @@ sub parseSMFile($){
   my $sm = readFile $smFile;
 
   my $smInfo = {
-    songName                 => undef,
-    songNameTranslit         => undef,
-    songNameId               => undef,
-    bpms                     => undef,
-    bpmsByRow                => undef,
-    stops                    => undef,
-    stopsByRow               => undef,
-    noteSetInfoByGameDiffKey => {},
+    songName                      => undef,
+    songNameTranslit              => undef,
+    songNameId                    => undef,
+    bpms                          => undef,
+    bpmsByRow                     => undef,
+    stops                         => undef,
+    stopsByRow                    => undef,
+    noteSetInfoByGameDiffKey      => {},
     expandedNoteRowsByGameDiffKey => {},
-    gameDiffKeyOrder         => [],
+    gameDiffKeyOrder              => [],
   };
 
   if($sm !~ /#TITLE:([^\r\n]+);/i){
