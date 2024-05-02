@@ -1043,6 +1043,78 @@ sub removeWarps($$$){
   return ($rows, $bpmsByRow, $stopsByRow);
 }
 
+#slice note rows into segments, and calculate the notes-per-second of each segment
+#  -calculate max+avg NPS variables,
+#     each with a certain segment size (by fixed time or by measure count),
+#     and each either allowing segments to overlap or assigning each row to one segment
+#
+#  -for each variable:
+#    -decide whether segments overlap
+#      '*_PEAK' vars:
+#        find every possible segment, allowing segments to overlap
+#        ignore segments that do not start with a tap/hold/roll,
+#          since those cannot be greater than the peak
+#        this produces exactly one segment per tap/hold/roll row
+#      non-'PEAK' vars:
+#        find only non-overlapping segments,
+#          where each note row (including empty rows) appear in exactly one segment
+#        (this means that the period of peak density may be split across two sections)
+#
+#    -calculate the duration of each note row
+#      -each note row has a duration in seconds of:
+#          60 * 1/(ROWS_PER_BEAT*BPM) + STOP
+#        where BPM is the BPM at the start of the row, ROWS_PER_BEAT=48,
+#          and STOP is a the STOP at that beat if present, or 0 if none
+#      -every BPM change and every STOP occurs at exactly one row
+#        (calculated to whichever row is closest to the by-beat value)
+#      -a note row with a BPM change has the new BPM
+#      -a note row with a STOP lasts its normal duration PLUS the length of the STOP
+#      -every note row has a duration, including the final note row
+#
+#    -decide the maximum size of segments
+#      'BY_#S*' vars:
+#        ensure each segment is at most 'MAX_DURATION_S' seconds long,
+#          and as long as possible otherwise
+#        for any segment (except segments containing the last row), adding the next
+#          note row after that segment will make that segment greater than the max
+#        segments containing the last row may be shorter,
+#          but are omitted if they are less than 0.01s long
+#      'BY_#MEAS*' vars:
+#        ensure each segment is at most 'MAX_NOTE_ROWS' note rows long,
+#          and as long as possible otherwise
+#          where MAX_NOTE_ROWS=ROWS_PER_MEASURE*MEAS, and ROWS_PER_MEASURE=192
+#        every segment (except segments containing the last row),
+#          is exactly 'MAX_NOTE_ROWS' long
+#        segments containing the last row may be shorter,
+#          but are omitted if they are less than 0.01s long
+#
+#    -omit short segments
+#      -calculate the duration of each segment
+#        the segment duration is the sum of the duration of all note rows in the segment,
+#          including the last note row
+#      -segments containing the end of a song may be arbitrarily short
+#        if a segment is very short, and has very few note rows at a fast bpm,
+#          it can have a very high NPS
+#          e.g.: a single note row, containing a tap, at 300bpm, is 240 NPS
+#      -therefore:
+#        -segments shorter than 0.01s are not considered for the max or the avg
+#
+#    -calculate the NPS of the segment
+#      count the number of rows with tap/hold/rolls in the segment
+#        include only rows with a tap=1, holdStart=2, or rollStart=4
+#          (do not include rows without 1 or 2 or 4, even if they have release=3 or mine=M)
+#      divide by the calculated duration of the segment
+#
+#    -count the number of segments considered
+#      'PEAK' vars:
+#        exactly one segment per tap/hold/roll row
+#      other vars:
+#        the minimum number of segments that includes every note row (including empty rows)
+#
+#    -find the avg+max nps
+#      take the mean average NPS of all considered segments: sum(NPS)/SEGMENT_COUNT
+#      take the maximum NPS of all considered segments
+#
 sub calculateNotesPerSecondInfo($$$){
   my ($rows, $bpmsByRow, $stopsByRow) = @_;
   my $songDurS = 0;
@@ -1074,19 +1146,6 @@ sub calculateNotesPerSecondInfo($$$){
   }
 
   my $maxNps = 0;
-
-  # slice note rows into (roughly) 1-second segments,
-  #   allowing segments to overlap,
-  #   and select the segment with the most note rows
-  # (roughly 1.0s, means max-note-rows-per-sec may be fractional)
-  #
-  #   -only consider segments of AT MOST one second
-  #   -only consider segments that start on a note
-  #     (i.e.: this results in a MINIMUM of note-rows-per=second = 1)
-  #
-  #   -never consider segments that are ENTIRELY part of another segment
-  #     (i.e.: only consider the longest possible segment, as close to 1.0s as possible)
-  #
 
   my $MEAS1 = $ROWS_PER_MEASURE * 1;
   my $MEAS2 = $ROWS_PER_MEASURE * 2;
@@ -1190,7 +1249,7 @@ sub calculateNotesPerSecondInfo($$$){
         }
         $prevSegmentEndRow = $segmentEndRow;
       }else{
-        #skip very short segments
+        #omit short segments
         next;
       }
     }
