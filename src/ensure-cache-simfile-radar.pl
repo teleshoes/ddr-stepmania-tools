@@ -95,8 +95,24 @@ sub ensureSimfilesCached($@){
 
   for my $simfile(sort keys %$stateBySimfile){
     my $state = $$stateBySimfile{$simfile};
+    if($$state{status} eq "success" and $$state{stderr} ne ""){
+      print "\n===WARNINGS $simfile\n";
+      print "status=$$state{status}\n";
+      print "stderr=$$state{stderr}\n";
+      print "stdout=$$state{stdout}\n";
+      print "===\n";
+    }
+  }
+
+  for my $simfile(sort keys %$stateBySimfile){
+    my $state = $$stateBySimfile{$simfile};
     if($$state{status} ne "success"){
-      print "\nFAILED: $simfile\n";
+      print "\n===ERRORS $simfile\n";
+      print "status=$$state{status}\n";
+      print "stderr=$$state{stderr}\n";
+      print "stdout=$$state{stdout}\n";
+      print "===\n";
+    }
   }
 
   print "\n";
