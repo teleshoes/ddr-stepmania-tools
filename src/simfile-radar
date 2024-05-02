@@ -767,6 +767,16 @@ sub handleSimfile($$$$$$$$$){
   my $stats = {};
   for my $gameDiffKey(@gameDiffKeys){
     next if isGameDiffSkipped($gameDiffFilters, $gameDiffKey);
+
+    if(not defined $$smInfo{expandedNoteRowsByGameDiffKey}{$gameDiffKey}){
+      if($readCache){
+        $$smInfo{expandedNoteRowsByGameDiffKey}{$gameDiffKey} =
+          readExpandedNoteRowsCache($smFile, $gameDiffKey);
+      }else{
+        die "ERROR: missing expanded note rows for $smFile $gameDiffKey\n";
+      }
+    }
+
     my $s = getNoteSetStats($smFile, $smInfo, $gameDiffKey, $readCache, $writeCache);
 
     $$s{SM_FILE} = $smFile;
@@ -1443,7 +1453,10 @@ sub calculateNoteSetStats($$){
   $$s{GAME_ABBREV} = abbrevGame($$s{GAME});
   $$s{DIFF_ABBREV} = abbrevDiff($$s{DIFF});
 
-  my $rows = $$noteSetInfo{expandedNoteRows};
+  my $rows = $$smInfo{expandedNoteRowsByGameDiffKey}{$gameDiffKey};
+  if(not defined $rows){
+    die "ERROR: missing expanded note rows for $$smInfo{songName} $gameDiffKey\n";
+  }
 
   my $bpmsByRow;
   if(defined $$noteSetInfo{bpmsByRow}){
@@ -1551,6 +1564,10 @@ sub getSMInfo($$$$){
     $smInfo = parseSMFile $smFile;
     if($writeCache){
       writeSMInfoCache($smFile, $smInfo);
+      for my $gameDiffKey(sort keys %{$$smInfo{expandedNoteRowsByGameDiffKey}}){
+        my $expandedNoteRows = $$smInfo{expandedNoteRowsByGameDiffKey}{$gameDiffKey};
+        writeExpandedNoteRowsCache($smFile, $gameDiffKey, $expandedNoteRows);
+      }
     }
   }
   return $smInfo;
@@ -1602,21 +1619,11 @@ sub readSMInfoCache($$){
     }
     $$noteSetInfo{stopsByRow} = $stopsByRow;
 
-    my $skipExpandedNoteRowsCache =
-      isGameDiffSkipped($gameDiffFilters, $gameDiffKey)
-        or isNoteSetStatsCached($smFile, $gameDiffKey);
-
-    if($skipExpandedNoteRowsCache){
-      #skip reading note rows if game-diff is skipped,
-      #  or if note-set-stats calculated+cached
-      $$noteSetInfo{expandedNoteRows} = undef;
-    }else{
-      $$noteSetInfo{expandedNoteRows} = readExpandedNoteRowsCache($smFile, $gameDiffKey);
-    }
-
-
     $$smInfo{noteSetInfoByGameDiffKey}{$gameDiffKey} = $noteSetInfo;
   }
+
+  #loaded when needed
+  $$smInfo{expandedNoteRowsByGameDiffKey} = {};
 
   return $smInfo;
 }
@@ -1648,8 +1655,6 @@ sub writeSMInfoCache($$){
     print FH "bpms=$$noteSetInfo{bpms}\n" if defined $$noteSetInfo{bpms};
     print FH "stops=$$noteSetInfo{stops}\n" if defined $$noteSetInfo{stops};
     close FH;
-
-    writeExpandedNoteRowsCache($smFile, $gameDiffKey, $$noteSetInfo{expandedNoteRows});
   }
 }
 
@@ -1712,6 +1717,7 @@ sub parseSMFile($){
     stops                    => undef,
     stopsByRow               => undef,
     noteSetInfoByGameDiffKey => {},
+    expandedNoteRowsByGameDiffKey => {},
     gameDiffKeyOrder         => [],
   };
 
@@ -1870,9 +1876,8 @@ sub parseSMFile($){
 
   @noteSetInfos = @playerNoteSetInfos;
 
-  #process/expand/format note-set data
+  #convert bpms+stops from by-beat to by-row
   for my $noteSetInfo(@noteSetInfos){
-    $$noteSetInfo{expandedNoteRows} = getExpandedNoteRows $$noteSetInfo{notes};
     $$noteSetInfo{bpmsByRow} = convertValuesByBeatToValuesByRow($$noteSetInfo{bpms});
     $$noteSetInfo{stopsByRow} = convertValuesByBeatToValuesByRow($$noteSetInfo{stops});
   }
@@ -1918,6 +1923,15 @@ sub parseSMFile($){
 
     $$smInfo{noteSetInfoByGameDiffKey}{$gameDiffKey} = $noteSetInfo;
     push @{$$smInfo{gameDiffKeyOrder}}, $gameDiffKey;
+  }
+
+  #expand note rows and place in smInfo
+  for my $gameDiffKey(sort keys %{$$smInfo{noteSetInfoByGameDiffKey}}){
+    my $noteSetInfo = $$smInfo{noteSetInfoByGameDiffKey}{$gameDiffKey};
+
+    my $expandedNoteRows = getExpandedNoteRows $$noteSetInfo{notes};
+
+    $$smInfo{expandedNoteRowsByGameDiffKey}{$gameDiffKey} = $expandedNoteRows;
   }
 
   my $gameDiffKeyCount = @{$$smInfo{gameDiffKeyOrder}};
