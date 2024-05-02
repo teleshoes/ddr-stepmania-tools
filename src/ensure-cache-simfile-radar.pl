@@ -8,7 +8,7 @@ use threads::shared;
 use File::Glob qw(:bsd_glob :globally :nocase);
 
 sub ensureSimfilesCached($@);
-sub handleSimfile($$);
+sub handleSimfile($$$);
 sub splitIntoBuckets($@);
 
 my $MAX_THREADS = 16;
@@ -62,6 +62,14 @@ sub ensureSimfilesCached($@){
 
   my @simfileBuckets = splitIntoBuckets($MAX_THREADS, @simfiles);
 
+  my $stateBySimfile = {};
+  for my $simfile(@simfiles){
+    my %simfileState;
+    share(%simfileState);
+    $simfileState{status} = "pending";
+    $$stateBySimfile{$simfile} = \%simfileState;
+  }
+
   my $start = time;
 
   my @threads;
@@ -70,7 +78,7 @@ sub ensureSimfilesCached($@){
       my $threadNum = threads->tid();
       print STDERR "\n     thread#$threadNum: STARTED\n";
       for my $simfile(@$bucket){
-        handleSimfile($opts, $simfile);
+        handleSimfile($$stateBySimfile{$simfile}, $opts, $simfile);
       }
       print STDERR "\n    thread#$threadNum finished\n";
     });
@@ -82,12 +90,25 @@ sub ensureSimfilesCached($@){
 
   my $end = time;
 
+  print "\n";
+  printf "success: %d\n", (0+grep{$$_{status} eq "success"} values %$stateBySimfile);
+  printf "failure: %d\n", (0+grep{$$_{status} eq "failure"} values %$stateBySimfile);
+  printf "pending: %d\n", (0+grep{$$_{status} eq "pending"} values %$stateBySimfile);
+  printf "running: %d\n", (0+grep{$$_{status} eq "running"} values %$stateBySimfile);
+
   print "ELAPSED: " . ($end-$start) . "s\n";
 }
 
-sub handleSimfile($$){
-  my ($opts, $simfile) = @_;
+sub handleSimfile($$$){
+  my ($state, $opts, $simfile) = @_;
+  $$state{status} = "running";
+
   system "simfile-radar", $simfile;
+  if($? == 0){
+    $$state{status} = "success";
+  }else{
+    $$state{status} = "failure";
+  }
 }
 
 # split list into a fixed number of sublists of similar size
