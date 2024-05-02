@@ -2,6 +2,8 @@
 use strict;
 use warnings;
 
+use File::Glob qw(:bsd_glob :globally :nocase);
+
 sub ensureSimfilesCached($@);
 sub handleSimfile($$);
 
@@ -38,8 +40,7 @@ sub main(@){
 
   my @simfiles;
   for my $songPackDir(@songPackDirs){
-    my @songPackSimfiles = `find '$songPackDir' -iname *.sm -or -iname *.ssc`;
-    chomp foreach @songPackSimfiles;
+    my @songPackSimfiles = grep {-f $_} glob "$songPackDir/*/*.{SM,SSC}";
     if(@songPackSimfiles == 0){
       print STDERR "WARNING: no simfiles found at $songPackDir/*/*\n";
     }
