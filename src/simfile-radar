@@ -1495,12 +1495,17 @@ sub calculateNoteSetStats($$){
 
   $s = {%$s, %{calculateNotesPerSecondInfo($rows, $bpmsByRow, $stopsByRow)}},
 
+  my $noteRowsCsv = join ",", @$rows;
+  my $bpmRowsCsv = join ",", map {"$_=$$bpmsByRow{$_}"} sort {$a <=> $b} keys %$bpmsByRow;
+  my $stopRowsCsv = join ",", map {"$_=$$stopsByRow{$_}"} sort {$a <=> $b} keys %$stopsByRow;
+  my $checksum = songChecksum($noteRowsCsv, $bpmRowsCsv, $stopRowsCsv);
+
   #meaningful calculated values
   $$s{SONG_DUR_FMT}              = formatTimeMSS $$s{SONG_DUR};
-  $$s{NOTE_ROWS}                 = join ",", @$rows;
-  $$s{BPM_ROWS}                  = join ",", map {"$_=$$bpmsByRow{$_}"} sort {$a <=> $b} keys %$bpmsByRow;
-  $$s{STOP_ROWS}                 = join ",", map {"$_=$$stopsByRow{$_}"} sort {$a <=> $b} keys %$stopsByRow;
-  $$s{CHECKSUM}                  = songChecksum($$s{NOTE_ROWS}, $$s{BPM_ROWS}, $$s{STOP_ROWS});
+  $$s{NOTE_ROWS}                 = $noteRowsCsv;
+  $$s{BPM_ROWS}                  = $bpmRowsCsv;
+  $$s{STOP_ROWS}                 = $stopRowsCsv;
+  $$s{CHECKSUM}                  = $checksum;
   $$s{SONG_BEAT_COUNT}           = int($$s{SONG_ROW_COUNT}/$ROWS_PER_BEAT + 0.5);
   $$s{TOTAL_NOTES}               = $$s{COUNT_NOTE_ROWS} + $$s{COUNT_SHOCK_ROWS};
   $$s{TOTAL_JUMPS_SHOCKS}        = $$s{COUNT_JUMP_ROWS} + $$s{COUNT_SHOCK_ROWS};
