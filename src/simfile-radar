@@ -18,7 +18,7 @@ my $CACHE_BASE_DIR_SUFFIX = ".cache/simfile-radar";
 
 my $SM_CHARS = '[01234MLFAKNHGOETU]';
 
-my @COMPRESSED_VARIABLE_NAMES = qw( NOTE_ROWS );
+my @COMPRESSED_VARIABLE_NAMES = qw(  );
 
 my @GAME_ABBREV_ARR = (
   ["dance-single"      => "singles"],
@@ -1502,7 +1502,6 @@ sub calculateNoteSetStats($$){
 
   #meaningful calculated values
   $$s{SONG_DUR_FMT}              = formatTimeMSS $$s{SONG_DUR};
-  $$s{NOTE_ROWS}                 = $noteRowsCsv;
   $$s{BPM_ROWS}                  = $bpmRowsCsv;
   $$s{STOP_ROWS}                 = $stopRowsCsv;
   $$s{CHECKSUM}                  = $checksum;
