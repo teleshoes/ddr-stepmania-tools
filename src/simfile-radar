@@ -1616,7 +1616,7 @@ sub readSMInfoCache($$){
         @expandedNoteRows = <FH>;
         close FH;
       }elsif(-f "$noteRowsCacheFilePrefix.gz" and isExecAvailable("gunzip")){
-        open FH, "-|", "gunzip", "-c", "$cacheDir/expandedNoteRows-$gameDiffKey";
+        open FH, "-|", "gunzip", "-c", "$cacheDir/expandedNoteRows-$gameDiffKey.gz";
         @expandedNoteRows = <FH>;
         close FH;
       }
