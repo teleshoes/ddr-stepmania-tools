@@ -13,7 +13,8 @@ sub ensureSimfilesCached($@);
 sub handleSimfile($$$);
 sub splitIntoBuckets($@);
 
-my $MAX_THREADS = 16;
+my $DEFAULT_MAX_THREADS = 16;
+
 my $USAGE = "Usage:
   $0 -h | --help
     show this message
@@ -22,15 +23,19 @@ my $USAGE = "Usage:
     -for each SONG_PACK_DIR, find simfiles at SONG_PACK_DIR/*/*
        simfiles must end in .sm or .ssc (case insensitive)
     -group simfiles into roughly even groups, and run concurrently with threads
-      (use a max of $MAX_THREADS threads)
+      (use a max of $DEFAULT_MAX_THREADS, see --threads)
     -for each SIMFILE
       run: simfile-radar SIMFILE
 
   OPTS
+    --threads=THREAD_COUNT
+      use at most THREAD_COUNT worker threads instead of $DEFAULT_MAX_THREADS
+      cannot be zero
 ";
 
 sub main(@){
   my $opts = {
+    maxThreads       => $DEFAULT_MAX_THREADS,
   };
   my @songPackDirs;
   while(@_ > 0){
@@ -38,12 +43,16 @@ sub main(@){
     if($arg =~ /^(-h|--help)$/){
       print $USAGE;
       exit 0;
+    }elsif($arg =~ /^--threads=(\d+)$/){
+      $$opts{maxThreads} = $1;
     }elsif(-d $arg){
       push @songPackDirs, $arg;
     }else{
       die "$USAGE\nERROR: unknown arg $arg\n";
     }
   }
+
+  die "ERROR: THREAD_COUNT cannot be 0\n" if $$opts{maxThreads} == 0;
 
   die "$USAGE\nERROR: no SONG_PACK_DIRS found\n" if @songPackDirs == 0;
 
@@ -62,7 +71,7 @@ sub main(@){
 sub ensureSimfilesCached($@){
   my ($opts, @simfiles) = @_;
 
-  my @simfileBuckets = splitIntoBuckets($MAX_THREADS, @simfiles);
+  my @simfileBuckets = splitIntoBuckets($$opts{maxThreads}, @simfiles);
 
   my $stateBySimfile = {};
   for my $simfile(@simfiles){
