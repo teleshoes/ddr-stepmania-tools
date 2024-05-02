@@ -666,7 +666,7 @@ my $usage = "Usage:
           e.g.: f
 
     --info
-      same as: --format=\"$DEFAULT_FORMAT_SPEC\"
+      same as: --format=\"$INFO_FORMAT_SPEC\"
 
     -n | --no-force-newline
       do not append newlines automatically
