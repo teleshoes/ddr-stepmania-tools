@@ -7,6 +7,7 @@ use threads::shared;
 
 use File::Glob qw(:bsd_glob :globally :nocase);
 use IPC::Run;
+use Time::HiRes qw(time);
 
 sub ensureSimfilesCached($@);
 sub handleSimfile($$$);
@@ -121,7 +122,7 @@ sub ensureSimfilesCached($@){
   printf "pending: %d\n", (0+grep{$$_{status} eq "pending"} values %$stateBySimfile);
   printf "running: %d\n", (0+grep{$$_{status} eq "running"} values %$stateBySimfile);
 
-  print "ELAPSED: " . ($end-$start) . "s\n";
+  printf "ELAPSED: %.3fs\n", $end-$start;
 }
 
 sub handleSimfile($$$){
