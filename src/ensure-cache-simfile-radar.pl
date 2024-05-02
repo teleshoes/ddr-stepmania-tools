@@ -90,6 +90,12 @@ sub ensureSimfilesCached($@){
 
   my $end = time;
 
+  for my $simfile(sort keys %$stateBySimfile){
+    my $state = $$stateBySimfile{$simfile};
+    if($$state{status} ne "success"){
+      print "\nFAILED: $simfile\n";
+  }
+
   print "\n";
   printf "success: %d\n", (0+grep{$$_{status} eq "success"} values %$stateBySimfile);
   printf "failure: %d\n", (0+grep{$$_{status} eq "failure"} values %$stateBySimfile);
