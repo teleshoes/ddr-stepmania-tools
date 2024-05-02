@@ -767,16 +767,6 @@ sub handleSimfile($$$$$$$$$){
   my $stats = {};
   for my $gameDiffKey(@gameDiffKeys){
     next if isGameDiffSkipped($gameDiffFilters, $gameDiffKey);
-
-    if(not defined $$smInfo{expandedNoteRowsByGameDiffKey}{$gameDiffKey}){
-      if($readCache){
-        $$smInfo{expandedNoteRowsByGameDiffKey}{$gameDiffKey} =
-          readExpandedNoteRowsCache($smFile, $gameDiffKey);
-      }else{
-        die "ERROR: missing expanded note rows for $smFile $gameDiffKey\n";
-      }
-    }
-
     my $s = getNoteSetStats($smFile, $smInfo, $gameDiffKey, $readCache, $writeCache);
 
     $$s{SM_FILE} = $smFile;
@@ -1390,6 +1380,15 @@ sub getNoteSetStats($$$$$){
   my $stats = undef;
   $stats = readNoteSetStatsCache($smFile, $gameDiffKey) if $readCache;
   if(not defined $stats){
+    if(not defined $$smInfo{expandedNoteRowsByGameDiffKey}{$gameDiffKey}){
+      if($readCache){
+        $$smInfo{expandedNoteRowsByGameDiffKey}{$gameDiffKey} =
+          readExpandedNoteRowsCache($smFile, $gameDiffKey);
+      }else{
+        die "ERROR: missing expanded note rows for $smFile $gameDiffKey\n";
+      }
+    }
+
     $stats = calculateNoteSetStats($smInfo, $gameDiffKey);
     writeNoteSetStatsCache($smFile, $gameDiffKey, $stats) if $writeCache;
   }
