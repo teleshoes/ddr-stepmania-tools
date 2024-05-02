@@ -6,6 +6,7 @@ use threads;
 use threads::shared;
 
 use File::Glob qw(:bsd_glob :globally :nocase);
+use IPC::Run;
 
 sub ensureSimfilesCached($@);
 sub handleSimfile($$$);
@@ -66,6 +67,8 @@ sub ensureSimfilesCached($@){
   for my $simfile(@simfiles){
     my %simfileState;
     share(%simfileState);
+    $simfileState{stdout} = "";
+    $simfileState{stderr} = "";
     $simfileState{status} = "pending";
     $$stateBySimfile{$simfile} = \%simfileState;
   }
@@ -109,8 +112,16 @@ sub handleSimfile($$$){
   my ($state, $opts, $simfile) = @_;
   $$state{status} = "running";
 
-  system "simfile-radar", $simfile;
-  if($? == 0){
+  my @cmd = ("simfile-radar", $simfile);
+
+  my ($stdout, $stderr);
+  my $h = IPC::Run::harness(\@cmd, ">", \$stdout, "2>", \$stderr);
+  IPC::Run::run($h);
+
+  $$state{stdout} = $stdout;
+  $$state{stderr} = $stderr;
+
+  if($h->result == 0){
     $$state{status} = "success";
   }else{
     $$state{status} = "failure";
