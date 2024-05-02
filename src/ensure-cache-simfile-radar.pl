@@ -31,11 +31,15 @@ my $USAGE = "Usage:
     --threads=THREAD_COUNT
       use at most THREAD_COUNT worker threads instead of $DEFAULT_MAX_THREADS
       cannot be zero
+
+    --arg=SIMFILE_RADAR_ARG
+      pass 'SIMFILE_RADAR_ARG' to simfile-radar, before the SIMFILE
 ";
 
 sub main(@){
   my $opts = {
     maxThreads       => $DEFAULT_MAX_THREADS,
+    simfileRadarArgs => [],
   };
   my @songPackDirs;
   while(@_ > 0){
@@ -47,6 +51,8 @@ sub main(@){
       $$opts{maxThreads} = $1;
     }elsif(-d $arg){
       push @songPackDirs, $arg;
+    }elsif($arg =~ /^--arg=(.+)$/){
+      push @{$$opts{simfileRadarArgs}}, $arg;
     }else{
       die "$USAGE\nERROR: unknown arg $arg\n";
     }
@@ -175,7 +181,7 @@ sub handleSimfile($$$){
   my ($state, $opts, $simfile) = @_;
   $$state{status} = "running";
 
-  my @cmd = ("simfile-radar", $simfile);
+  my @cmd = ("simfile-radar", @{$$opts{simfileRadarArgs}}, $simfile);
 
   my ($stdout, $stderr);
   my $h = IPC::Run::harness(\@cmd, ">", \$stdout, "2>", \$stderr);
