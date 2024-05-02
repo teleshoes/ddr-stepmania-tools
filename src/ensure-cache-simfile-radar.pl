@@ -76,9 +76,18 @@ sub ensureSimfilesCached($@){
 
   my $total = 0+@simfiles;
 
+  my $isAbort;
+  share($isAbort);
+  $isAbort = 0;
+
   my $count;
   share($count);
   $count = 0;
+
+  $SIG{'INT'} = sub {
+    print STDERR "\n\ncaught SIGINT, exiting each thread after current file\n\n";
+    $isAbort = 1;
+  };
 
   my $progressChunk = int($total / 50);
   $progressChunk = 1 if $progressChunk < 1;
@@ -90,9 +99,18 @@ sub ensureSimfilesCached($@){
     push @threads, threads->create(sub {
       my $threadNum = threads->tid();
       print STDERR "\n     thread#$threadNum: STARTED\n";
+      $SIG{'INT'} = sub {
+        print STDERR "\n\ncaught SIGINT, exiting each thread after current file\n\n";
+        $isAbort = 1;
+      };
 
       for my $simfile(@$bucket){
         handleSimfile($$stateBySimfile{$simfile}, $opts, $simfile);
+
+        if($isAbort){
+          print STDERR "\n    thread#$threadNum: ERROR (aborting)\n";
+          return;
+        }
 
         {
           lock($count);
