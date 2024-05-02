@@ -792,7 +792,19 @@ sub handleSimfile($$$$$$$$$){
       }
     }
 
-    $$s{NOTE_ROWS} = '' if $skipNoteRowsPrinting;
+    if(not $skipNoteRowsPrinting){
+      if(not defined $$smInfo{expandedNoteRowsByGameDiffKey}{$gameDiffKey}){
+        if($readCache){
+          $$smInfo{expandedNoteRowsByGameDiffKey}{$gameDiffKey} =
+            readExpandedNoteRowsCache($smFile, $gameDiffKey);
+        }else{
+          die "ERROR: missing expanded note rows for $smFile $gameDiffKey\n";
+        }
+      }
+      $$s{NOTE_ROWS} = join ",", @{$$smInfo{expandedNoteRowsByGameDiffKey}{$gameDiffKey}};
+    }else{
+      $$s{NOTE_ROWS} = '';
+    }
 
     print formatStats($formatSpec, $forceNewlines, $s);
   }
