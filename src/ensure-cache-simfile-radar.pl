@@ -15,9 +15,14 @@ sub splitIntoBuckets($@);
 
 my $DEFAULT_MAX_THREADS = 16;
 
+my $DEFAULT_SONGS_DIR = "$ENV{HOME}/songs";
+
 my $USAGE = "Usage:
   $0 -h | --help
     show this message
+
+  $0 [OPTS]
+    same as: `$0 $DEFAULT_SONGS_DIR/*`
 
   $0 [OPTS] SONG_PACK_DIR [SONG_PACK_DIR SONG_PACK_DIR..]
     -for each SONG_PACK_DIR, find simfiles at SONG_PACK_DIR/*/*
@@ -56,6 +61,10 @@ sub main(@){
     }else{
       die "$USAGE\nERROR: unknown arg $arg\n";
     }
+  }
+
+  if(@songPackDirs == 0){
+    @songPackDirs = grep {-d $_} glob "$DEFAULT_SONGS_DIR/*";
   }
 
   die "ERROR: THREAD_COUNT cannot be 0\n" if $$opts{maxThreads} == 0;
