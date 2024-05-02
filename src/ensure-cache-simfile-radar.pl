@@ -74,6 +74,15 @@ sub ensureSimfilesCached($@){
     $$stateBySimfile{$simfile} = \%simfileState;
   }
 
+  my $total = 0+@simfiles;
+
+  my $count;
+  share($count);
+  $count = 0;
+
+  my $progressChunk = int($total / 50);
+  $progressChunk = 1 if $progressChunk < 1;
+
   my $start = time;
 
   my @threads;
@@ -81,9 +90,19 @@ sub ensureSimfilesCached($@){
     push @threads, threads->create(sub {
       my $threadNum = threads->tid();
       print STDERR "\n     thread#$threadNum: STARTED\n";
+
       for my $simfile(@$bucket){
         handleSimfile($$stateBySimfile{$simfile}, $opts, $simfile);
+
+        {
+          lock($count);
+          $count++;
+          if($count % $progressChunk == 0){
+            printf "\r%d / %d (%d%%)", $count, $total, int(100.0*$count/$total + 0.5);
+          }
+        }
       }
+
       print STDERR "\n    thread#$threadNum finished\n";
     });
   }
