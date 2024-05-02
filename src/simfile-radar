@@ -1547,7 +1547,9 @@ sub getSMInfo($$$$){
   $smInfo = readSMInfoCache $smFile, $gameDiffFilters if $readCache;
   if(not defined $smInfo){
     $smInfo = parseSMFile $smFile;
-    writeSMInfoCache($smFile, $smInfo) if $writeCache;
+    if($writeCache){
+      writeSMInfoCache($smFile, $smInfo);
+    }
   }
   return $smInfo;
 }
