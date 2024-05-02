@@ -106,6 +106,8 @@ sub calculateNoteSetStats($$);
 sub getSMInfo($$$$);
 sub readSMInfoCache($$);
 sub writeSMInfoCache($$);
+sub readExpandedNoteRowsCache($$);
+sub writeExpandedNoteRowsCache($$$);
 sub songChecksum($$$);
 sub parseSMFile($);
 sub getUniqueDifficulties(@);
@@ -1600,8 +1602,6 @@ sub readSMInfoCache($$){
     }
     $$noteSetInfo{stopsByRow} = $stopsByRow;
 
-    my $noteRowsCacheFilePrefix = "$cacheDir/expandedNoteRows-$gameDiffKey";
-
     my $skipExpandedNoteRowsCache =
       isGameDiffSkipped($gameDiffFilters, $gameDiffKey)
         or isNoteSetStatsCached($smFile, $gameDiffKey);
@@ -1611,20 +1611,7 @@ sub readSMInfoCache($$){
       #  or if note-set-stats calculated+cached
       $$noteSetInfo{expandedNoteRows} = undef;
     }else{
-      my @expandedNoteRows;
-      if(-f "$noteRowsCacheFilePrefix"){
-        open FH, "<", $noteRowsCacheFilePrefix
-          or die "ERROR: could not read $noteRowsCacheFilePrefix\n$!\n";
-        @expandedNoteRows = <FH>;
-        close FH;
-      }elsif(-f "$noteRowsCacheFilePrefix.gz" and isExecAvailable("gunzip")){
-        open FH, "-|", "gunzip", "-c", "$cacheDir/expandedNoteRows-$gameDiffKey.gz";
-        @expandedNoteRows = <FH>;
-        close FH;
-      }
-
-      chomp foreach @expandedNoteRows;
-      $$noteSetInfo{expandedNoteRows} = [@expandedNoteRows];
+      $$noteSetInfo{expandedNoteRows} = readExpandedNoteRowsCache($smFile, $gameDiffKey);
     }
 
 
@@ -1662,13 +1649,43 @@ sub writeSMInfoCache($$){
     print FH "stops=$$noteSetInfo{stops}\n" if defined $$noteSetInfo{stops};
     close FH;
 
-    open FH, "> $cacheDir/expandedNoteRows-$gameDiffKey";
-    print FH "$_\n" foreach @{$$noteSetInfo{expandedNoteRows}};
-    close FH;
+    writeExpandedNoteRowsCache($smFile, $gameDiffKey, $$noteSetInfo{expandedNoteRows});
+  }
+}
 
-    if(isExecAvailable("gzip")){
-      system "gzip", "$cacheDir/expandedNoteRows-$gameDiffKey";
-    }
+sub readExpandedNoteRowsCache($$){
+  my ($smFile, $gameDiffKey) = @_;
+  my $cacheDir = getCacheDir($smFile);
+  my $cacheFile = "$cacheDir/expandedNoteRows-$gameDiffKey";
+
+  my $fh;
+  if(-f $cacheFile){
+    open $fh, "< $cacheFile"
+      or die "ERROR: could not read $cacheFile\n$!\n";
+  }elsif(-f "$cacheFile.gz" and isExecAvailable("gunzip")){
+    open $fh, "-|", "gunzip", "-c", "$cacheFile.gz"
+      or die "ERROR: gunzip $cacheFile.gz failed\n$!\n";
+  }else{
+    return undef;
+  }
+  my @expandedNoteRows = <$fh>;
+  close $fh;
+  chomp foreach @expandedNoteRows;
+  return \@expandedNoteRows;
+}
+
+sub writeExpandedNoteRowsCache($$$){
+  my ($smFile, $gameDiffKey, $expandedNoteRows) = @_;
+  my $cacheDir = getCacheDir($smFile);
+  my $cacheFile = "$cacheDir/expandedNoteRows-$gameDiffKey";
+
+  open my $fh, "> $cacheDir/expandedNoteRows-$gameDiffKey"
+    or die "ERROR: could not write $cacheFile\n$!\n";
+  print $fh "$_\n" foreach @$expandedNoteRows;
+  close $fh;
+
+  if(isExecAvailable("gzip")){
+    system "gzip", $cacheFile;
   }
 }
 
