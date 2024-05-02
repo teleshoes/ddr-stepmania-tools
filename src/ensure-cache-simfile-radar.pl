@@ -52,9 +52,15 @@ sub main(@){
 sub ensureSimfilesCached($@){
   my ($opts, @simfiles) = @_;
 
+  my $start = time;
+
   for my $simfile(@simfiles){
     handleSimfile($opts, $simfile);
   }
+
+  my $end = time;
+
+  print "ELAPSED: " . ($end-$start) . "s\n";
 }
 
 sub handleSimfile($$){
