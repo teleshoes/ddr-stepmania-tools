@@ -18,8 +18,6 @@ my $CACHE_BASE_DIR_SUFFIX = ".cache/simfile-radar";
 
 my $SM_CHARS = '[01234MLFAKNHGOETU]';
 
-my @COMPRESSED_VARIABLE_NAMES = qw(  );
-
 my @GAME_ABBREV_ARR = (
   ["dance-single"      => "singles"],
   ["dance-double"      => "doubles"],
@@ -122,8 +120,6 @@ sub abbrevGame($);
 sub abbrevDiff($);
 sub removeMiddleChar($);
 sub formatTimeMSS($);
-sub boingCompressString($);
-sub boingDecompressString($);
 sub pipeCmdData($$);
 sub readFile($);
 sub getChecksumStr($);
@@ -819,16 +815,11 @@ sub formatStats($$$){
 
   $s =~ s/%n/\n/g;
 
-  my %okCompressedVarnames = map {$_ => 1} @COMPRESSED_VARIABLE_NAMES;
-
   my $varRegex = join "|", sort {length $b <=> length $a} keys %$stats;
   my $printfModRegex = '[ \-+#0]*\d*(?:\.\d+)?[diuoxXfFeEgGaAcs]';
   while($s =~ s/%((?:$printfModRegex)?)-?($varRegex)/&var;/){
     my ($printfMod, $varName) = ($1, $2);
     my $val = $$stats{$varName};
-    if(defined $okCompressedVarnames{$varName}){
-      $val = boingDecompressString($val);
-    }
     $val =~ s/&/&amp;/g;
     $val =~ s/%/&boing;/g;
     if(length $printfMod > 0){
@@ -1560,12 +1551,6 @@ sub calculateNoteSetStats($$){
     my $countCondOK = grep {$_} @$conditions;
     my $countCondTotal = @$conditions;
     $$s{$radarStat} = $val if $countCondOK == $countCondTotal;
-  }
-
-  for my $varName(@COMPRESSED_VARIABLE_NAMES){
-    if(defined $$s{$varName}){
-      $$s{$varName} = boingCompressString($$s{$varName});
-    }
   }
 
   return $s;
@@ -2327,64 +2312,6 @@ sub formatTimeMSS($){
   my $m = int($time/60.0);
   my $s = $time - $m*60;
   return sprintf "%d:%02d", $m, $s;
-}
-
-sub boingCompressString($){
-  my ($str) = @_;
-  my @operations = qw(GZIP BASE64 BOING);
-
-  if(not isExecAvailable("gzip") or not isExecAvailable("base64")){
-    return $str;
-  }
-
-  my $data = $str;
-  for my $operation(@operations){
-    if($operation =~ /^(GZIP)$/i){
-      $data = pipeCmdData("gzip -f", $data);
-    }elsif($operation =~ /^(BASE64)$/i){
-      $data = pipeCmdData("base64 -w 0", $data);
-    }elsif($operation =~ /^(BOING)$/i){
-      $data =~ s/&/&amp;/g;
-      $data =~ s/\n/&nl;/g;
-      $data =~ s/\r/&cr;/g;
-      $data =~ s/%/&boing;/g;
-    }else{
-      die "ERROR: unknown compress-string operation $operation\n";
-    }
-  }
-
-  $data = "%" . join("", map{"$_%"} @operations) . $data . "%";
-
-  return $data;
-}
-
-#e.g.: %BOING%abc&boing;def%   =>  abc%def
-sub boingDecompressString($){
-  my ($str) = @_;
-  if($str !~ /^%((?:GZIP%|BASE64%|BOING%)+)([^%]+)%$/i){
-    #not a boingCompressString() string
-    return $str;
-  }
-  my ($operationsStr, $data) = ($1, $2);
-  my @operations = split /%/, $operationsStr;
-  @operations = reverse @operations; #apply operation closest to the data first
-
-  for my $operation(@operations){
-    if($operation =~ /^(GZIP)$/i){
-      $data = pipeCmdData("gzip -f --decompress", $data);
-    }elsif($operation =~ /^(BASE64)$/i){
-      $data = pipeCmdData("base64 -w 0 --decode", $data);
-    }elsif($operation =~ /^(BOING)$/i){
-      $data =~ s/&boing;/%/g;
-      $data =~ s/&cr;/\r/g;
-      $data =~ s/&nl;/\n/g;
-      $data =~ s/&amp;/&/g;
-    }else{
-      die "ERROR: unknown compress-string operation $operation\n";
-    }
-  }
-
-  return $data;
 }
 
 sub pipeCmdData($$){
