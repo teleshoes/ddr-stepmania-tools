@@ -542,13 +542,15 @@ sub getScoreDataByXmlFile($$$){
     my $ddrnameInfo = ddrnameGetClosestMtimeInfo($$sd{SONG_NAME}, $mtime, [@fieldNames]);
 
     #assert that the parsed XML score data matches the ddrname file
-    my $ddrnameMismatch = 0;
-    $ddrnameMismatch = 1 if $$ddrnameInfo{song}       ne $$sd{SONG_NAME};
-    $ddrnameMismatch = 1 if $$ddrnameInfo{game}       ne $$sd{DDRA_GAME};
-    $ddrnameMismatch = 1 if $$ddrnameInfo{difficulty} ne $$sd{DDRA_DIFFICULTY};
-    $ddrnameMismatch = 1 if $$ddrnameInfo{score}      ne $$sd{DDRA_SCORE};
-    if($ddrnameMismatch){
-      print STDERR "XML/DDRNAME file info mismatch:\n$xmlFile\n";
+    my $ddrnameMatches = defined $ddrnameInfo
+      && $$ddrnameInfo{song}       eq $$sd{SONG_NAME}
+      && $$ddrnameInfo{game}       eq $$sd{DDRA_GAME}
+      && $$ddrnameInfo{difficulty} eq $$sd{DDRA_DIFFICULTY}
+      && $$ddrnameInfo{score}      eq $$sd{DDRA_SCORE}
+    ;
+
+    if(not $ddrnameMatches){
+      print STDERR "\nWARNING: could not find `ddrname` score for xml file:\n  '$xmlFile'\n\n";
       $ddrnameInfo = undef;
     }
 
