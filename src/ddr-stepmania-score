@@ -862,7 +862,6 @@ sub parseSMFileSongStats($$$){
   my $fieldNameFmt = join "###", map {"%$_"} @fieldNames;
 
   my @simfileRadarCmd = ($SIMFILE_RADAR_TOOL,
-    "--no-cache",
     "--game=$game",
     "--diff-sm=$diff",
     "--format=$fieldNameFmt",
