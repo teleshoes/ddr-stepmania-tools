@@ -5,7 +5,7 @@ use File::Basename qw(basename dirname);
 
 sub getDDRNAMECommand($$$);
 sub checkDDRNAME($$$);
-sub getScoreDataByXmlFile($$$);
+sub getScoreDataByXmlFile($$);
 sub readScoreDataCache($);
 sub writeScoreDataCache($$);
 sub getCacheFile($);
@@ -336,10 +336,12 @@ sub main(@){
   my @ddrnamePassedInOpts;
   my $scoreFileMode = $SCORE_FILE_MODE_BY_FILE_EXT;
   my $filenamePrintMode = $FILENAME_PRINT_MODE_MULTIPLE_ONLY;
-  my $checkMtimes = 1;
-  my $readCache = 1;
-  my $writeCache = 1;
-  my $formatSpec = $DEFAULT_FORMAT_SPEC;
+  my $conf = {
+    checkMtimes => 1,
+    readCache => 1,
+    writeCache => 1,
+    formatSpec => $DEFAULT_FORMAT_SPEC,
+  };
   while(@_ > 0){
     my $arg = shift @_;
     if($arg =~ /^(-h|--help)$/){
@@ -373,22 +375,22 @@ sub main(@){
     }elsif($arg =~ /^(--img|--image|--closest-by-mtime)$/i){
       $scoreFileMode = $SCORE_FILE_MODE_CLOSEST_XML_BY_MTIME;
     }elsif($arg =~ /^(--check-mtimes?)$/i){
-      $checkMtimes = 1;
+      $$conf{checkMtimes} = 1;
     }elsif($arg =~ /^(--no-check-mtimes?|--force-mtimes?|--force)$/i){
-      $checkMtimes = 0;
+      $$conf{checkMtimes} = 0;
     }elsif($arg =~ /^(-c|--no-cache)$/){
-      $readCache = 0;
-      $writeCache = 0;
+      $$conf{readCache} = 0;
+      $$conf{writeCache} = 0;
     }elsif($arg =~ /^(-w|--no-read-cache|--overwrite-cache)$/){
-      $readCache = 0;
+      $$conf{readCache} = 0;
     }elsif($arg =~ /^(-r|--no-write-cache|--read-only-cache)$/){
-      $writeCache = 0;
+      $$conf{writeCache} = 0;
     }elsif($arg =~ /^(--filenames?)$/i){
       $filenamePrintMode = $FILENAME_PRINT_MODE_ALWAYS;
     }elsif($arg =~ /^(--no-filenames?|--nofilenames?)$/i){
       $filenamePrintMode = $FILENAME_PRINT_MODE_NEVER;
     }elsif($arg =~ /^--format=(.+)$/i){
-      $formatSpec = $1;
+      $$conf{formatSpec} = $1;
     }elsif(-f $arg){
       push @files, $arg;
     }else{
@@ -415,7 +417,7 @@ sub main(@){
       $xmlFile = $file;
     }elsif($mode eq $SCORE_FILE_MODE_CLOSEST_XML_BY_MTIME){
       $xmlFile = getOldestXmlFileAfterMtime mtime($file);
-      if($checkMtimes){
+      if($$conf{checkMtimes}){
         assertMtimesCloseEnough($file, $xmlFile,
           $XML_MTIME_DIFF_WARNING_SECONDS, $XML_MTIME_DIFF_ERROR_SECONDS);
       }
@@ -423,7 +425,7 @@ sub main(@){
       die "ERROR: unknown SCORE_FILE_MODE: $mode\n";
     }
 
-    my $sd = getScoreDataByXmlFile($xmlFile, $readCache, $writeCache);
+    my $sd = getScoreDataByXmlFile($conf, $xmlFile);
 
     if($cmd eq $COMMAND_PRINT){
       my $printFilename;
@@ -440,7 +442,7 @@ sub main(@){
       if($printFilename){
         print "$file\n";
       }
-      print formatScoreData($formatSpec, $sd);
+      print formatScoreData($$conf{formatSpec}, $sd);
     }elsif($cmd eq $COMMAND_DDRNAME){
       my @cmd = getDDRNAMECommand($file, $sd, [@ddrnamePassedInOpts]);
       print "$SEP\n";
@@ -518,16 +520,16 @@ sub checkDDRNAME($$$){
   }
 }
 
-sub getScoreDataByXmlFile($$$){
-  my ($xmlFile, $readCache, $writeCache) = @_;
+sub getScoreDataByXmlFile($$){
+  my ($conf, $xmlFile) = @_;
   my $sd = undef;
-  $sd = readScoreDataCache($xmlFile) if $readCache;
+  $sd = readScoreDataCache($xmlFile) if $$conf{readCache};
 
   my $cacheOutOfDate = 0;
   if(not defined $sd){
     $sd = calculateScoreDataCache($xmlFile);
     $cacheOutOfDate = 1;
-    writeScoreDataCache($xmlFile, $sd) if $writeCache;
+    writeScoreDataCache($xmlFile, $sd) if $$conf{writeCache};
   }
 
   if(not defined $$sd{DDRNAME_FILE}){
@@ -579,7 +581,7 @@ sub getScoreDataByXmlFile($$$){
     }
   }
 
-  if($writeCache and $cacheOutOfDate){
+  if($$conf{writeCache} and $cacheOutOfDate){
     writeScoreDataCache($xmlFile, $sd);
   }
 
