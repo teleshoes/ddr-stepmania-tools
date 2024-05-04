@@ -15,7 +15,7 @@ sub splitIntoBuckets($@);
 
 my $DEFAULT_MAX_THREADS = 16;
 
-my $DEFAULT_SONGS_DIR = "$ENV{HOME}/songs";
+my $DEFAULT_SONGS_DIR = "$ENV{HOME}/.stepmania-5.0/Songs";
 
 my $USAGE = "Usage:
   $0 -h | --help
