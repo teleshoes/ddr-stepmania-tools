@@ -1021,15 +1021,34 @@ sub removeWarps($$$){
   my $anyWarps = 0;
   my $indexOffset = 0;
   my %indexOldToNew;
+  my $negativeStopWarpRows = 0;
+  my $curBpm = undef;
   for(my $row=0; $row<@$rows; $row++){
     my $bpm = $$bpmsByRow{$row};
+    my $stop = $$stopsByRow{$row};
     my $isWarp = 0;
     if(defined $bpm){
+      $curBpm = $bpm;
       if($bpm < 0 || $bpm > 109713){
         $isWarp = 1;
         $anyWarps = 1;
       }
     }
+
+    if(defined $stop and defined $curBpm){
+      if($stop < 0){
+        my $bps = $curBpm/60;
+        my $warpS = 0-$stop;
+        $negativeStopWarpRows += int($warpS * $ROWS_PER_BEAT * $bps);
+      }
+    }
+
+    if($negativeStopWarpRows > 0){
+      $isWarp = 1;
+      $anyWarps = 1;
+      $negativeStopWarpRows--;
+    }
+
     if($isWarp){
       $indexOffset++;
     }else{
