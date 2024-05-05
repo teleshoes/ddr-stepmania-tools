@@ -1132,8 +1132,6 @@ sub calculateNotesPerSecondInfo($$$){
   my ($rows, $bpmsByRow, $stopsByRow) = @_;
   my $songDurS = 0;
 
- ($rows, $bpmsByRow, $stopsByRow) = removeWarps($rows, $bpmsByRow, $stopsByRow);
-
   my @bpmChangeRows = sort {$a <=> $b} keys %$bpmsByRow;
   my $firstBpm = $$bpmsByRow{$bpmChangeRows[0]};
 
@@ -1481,6 +1479,8 @@ sub calculateNoteSetStats($$){
   }else{
     $stopsByRow = $$smInfo{stopsByRow};
   }
+
+  ($rows, $bpmsByRow, $stopsByRow) = removeWarps($rows, $bpmsByRow, $stopsByRow);
 
   #analysis + data-collection
   $s = {%$s,                     %{getNoteCounts($rows)},
