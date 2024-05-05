@@ -15,6 +15,7 @@ sub getSongAbsDir($);
 sub getSMFileFromSongDir($);
 sub getDDRSonglistLine($$$);
 sub parseSongNameIdOverridesFile($);
+sub parseSimfileDirRenamesFile($);
 sub parseXmlFile($);
 sub parseSMFileSongStats($$$);
 sub replaceXmlCharEntities($);
@@ -44,6 +45,7 @@ my $SONGS_PARENT_DIR = "$ENV{HOME}/.stepmania-5.0";
 my $CACHE_BASE_DIR = "$ENV{HOME}/.cache/ddr-stepmania-score";
 my $ZENIUS_NAME_ID_CACHE_FILE = "$ENV{HOME}/.cache/ddr-zenius-name-id-cache";
 my $SONG_NAME_ID_OVERRIDES_FILE = "$ENV{HOME}/.config/ddrname-songlist-simfile-overrides";
+my $SIMFILE_DIR_RENAMES_FILE = "$ENV{HOME}/.config/stepmania-simfile-dir-renames";
 
 my $DDR_RADAR_FEET_TOOL = "ddr-radar-feet";
 my $ZENIUS_TOOL = "zenius-ddrsonglist";
@@ -63,6 +65,8 @@ my $XML_MTIME_DIFF_ERROR_SECONDS = 600; #FAIL if image file and XML file mtimes 
 my $SONG_NAME_IDS_BY_SONG_DIR_SUFFIX = parseSongNameIdOverridesFile($SONG_NAME_ID_OVERRIDES_FILE);
 my $FMT_HARDCODED_SONG_NAME_IDS = join "\n        ", map {join " ", @$_}
   chunkArr(3, sort values %$SONG_NAME_IDS_BY_SONG_DIR_SUFFIX);
+
+my $SIMFILE_DIR_RENAMES = parseSimfileDirRenamesFile($SIMFILE_DIR_RENAMES_FILE);
 
 my $SM_DDRA_DIFF_ARR = [
   ["Beginner"  => "beginner"],
@@ -794,6 +798,43 @@ sub parseSongNameIdOverridesFile($){
   return $songNameIdsBySongDirSuffix;
 }
 
+sub parseSimfileDirRenamesFile($){
+  my ($file) = @_;
+  my @lines;
+  if(-f $file){
+    open my $fh, "< $file" or die "ERROR: could not read file $file\n$!\n";
+    @lines = <$fh>;
+    close $fh;
+  }
+
+  my $simfileDirRenames = {};
+  my $orig = undef;
+  for my $line(@lines){
+    next if $line =~ /^\s*$/ or $line =~ /^\s*#/;
+    if($line =~ /^\s*=>\s*(\S.*)$/){
+      my $repl = $1;
+      if(not defined $orig){
+        die "ERROR: malformed simfile dir renames file $file\n";
+      }
+      chomp $orig;
+      chomp $repl;
+      if($orig !~ /^Songs\// or $repl !~ /^Songs\//){
+        die "ERROR: simfile dir renames must start with 'Songs/'\n";
+      }elsif($orig !~ /\/$/ or $repl !~ /\/$/){
+        die "ERROR: simfile dir renames must end with '/'\n";
+      }
+      $$simfileDirRenames{$orig} = $repl;
+      $orig = undef;
+    }else{
+      if(defined $orig){
+        die "ERROR: malformed simfile dir renames file $file\n";
+      }
+      $orig = $line;
+    }
+  }
+  return $simfileDirRenames;
+}
+
 sub parseXmlFile($){
   my ($xmlFile) = @_;
   my $xml = readFile $xmlFile;
@@ -839,6 +880,16 @@ sub parseXmlFile($){
     my $songDir = $$info{songDir};
     if($songDir !~ /^Songs\/.*\/$/){
       die "ERROR: song dir must start with 'Songs/' and end with '/' ($xmlFile)\n";
+    }
+
+    if(not -d "$SONGS_PARENT_DIR/$songDir"){
+      if(defined $$SIMFILE_DIR_RENAMES{$songDir}){
+        $songDir = $$SIMFILE_DIR_RENAMES{$songDir};
+        if(not -d "$SONGS_PARENT_DIR/$songDir"){
+          die "ERROR: replacement song dir '$songDir' also does not exist ($xmlFile)\n";
+        }
+        $$info{songDir} = $songDir;
+      }
     }
 
     if(not -d "$SONGS_PARENT_DIR/$songDir"){
