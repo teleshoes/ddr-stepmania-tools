@@ -2100,7 +2100,7 @@ sub convertValuesByBeatToValuesByRow($){
     my $fracDiff = $fracRow - $row;
     $fracDiff = 0 - $fracDiff if $fracDiff < 0;
     if($fracDiff > 0.001){
-      my $msg = "WARNING: invalid BEAT in BPM"
+      my $msg = "WARNING: invalid BEAT/STOP in BPM"
         . " (not close to 1/$ROWS_PER_MEASURE note; forced to the nearest anyway)"
         . " beat\"$beat\" => row\"$fracRow\" ~> row\"$row\""
         . "\n"
