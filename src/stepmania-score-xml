@@ -1,8 +1,13 @@
 #!/usr/bin/perl
 use strict;
 use warnings;
+use Cwd qw(abs_path);
+use File::Basename qw(dirname basename);
+use lib dirname(abs_path($0));
+use SMUtils::Utils qw(
+);
+
 use open qw( :std :encoding(UTF-8) );
-use File::Basename qw(basename);
 use XML::LibXML;
 use Date::Format qw(time2str);
 use Date::Parse qw(str2time);
