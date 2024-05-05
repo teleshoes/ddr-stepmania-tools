@@ -203,6 +203,7 @@ my $usage = "Usage:
             FLAWLESS+PERFECT+GREAT+GOOD+BAD+MISS|HOLD_OK+HOLD_LETGO+HOLD_MISS|MINE_AVOID+MINE_HIT
             e.g.:  138+6+1+0+0+0|32+0+0|8+1
         -DATETIME       XML file mtime, formatted \"%Y-%m-%d_%H:%M:%S\" (e.g.: 2020-05-27_15:16:02)
+        -DATETIME_EPOCH XML file mtime in seconds since epoch
         -PASS_FAIL      <Grade> extracted to just 'passed' or 'failed ('failed' only if 'Failed')
         -SM_GAME        <Steps> 'StepsType' att in the XML (e.g.: 'dance-single')
         -SM_DIFF        <Steps> 'Difficulty' att in the XML (e.g.: ('Hard')
@@ -660,6 +661,7 @@ sub readScoreDataCache($){
   my $xmlMtime = mtime($xmlFile);
   $$sd{XML_FILE} = $xmlFile;
   $$sd{DATETIME} = dateFmt($xmlMtime);
+  $$sd{DATETIME_EPOCH} = $xmlMtime;
 
   return $sd;
 }
@@ -706,6 +708,7 @@ sub calculateScoreDataCache($){
     XML_FILE        => $xmlFile,
     SIMFILE         => $smFile,
     DATETIME        => dateFmt($xmlMtime),
+    DATETIME_EPOCH  => $xmlMtime,
     SONG_DIR        => $songDir,
     SONG_NAME       => $songName,
     PASS_FAIL       => $$xmlInfo{passFail},
