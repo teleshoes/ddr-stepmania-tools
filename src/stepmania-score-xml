@@ -8,6 +8,7 @@ use Date::Format qw(time2str);
 use Date::Parse qw(str2time);
 use Digest::MD5;
 use List::Util qw(max reduce sum);
+use Time::Local qw(timelocal_posix);
 
 sub buildStatsXML($$@);
 sub buildStatsGeneralDataXml($$@);
@@ -1167,7 +1168,13 @@ sub epochToYMD($){
 sub dtmStrToEpoch($){
   my ($dtm) = @_;
 
-  $epoch = str2time($dtm);
+  my $epoch;
+  if($dtm =~ /^(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})$/){
+    #faster (elapsed time is ~60.0%) conversion for stepmania <DateTime> vars
+    $epoch = timelocal_posix($6, $5, $4, $3, $2-1, $1-1900);
+  }else{
+    $epoch = str2time($dtm);
+  }
 
   if(not defined $epoch or $epoch !~ /^-?\d+$/){
     die "ERROR: failed to convert $dtm to epoch\n";
