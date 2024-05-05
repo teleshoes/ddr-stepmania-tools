@@ -42,7 +42,7 @@ sub formatHighScoreNode($);
 sub formatScoreEntryPrettyName($);
 sub cleanStr($);
 sub assertPresent($@);
-sub assertDateTime($$);
+sub assertDateTimeFmt($$);
 sub assertMd5sumMatches($$);
 sub maxBy($@);
 sub readFile($);
@@ -797,7 +797,7 @@ sub extractScoreEntriesFromStats($){
       my $game = convertStepsTypeToGame($stepsType);
       for my $scoreNode(@scoreNodes){
         my $dateTimeXML = $scoreNode->findvalue("./DateTime");
-        assertDateTime("$errorMsg [$songDir] invalid/missing DateTime", $dateTimeXML);
+        assertDateTimeFmt("$errorMsg [$songDir] invalid/missing DateTime", $dateTimeXML);
         my $epoch = dtmStrToEpoch($dateTimeXML);
         my $percentDP = $scoreNode->findvalue("./PercentDP");
 
@@ -863,7 +863,7 @@ sub extractScoreEntriesFromUpload($){
     my $percentDP = $scoreNode->findvalue("./PercentDP");
 
     assertPresent("$errorMsg - missing songDir/game/diff\n", $songDir, $smDiff, $stepsType);
-    assertDateTime("$errorMsg - invalid/missing DateTime\n", $dateTimeXML);
+    assertDateTimeFmt("$errorMsg - invalid/missing DateTime\n", $dateTimeXML);
 
     my $game = convertStepsTypeToGame($stepsType);
     my $epoch = dtmStrToEpoch($dateTimeXML);
@@ -1157,9 +1157,9 @@ sub assertPresent($@){
     die $msg if not defined $elem or $elem eq "";
   }
 }
-sub assertDateTime($$){
-  my ($msg, $timeXML) = @_;
-  if($timeXML !~ /^\d\d\d\d-\d\d-\d\d \d\d:\d\d:\d\d$/){
+sub assertDateTimeFmt($$){
+  my ($msg, $dtm) = @_;
+  if($dtm !~ /^\d\d\d\d-\d\d-\d\d \d\d:\d\d:\d\d$/){
     die $msg;
   }
 }
