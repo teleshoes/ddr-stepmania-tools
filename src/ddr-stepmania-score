@@ -851,6 +851,7 @@ sub parseXmlFile($){
   my @requiredAtts = qw(
     songDir difficulty game grade percentDP
     holdOk holdLetGo holdMissed
+    mineOk mineHit
     flawless perfect great good bad miss
   );
 
