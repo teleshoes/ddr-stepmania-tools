@@ -7,10 +7,9 @@ use lib dirname(abs_path($0));
 use SMUtils::Utils qw(
   epochToYMDOrZero epochToYMD dtmStrToEpoch
   assertPresent assertDateTimeFmt assertMd5sumMatches
-  md5sum mtime touch
+  readFile writeFile md5sum mtime touch
 );
 
-use open qw( :std :encoding(UTF-8) );
 use XML::LibXML;
 use List::Util qw(max reduce sum);
 
@@ -43,8 +42,6 @@ sub formatHighScoreNode($);
 sub formatScoreEntryPrettyName($);
 sub cleanStr($);
 sub maxBy($@);
-sub readFile($);
-sub writeFile($$);
 
 my $SM_SAVE_DIR = "$ENV{HOME}/.stepmania/Save";
 my $SM_STATS_XML_FILE = "$SM_SAVE_DIR/MachineProfile/Stats.xml";
@@ -1149,21 +1146,6 @@ sub cleanStr($){
 sub maxBy($@){
   my ($fct, @elems) = @_;
   return reduce(sub{&$fct($a) >= &$fct($b) ? $a : $b}, @elems);
-}
-
-sub readFile($){
-  my ($file) = @_;
-  open my $fh, "< $file" or die "ERROR: could not read $file\n$!\n";
-  my $contents = join '', <$fh>;
-  close $fh;
-  return $contents;
-}
-
-sub writeFile($$){
-  my ($file, $contents) = @_;
-  open FH, "> $file" or die "ERROR: could not write $file\n$!\n";
-  print FH $contents;
-  close FH;
 }
 
 &main(@ARGV);

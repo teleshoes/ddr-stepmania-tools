@@ -2,6 +2,7 @@ package SMUtils::Utils;
 use strict;
 use warnings;
 
+use open qw( :std :encoding(UTF-8) );
 use Date::Format qw(time2str);
 use Date::Parse qw(str2time);
 use Digest::MD5;
@@ -12,7 +13,7 @@ our @EXPORT_OK = qw();
 our @EXPORT = qw(
   epochToYMDOrZero epochToYMD dtmStrToEpoch
   assertPresent assertDateTimeFmt assertMd5sumMatches
-  md5sum mtime touch
+  readFile writeFile md5sum mtime touch
 );
 
 sub epochToYMDOrZero($);
@@ -21,6 +22,8 @@ sub dtmStrToEpoch($);
 sub assertPresent($@);
 sub assertDateTimeFmt($$);
 sub assertMd5sumMatches($$);
+sub readFile($);
+sub writeFile($$);
 sub md5sum($);
 sub mtime($);
 sub touch($$);
@@ -75,6 +78,21 @@ sub assertMd5sumMatches($$){
   if(not defined $csum1 or not defined $csum2 or $csum1 ne $csum2){
     die "ERROR: checksum mismatch '$f1' vs '$f2'\n";
   }
+}
+
+sub readFile($){
+  my ($file) = @_;
+  open my $fh, "< $file" or die "ERROR: could not read $file\n$!\n";
+  my $contents = join '', <$fh>;
+  close $fh;
+  return $contents;
+}
+
+sub writeFile($$){
+  my ($file, $contents) = @_;
+  open FH, "> $file" or die "ERROR: could not write $file\n$!\n";
+  print FH $contents;
+  close FH;
 }
 
 sub md5sum($){
