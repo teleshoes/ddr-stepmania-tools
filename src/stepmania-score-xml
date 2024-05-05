@@ -95,6 +95,7 @@ my $USAGE = "Usage:
   $EXEC -h | --help
     show this message
 
+  $EXEC [OPTS]
   $EXEC [OPTS] --build-scores
     -parse scores from stepmania XML files
       -include upload files (included by default), unless --no-use-upload is given
