@@ -837,6 +837,10 @@ sub parseXmlFile($){
 
   if(defined $$info{songDir}){
     my $songDir = $$info{songDir};
+    if($songDir !~ /^Songs\/.*\/$/){
+      die "ERROR: song dir must start with 'Songs/' and end with '/' ($xmlFile)\n";
+    }
+
     if(not -d "$SONGS_PARENT_DIR/$songDir"){
       die "ERROR: song dir '$songDir' does not exist ($xmlFile)\n";
     }
