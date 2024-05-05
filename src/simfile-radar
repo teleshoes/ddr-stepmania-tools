@@ -925,10 +925,10 @@ sub getNoteCounts($){
     $$noteCounts{COUNT_MINE_ROWS}++  if $row =~ /[M]/;
     $$noteCounts{COUNT_SHOCK_ROWS}++ if $row =~ /^M+$/; #"shocks" are mine-only rows
 
-    $$noteCounts{COUNT_TAPS}  += $row =~ /1/;
-    $$noteCounts{COUNT_HOLDS} += $row =~ /2/;
-    $$noteCounts{COUNT_ROLLS} += $row =~ /4/;
-    $$noteCounts{COUNT_MINES} += $row =~ /M/;
+    $$noteCounts{COUNT_TAPS}  += @{[ $row =~ /1/g ]};
+    $$noteCounts{COUNT_HOLDS} += @{[ $row =~ /2/g ]};
+    $$noteCounts{COUNT_ROLLS} += @{[ $row =~ /4/g ]};
+    $$noteCounts{COUNT_MINES} += @{[ $row =~ /M/g ]};
   }
 
   return $noteCounts;
