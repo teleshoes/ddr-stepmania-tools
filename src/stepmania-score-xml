@@ -37,6 +37,8 @@ sub formatAttributeStr(@);
 sub formatHighScoreNode($);
 sub formatScoreEntryPrettyName($);
 sub cleanStr($);
+sub epochToYMDOrZero($);
+sub epochToYMD($);
 sub assertPresent($@);
 sub assertDateTime($$);
 sub assertMd5sumMatches($$);
@@ -290,8 +292,8 @@ sub main(@){
     my @scores = sort {$$a{epoch} <=> $$b{epoch}} extractScoreEntriesFromStats $statsXmlFile;
     my $minEpoch = @scores > 0 ? ${$scores[0]}{epoch} : undef;
     my $maxEpoch = @scores > 0 ? ${$scores[-1]}{epoch} : undef;
-    my $minDate = defined $minEpoch ? time2str("%Y-%m-%d", $minEpoch) : "0000-00-00";
-    my $maxDate = defined $maxEpoch ? time2str("%Y-%m-%d", $maxEpoch) : "0000-00-00";
+    my $minDate = epochToYMDOrZero($minEpoch);
+    my $maxDate = epochToYMDOrZero($maxEpoch);
 
     my $machineName = readFile $STATS_MACHINE_NAME_FILE;
     chomp $machineName;
@@ -580,7 +582,7 @@ sub buildStatsSongScoresXML(@){
         my $maxPassedScoreEntryByPercentDP =
           maxBy(sub {${$_[0]}{scoreDetails}{percentDP}}, @passedStepScores);
 
-        my $lastPlayed = time2str("%Y-%m-%d", $$latestScoreEntryByEpoch{epoch});
+        my $lastPlayed = epochToYMD($$latestScoreEntryByEpoch{epoch});
 
         my $highScoreEntry = $maxPassedScoreEntryByPercentDP;
         $highScoreEntry = $maxAnyScoreEntryByPercentDP if not defined $highScoreEntry;
@@ -643,7 +645,7 @@ sub writeScoreEntryFile($){
   my $playerNum = $$scoreEntry{playerNum};
 
   my $epoch = $$scoreEntry{epoch};
-  my $ymd = time2str("%Y-%m-%d", $epoch);
+  my $ymd = epochToYMD($epoch);
 
   my $outFile = "$BAK_SCORES_DIR/${ymd}_${epoch}_p${playerNum}_"
     . formatScoreEntryPrettyName($scoreEntry) . ".xml";
@@ -1148,6 +1150,17 @@ sub cleanStr($){
   $str =~ s/^-//;
   $str =~ s/-$//;
   return $str;
+}
+
+sub epochToYMDOrZero($){
+  my ($epoch) = @_;
+  return defined $epoch ? epochToYMD($epoch) : "0000-00-00";
+}
+
+sub epochToYMD($){
+  my ($epoch) = @_;
+  die "ERROR: missing epoch\n" if not defined $epoch;
+  return time2str("%Y-%m-%d", $epoch);
 }
 
 sub assertPresent($@){
