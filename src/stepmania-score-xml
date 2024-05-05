@@ -44,6 +44,7 @@ sub formatScoreEntryPrettyName($);
 sub cleanStr($);
 sub maxBy($@);
 sub readFile($);
+sub writeFile($$);
 
 my $SM_SAVE_DIR = "$ENV{HOME}/.stepmania/Save";
 my $SM_STATS_XML_FILE = "$SM_SAVE_DIR/MachineProfile/Stats.xml";
@@ -278,9 +279,7 @@ sub main(@){
 
     my $targetStatsFile = "$SM_STATS_XML_FILE.generated";
     print "writing $targetStatsFile\n";
-    open FH, "> $targetStatsFile" or die "ERROR: could not write $targetStatsFile\n$!\n";
-    print FH $xml;
-    close FH;
+    writeFile($targetStatsFile, $xml);
   }elsif($mode eq $MODE_BACKUP_STATS){
     my $statsXmlFile = $SM_STATS_XML_FILE;
 
@@ -646,9 +645,7 @@ sub writeScoreEntryFile($){
 
   my $outFile = "$BAK_SCORES_DIR/${ymd}_${epoch}_p${playerNum}_"
     . formatScoreEntryPrettyName($scoreEntry) . ".xml";
-  open FH, "> $outFile" or die "ERROR: could not write $outFile\n$!\n";
-  print FH $xml;
-  close FH;
+  writeFile($outFile, $xml);
 
   touch($outFile, $epoch);
 }
@@ -1160,6 +1157,13 @@ sub readFile($){
   my $contents = join '', <$fh>;
   close $fh;
   return $contents;
+}
+
+sub writeFile($$){
+  my ($file, $contents) = @_;
+  open FH, "> $file" or die "ERROR: could not write $file\n$!\n";
+  print FH $contents;
+  close FH;
 }
 
 &main(@ARGV);
