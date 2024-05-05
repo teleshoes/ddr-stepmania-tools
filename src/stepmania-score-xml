@@ -39,6 +39,7 @@ sub formatScoreEntryPrettyName($);
 sub cleanStr($);
 sub epochToYMDOrZero($);
 sub epochToYMD($);
+sub dtmStrToEpoch($);
 sub assertPresent($@);
 sub assertDateTime($$);
 sub assertMd5sumMatches($$);
@@ -799,7 +800,7 @@ sub extractScoreEntriesFromStats($){
       for my $scoreNode(@scoreNodes){
         my $dateTimeXML = $scoreNode->findvalue("./DateTime");
         assertDateTime("$errorMsg [$songDir] invalid/missing DateTime", $dateTimeXML);
-        my $epoch = str2time($dateTimeXML);
+        my $epoch = dtmStrToEpoch($dateTimeXML);
         my $percentDP = $scoreNode->findvalue("./PercentDP");
 
         push @scoreEntries, {
@@ -867,7 +868,7 @@ sub extractScoreEntriesFromUpload($){
     assertDateTime("$errorMsg - invalid/missing DateTime\n", $dateTimeXML);
 
     my $game = convertStepsTypeToGame($stepsType);
-    my $epoch = str2time($dateTimeXML);
+    my $epoch = dtmStrToEpoch($dateTimeXML);
 
     push @scoreEntries, {
       songDir     => $songDir,
@@ -1161,6 +1162,11 @@ sub epochToYMD($){
   my ($epoch) = @_;
   die "ERROR: missing epoch\n" if not defined $epoch;
   return time2str("%Y-%m-%d", $epoch);
+}
+
+sub dtmStrToEpoch($){
+  my ($dtm) = @_;
+  return str2time($dtm);
 }
 
 sub assertPresent($@){
