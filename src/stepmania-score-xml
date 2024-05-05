@@ -6,6 +6,7 @@ use File::Basename qw(dirname basename);
 use lib dirname(abs_path($0));
 use SMUtils::Utils qw(
   epochToYMDOrZero epochToYMD dtmStrToEpoch
+  assertPresent assertDateTimeFmt assertMd5sumMatches
   md5sum mtime touch
 );
 
@@ -41,9 +42,6 @@ sub formatAttributeStr(@);
 sub formatHighScoreNode($);
 sub formatScoreEntryPrettyName($);
 sub cleanStr($);
-sub assertPresent($@);
-sub assertDateTimeFmt($$);
-sub assertMd5sumMatches($$);
 sub maxBy($@);
 sub readFile($);
 
@@ -1149,28 +1147,6 @@ sub cleanStr($){
   $str =~ s/^-//;
   $str =~ s/-$//;
   return $str;
-}
-
-sub assertPresent($@){
-  my ($msg, @elems) = @_;
-  for my $elem(@elems){
-    die $msg if not defined $elem or $elem eq "";
-  }
-}
-sub assertDateTimeFmt($$){
-  my ($msg, $dtm) = @_;
-  if($dtm !~ /^\d\d\d\d-\d\d-\d\d \d\d:\d\d:\d\d$/){
-    die $msg;
-  }
-}
-
-sub assertMd5sumMatches($$){
-  my ($f1, $f2) = @_;
-  my $csum1 = md5sum $f1;
-  my $csum2 = md5sum $f2;
-  if(not defined $csum1 or not defined $csum2 or $csum1 ne $csum2){
-    die "ERROR: checksum mismatch '$f1' vs '$f2'\n";
-  }
 }
 
 sub maxBy($@){

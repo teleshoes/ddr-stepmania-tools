@@ -11,12 +11,16 @@ our @ISA = qw(Exporter);
 our @EXPORT_OK = qw();
 our @EXPORT = qw(
   epochToYMDOrZero epochToYMD dtmStrToEpoch
+  assertPresent assertDateTimeFmt assertMd5sumMatches
   md5sum mtime touch
 );
 
 sub epochToYMDOrZero($);
 sub epochToYMD($);
 sub dtmStrToEpoch($);
+sub assertPresent($@);
+sub assertDateTimeFmt($$);
+sub assertMd5sumMatches($$);
 sub md5sum($);
 sub mtime($);
 sub touch($$);
@@ -48,6 +52,29 @@ sub dtmStrToEpoch($){
   }
 
   return $epoch;
+}
+
+sub assertPresent($@){
+  my ($msg, @elems) = @_;
+  for my $elem(@elems){
+    die $msg if not defined $elem or $elem eq "";
+  }
+}
+
+sub assertDateTimeFmt($$){
+  my ($msg, $dtm) = @_;
+  if($dtm !~ /^\d\d\d\d-\d\d-\d\d \d\d:\d\d:\d\d$/){
+    die $msg;
+  }
+}
+
+sub assertMd5sumMatches($$){
+  my ($f1, $f2) = @_;
+  my $csum1 = md5sum $f1;
+  my $csum2 = md5sum $f2;
+  if(not defined $csum1 or not defined $csum2 or $csum1 ne $csum2){
+    die "ERROR: checksum mismatch '$f1' vs '$f2'\n";
+  }
 }
 
 sub md5sum($){
