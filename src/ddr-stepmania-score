@@ -11,10 +11,11 @@ sub writeScoreDataCache($$);
 sub getCacheFile($);
 sub calculateScoreDataCache($);
 sub formatScoreData($$);
-sub getSMFileFromSongDir($);
+sub getSMFileFromSongDir($$);
 sub getDDRSonglistLine($$$);
 sub parseSongNameIdOverridesFile($);
 sub parseSimfileDirRenamesFile($);
+sub parseSimfileVersionsFile($);
 sub parseXmlFile($);
 sub parseSMFileSongStats($$$);
 sub replaceXmlCharEntities($);
@@ -45,6 +46,7 @@ my $CACHE_BASE_DIR = "$ENV{HOME}/.cache/ddr-stepmania-score";
 my $ZENIUS_NAME_ID_CACHE_FILE = "$ENV{HOME}/.cache/ddr-zenius-name-id-cache";
 my $SONG_NAME_ID_OVERRIDES_FILE = "$ENV{HOME}/.config/ddrname-songlist-simfile-overrides";
 my $SIMFILE_DIR_RENAMES_FILE = "$ENV{HOME}/.config/stepmania-simfile-dir-renames";
+my $SIMFILE_VERSIONS_FILE = "$ENV{HOME}/.config/stepmania-simfile-versions";
 
 my $DDR_RADAR_FEET_TOOL = "ddr-radar-feet";
 my $ZENIUS_TOOL = "zenius-ddrsonglist";
@@ -66,6 +68,7 @@ my $FMT_HARDCODED_SONG_NAME_IDS = join "\n        ", map {join " ", @$_}
   chunkArr(3, sort values %$SONG_NAME_IDS_BY_SONG_DIR_SUFFIX);
 
 my $SIMFILE_DIR_RENAMES = parseSimfileDirRenamesFile($SIMFILE_DIR_RENAMES_FILE);
+my $SIMFILE_VERSIONS_BY_SONG_DIR = parseSimfileVersionsFile($SIMFILE_VERSIONS_FILE);
 
 my $SM_DDRA_DIFF_ARR = [
   ["Beginner"  => "beginner"],
@@ -466,7 +469,7 @@ sub main(@){
       if($exitCode != 0){
         my $songDir = $$sd{SONG_DIR};
         my $song = $$sd{SONG_NAME};
-        my $smFile = getSMFileFromSongDir $songDir;
+        my $smFile = getSMFileFromSongDir $$sd{SONG_DIR}, $$sd{DATETIME_EPOCH};
         my $songlistLine = getDDRSonglistLine($songDir, $song, $smFile);
         die "\n\nERROR: $DDRNAME_TOOL failed\n"
           . "target: $file\n"
@@ -481,7 +484,7 @@ sub main(@){
       if(not $isOk){
         my $songDir = $$sd{SONG_DIR};
         my $song = $$sd{SONG_NAME};
-        my $smFile = getSMFileFromSongDir $songDir;
+        my $smFile = getSMFileFromSongDir $$sd{SONG_DIR}, $$sd{DATETIME_EPOCH};
 
         my $songlistLine = getDDRSonglistLine($songDir, $song, $smFile);
         print "$songDir\n";
@@ -655,7 +658,7 @@ sub readScoreDataCache($){
   }
 
   if(not defined $$sd{SIMFILE}){
-    $$sd{SIMFILE} = getSMFileFromSongDir $$sd{SONG_DIR};
+    $$sd{SIMFILE} = getSMFileFromSongDir $$sd{SONG_DIR}, $$sd{DATETIME_EPOCH};
   }
 
   my $xmlMtime = mtime($xmlFile);
@@ -696,7 +699,7 @@ sub calculateScoreDataCache($){
   my $xmlInfo = parseXmlFile $xmlFile;
   my $songDir = $$xmlInfo{songDir};
   my $gameDiffKey = gameDiffKey($$xmlInfo{game}, $$xmlInfo{difficulty});
-  my $smFile = getSMFileFromSongDir $songDir;
+  my $smFile = getSMFileFromSongDir $songDir, $xmlMtime;
   my $songStats = parseSMFileSongStats(
     $smFile, $$xmlInfo{game}, $$xmlInfo{difficulty});
 
@@ -752,8 +755,18 @@ sub formatScoreData($$){
   return $s;
 }
 
-sub getSMFileFromSongDir($){
-  my ($songDir) = @_;
+sub getSMFileFromSongDir($$){
+  my ($songDir, $epoch) = @_;
+
+  if(defined $$SIMFILE_VERSIONS_BY_SONG_DIR{$songDir}){
+    my @versions = @{$$SIMFILE_VERSIONS_BY_SONG_DIR{$songDir}};
+    for my $v(@versions){
+      if($$v{startEpoch} <= $epoch && $epoch <= $$v{endEpoch}){
+        die "$$v{startEpoch}   $epoch   $$v{endEpoch}\n";
+        return $$v{absSMFile};
+      }
+    }
+  }
 
   my $songAbsDir = "$SONGS_PARENT_DIR/$songDir";
   if(not -d $songAbsDir){
@@ -839,6 +852,45 @@ sub parseSimfileDirRenamesFile($){
     }
   }
   return $simfileDirRenames;
+}
+
+sub parseSimfileVersionsFile($){
+  my ($file) = @_;
+  my @lines;
+  if(-f $file){
+    open my $fh, "< $file" or die "ERROR: could not read file $file\n$!\n";
+    @lines = <$fh>;
+    close $fh;
+  }
+
+  my $simfileVersionsBySongDir = {};
+  for my $line(@lines){
+    chomp $line;
+    next if $line =~ /^\s*$/ or $line =~ /^\s*#/;
+    if($line =~ /^\s*(\d+)\s*:\s*(\d+)\s*:\s*(Songs\/[^:]*\/)\s*:\s*([^:]+)$/){
+      my ($startEpoch, $endEpoch, $songDir, $relSMFile) = ($1, $2, $3, $4);
+
+      my $absDir = "$SONGS_PARENT_DIR/$songDir";
+      $absDir =~ s/\/$//;
+      my $absSMFile = "$absDir/$relSMFile";
+      if(not -f $absSMFile){
+        die "ERROR: could not find SM_FILE version $absSMFile\n";
+      }
+
+      if(not defined $$simfileVersionsBySongDir{$songDir}){
+        $$simfileVersionsBySongDir{$songDir} = [];
+      }
+      push @{$$simfileVersionsBySongDir{$songDir}}, {
+        startEpoch => $startEpoch,
+        endEpoch   => $endEpoch,
+        songDir    => $songDir,
+        absSMFile  => $absSMFile,
+      };
+    }else{
+      die "ERROR: malformed versions line in $file\n$line\n";
+    }
+  }
+  return $simfileVersionsBySongDir;
 }
 
 sub parseXmlFile($){
