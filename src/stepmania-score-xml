@@ -1166,7 +1166,14 @@ sub epochToYMD($){
 
 sub dtmStrToEpoch($){
   my ($dtm) = @_;
-  return str2time($dtm);
+
+  $epoch = str2time($dtm);
+
+  if(not defined $epoch or $epoch !~ /^-?\d+$/){
+    die "ERROR: failed to convert $dtm to epoch\n";
+  }
+
+  return $epoch;
 }
 
 sub assertPresent($@){
