@@ -1044,8 +1044,8 @@ sub removeWarps($$$){
     for my $oldIndex(sort {$a <=> $b} keys %indexOldToNew){
       push @newRows, $$rows[$oldIndex];
       my $newIndex = $indexOldToNew{$oldIndex};
-      $newBpmsByRow{$newIndex} = $$bpmsByRow{$oldIndex};
-      $newStopsByRow{$newIndex} = $$stopsByRow{$oldIndex};
+      $newBpmsByRow{$newIndex} = $$bpmsByRow{$oldIndex} if defined $$bpmsByRow{$oldIndex};
+      $newStopsByRow{$newIndex} = $$stopsByRow{$oldIndex} if defined $$stopsByRow{$oldIndex};
     }
 
     $rows = \@newRows;
