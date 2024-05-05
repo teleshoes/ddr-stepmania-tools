@@ -1154,7 +1154,7 @@ sub cleanStr($){
 sub assertPresent($@){
   my ($msg, @elems) = @_;
   for my $elem(@elems){
-    die $msg if not $elem;
+    die $msg if not defined $elem or $elem eq "";
   }
 }
 sub assertDateTime($$){
