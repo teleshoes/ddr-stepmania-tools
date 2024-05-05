@@ -114,6 +114,7 @@ my $DEFAULT_FORMAT_SPEC = ""
   . "PASS_FAIL:       %PASS_FAIL\n"
   . "DDRA_SCORE:      %DDRA_SCORE\n"
   . "PERCENT_SCORE:   %PERCENT_SCORE\n"
+  . "TIMING_DATA:     %TIMING_DATA\n"
   . "FC:              %FC\n"
   . "DDRA_GAME:       %DDRA_GAME\n"
   . "DDRA_DIFFICULTY: %DDRA_DIFFICULTY\n"
@@ -198,7 +199,10 @@ my $usage = "Usage:
   SCORE_DATA
     (1) parse stepmania XML_SCORE_FILE, and obtain:
         -SONG_DIR       relative path to the song dir, always starts with Songs/
-        -TIMING_DATA    includes counts of steps for timings like: FLAWLESS PERFECT GREAT GOOD OK
+        -TIMING_DATA    includes counts of tap/hold/minesteps for timings like
+          format as:
+            FLAWLESS+PERFECT+GREAT+GOOD+BAD+MISS|HOLD_OK+HOLD_LETGO+HOLD_MISS|MINE_AVOID+MINE_HIT
+            e.g.:  138+6+1+0+0+0|32+0+0|8+1
         -DATETIME       XML file mtime, formatted \"%Y-%m-%d_%H:%M:%S\" (e.g.: 2020-05-27_15:16:02)
         -PASS_FAIL      <Grade> extracted to just 'passed' or 'failed ('failed' only if 'Failed')
         -SM_GAME        <Steps> 'StepsType' att in the XML (e.g.: 'dance-single')
@@ -255,6 +259,7 @@ my $usage = "Usage:
         -PASS_FAIL
         -DDRA_SCORE
         -PERCENT_SCORE
+        -TIMING_DATA
         -FC
         -FC_MAYBE
         -DDRA_GAME
@@ -705,6 +710,7 @@ sub calculateScoreDataCache($){
     PASS_FAIL       => $$xmlInfo{passFail},
     DDRA_SCORE      => $ddraScore,
     PERCENT_SCORE   => $$xmlInfo{percentScore},
+    TIMING_DATA     => $$xmlInfo{timingData},
     FC              => $fc,
     FC_MAYBE        => $fc =~ /^(nofc)$/i ? "" : $fc,
     DDRA_GAME       => getDDRAGame($$xmlInfo{game}),
@@ -920,6 +926,21 @@ sub parseXmlFile($){
   for my $att(@requiredAtts){
     die "ERROR: could not parse '$att' in $xmlFile\n" if not defined $$info{$att};
   }
+
+  $$info{timingData} = sprintf("%d+%d+%d+%d+%d+%d|%d+%d+%d|%d+%d",
+    $$info{flawless},
+    $$info{perfect},
+    $$info{great},
+    $$info{good},
+    $$info{bad},
+    $$info{miss},
+    $$info{holdOk},
+    $$info{holdLetGo},
+    $$info{holdMissed},
+    $$info{mineOk},
+    $$info{mineHit},
+  );
+
 
   if(defined $$info{percentDP}){
     #percentDP is a ratio in the XML...
