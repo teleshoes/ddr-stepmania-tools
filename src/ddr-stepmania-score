@@ -11,7 +11,6 @@ sub writeScoreDataCache($$);
 sub getCacheFile($);
 sub calculateScoreDataCache($);
 sub formatScoreData($$);
-sub getSongAbsDir($);
 sub getSMFileFromSongDir($);
 sub getDDRSonglistLine($$$);
 sub parseSongNameIdOverridesFile($);
@@ -693,7 +692,7 @@ sub calculateScoreDataCache($){
   my ($xmlFile) = @_;
   my $xmlMtime = mtime($xmlFile);
   my $xmlInfo = parseXmlFile $xmlFile;
-  my $songDir = getSongAbsDir $$xmlInfo{songDir};
+  my $songDir = $$xmlInfo{songDir};
   my $gameDiffKey = gameDiffKey($$xmlInfo{game}, $$xmlInfo{difficulty});
   my $smFile = getSMFileFromSongDir $songDir;
   my $songStats = parseSMFileSongStats(
@@ -750,20 +749,16 @@ sub formatScoreData($$){
   return $s;
 }
 
-sub getSongAbsDir($){
-  my ($songRelDir) = @_;
-  my $songDir = "$SONGS_PARENT_DIR/$songRelDir";
-  $songDir =~ s/\/$//;
-  if(not -d $songDir){
-    die "ERROR: \"$songDir\" is not a dir\n";
-  }
-  return $songDir;
-}
-
 sub getSMFileFromSongDir($){
   my ($songDir) = @_;
-  my @smFiles = grep {$_ =~ /\.(ssc|sm)$/i} listDirFiles $songDir;
-  die "ERROR: could not find SSC or SM file in $songDir\n" if @smFiles == 0;
+
+  my $songAbsDir = "$SONGS_PARENT_DIR/$songDir";
+  if(not -d $songAbsDir){
+    die "ERROR: \"$songAbsDir\" is not a dir\n";
+  }
+
+  my @smFiles = grep {$_ =~ /\.(ssc|sm)$/i} listDirFiles $songAbsDir;
+  die "ERROR: could not find SSC or SM file in $songAbsDir\n" if @smFiles == 0;
   return $smFiles[0];
 }
 
