@@ -6,11 +6,11 @@ use File::Basename qw(dirname basename);
 use lib dirname(abs_path($0));
 use SMUtils::Utils qw(
   epochToYMDOrZero epochToYMD dtmStrToEpoch
+  md5sum mtime touch
 );
 
 use open qw( :std :encoding(UTF-8) );
 use XML::LibXML;
-use Digest::MD5;
 use List::Util qw(max reduce sum);
 
 sub buildStatsXML($$@);
@@ -46,9 +46,6 @@ sub assertDateTime($$);
 sub assertMd5sumMatches($$);
 sub maxBy($@);
 sub readFile($);
-sub md5sum($);
-sub mtime($);
-sub touch($$);
 
 my $SM_SAVE_DIR = "$ENV{HOME}/.stepmania/Save";
 my $SM_STATS_XML_FILE = "$SM_SAVE_DIR/MachineProfile/Stats.xml";
@@ -1187,26 +1184,6 @@ sub readFile($){
   my $contents = join '', <$fh>;
   close $fh;
   return $contents;
-}
-
-sub md5sum($){
-  my ($file) = @_;
-  open my $fh, "< $file" or die "ERROR: could not read $file\n$!\n";
-  my $md5sum = Digest::MD5->new->addfile($fh)->hexdigest;
-  close $fh;
-  die "ERROR: could not get md5sum of $file\n" if $md5sum !~ /^[0-9a-f]{32}$/;
-  return $md5sum;
-}
-
-sub mtime($){
-  my ($file) = @_;
-  my @stat = stat $file;
-  return $stat[9];
-}
-
-sub touch($$){
-  my ($file, $epoch) = @_;
-  utime($epoch, $epoch, $file);
 }
 
 &main(@ARGV);

@@ -4,17 +4,22 @@ use warnings;
 
 use Date::Format qw(time2str);
 use Date::Parse qw(str2time);
+use Digest::MD5;
 use Time::Local qw(timelocal_posix);
 
 our @ISA = qw(Exporter);
 our @EXPORT_OK = qw();
 our @EXPORT = qw(
   epochToYMDOrZero epochToYMD dtmStrToEpoch
+  md5sum mtime touch
 );
 
 sub epochToYMDOrZero($);
 sub epochToYMD($);
 sub dtmStrToEpoch($);
+sub md5sum($);
+sub mtime($);
+sub touch($$);
 
 sub epochToYMDOrZero($){
   my ($epoch) = @_;
@@ -43,6 +48,26 @@ sub dtmStrToEpoch($){
   }
 
   return $epoch;
+}
+
+sub md5sum($){
+  my ($file) = @_;
+  open my $fh, "< $file" or die "ERROR: could not read $file\n$!\n";
+  my $md5sum = Digest::MD5->new->addfile($fh)->hexdigest;
+  close $fh;
+  die "ERROR: could not get md5sum of $file\n" if $md5sum !~ /^[0-9a-f]{32}$/;
+  return $md5sum;
+}
+
+sub mtime($){
+  my ($file) = @_;
+  my @stat = stat $file;
+  return $stat[9];
+}
+
+sub touch($$){
+  my ($file, $epoch) = @_;
+  utime($epoch, $epoch, $file);
 }
 
 1;
