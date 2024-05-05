@@ -835,6 +835,13 @@ sub parseXmlFile($){
     $$info{songDir} = replaceXmlCharEntities($$info{songDir});
   }
 
+  if(defined $$info{songDir}){
+    my $songDir = $$info{songDir};
+    if(not -d "$SONGS_PARENT_DIR/$songDir"){
+      die "ERROR: song dir '$songDir' does not exist ($xmlFile)\n";
+    }
+  }
+
   #convert new outfox format StepsType_Dance_Single => dance-single
   $$info{game} =~ s/^StepsType_//;
   $$info{game} =~ s/_/-/g;
