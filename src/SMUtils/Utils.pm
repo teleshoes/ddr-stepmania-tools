@@ -14,6 +14,7 @@ our @EXPORT = qw(
   dateFmt dateFmtYMDHMS epochToYMDOrZero epochToYMD dtmStrToEpoch
   assertPresent assertDateTimeFmt assertMd5sumMatches
   readFile writeFile appendFile readProc listDirFiles md5sum mtime touch
+  wantarrayToContext
 );
 
 sub dateFmt($$);
