@@ -119,9 +119,17 @@ sub appendFile($$){
 
 sub readProc(@){
   open CMD, "-|", @_ or die "ERROR: could not run \"@_\"\n$!\n";
-  my $out = join '', <CMD>;
+  my @lines = <CMD>;
   close CMD;
-  return $out;
+
+  my $wantarrayContext = wantarrayToContext(wantarray);
+  if($wantarrayContext eq $WANTARRAY_CONTEXT_SCALAR){
+    return join '', @lines;
+  }elsif($wantarrayContext eq $WANTARRAY_CONTEXT_LIST){
+    return @lines;
+  }elsif($wantarrayContext eq $WANTARRAY_CONTEXT_VOID){
+    return;
+  }
 }
 
 sub md5sum($){
