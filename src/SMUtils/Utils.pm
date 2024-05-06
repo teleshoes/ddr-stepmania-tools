@@ -13,7 +13,7 @@ our @EXPORT_OK = qw();
 our @EXPORT = qw(
   epochToYMDOrZero epochToYMD dtmStrToEpoch
   assertPresent assertDateTimeFmt assertMd5sumMatches
-  readFile writeFile appendFile md5sum mtime touch
+  readFile writeFile appendFile readProc md5sum mtime touch
 );
 
 sub epochToYMDOrZero($);
@@ -25,6 +25,7 @@ sub assertMd5sumMatches($$);
 sub readFile($);
 sub writeFile($$);
 sub appendFile($$);
+sub readProc(@);
 sub md5sum($);
 sub mtime($);
 sub touch($$);
@@ -114,6 +115,13 @@ sub appendFile($$){
   open FH, ">> $file" or die "ERROR: could not append $file\n$!\n";
   print FH $contents;
   close FH;
+}
+
+sub readProc(@){
+  open CMD, "-|", @_ or die "ERROR: could not run \"@_\"\n$!\n";
+  my $out = join '', <CMD>;
+  close CMD;
+  return $out;
 }
 
 sub md5sum($){
