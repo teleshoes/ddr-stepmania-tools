@@ -13,7 +13,7 @@ our @EXPORT_OK = qw();
 our @EXPORT = qw(
   dateFmt dateFmtYMDHMS epochToYMDOrZero epochToYMD dtmStrToEpoch
   assertPresent assertDateTimeFmt assertMd5sumMatches
-  readFile writeFile appendFile readProc md5sum mtime touch
+  readFile writeFile appendFile readProc listDirFiles md5sum mtime touch
 );
 
 sub dateFmt($$);
@@ -28,6 +28,7 @@ sub readFile($);
 sub writeFile($$);
 sub appendFile($$);
 sub readProc(@);
+sub listDirFiles($);
 sub md5sum($);
 sub mtime($);
 sub touch($$);
@@ -143,6 +144,17 @@ sub readProc(@){
   }elsif($wantarrayContext eq $WANTARRAY_CONTEXT_VOID){
     return;
   }
+}
+
+sub listDirFiles($){
+  my ($dir) = @_;
+  opendir(my $dh, $dir) or die "ERROR: could not read dir $dir\n$!\n";
+  my @files = readdir($dh);
+  closedir($dh);
+  $dir =~ s/\/?$//;
+  @files = map {"$dir/$_"} @files;
+  @files = grep {-f $_} @files;
+  return @files;
 }
 
 sub md5sum($){
