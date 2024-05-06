@@ -6,7 +6,7 @@ use File::Basename qw(basename dirname);
 use lib dirname(abs_path($0));
 
 use SMUtils::Utils qw(
-  readFile writeFile md5sum mtime
+  readFile writeFile appendFile md5sum mtime
 );
 
 sub getDDRNAMECommand($$$);
@@ -1184,10 +1184,7 @@ sub readZeniusNameIdCache(){
 }
 sub appendZeniusNameIdCache($$){
   my ($songName, $query) = @_;
-  open FH, ">> $ZENIUS_NAME_ID_CACHE_FILE"
-    or die "ERROR: could not append $ZENIUS_NAME_ID_CACHE_FILE\n$!\n";
-  print FH "$songName:$query\n";
-  close FH;
+  appendFile($ZENIUS_NAME_ID_CACHE_FILE, "$songName:$query\n");
 }
 
 sub listDirFiles($){
