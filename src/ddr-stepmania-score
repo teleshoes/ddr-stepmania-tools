@@ -7,7 +7,7 @@ use lib dirname(abs_path($0));
 
 use SMUtils::Utils qw(
   dateFmtYMDHMS
-  readFile writeFile appendFile readProc md5sum mtime
+  readFile writeFile appendFile readProc listDirFiles md5sum mtime
 );
 
 sub getDDRNAMECommand($$$);
@@ -38,7 +38,6 @@ sub getSongNameWithZeniusTool($);
 sub readZeniusNameIdCache();
 sub appendZeniusNameIdCache($$);
 
-sub listDirFiles($);
 sub allFilesExist(@);
 sub chunkArr($@);
 
@@ -1182,17 +1181,6 @@ sub readZeniusNameIdCache(){
 sub appendZeniusNameIdCache($$){
   my ($songName, $query) = @_;
   appendFile($ZENIUS_NAME_ID_CACHE_FILE, "$songName:$query\n");
-}
-
-sub listDirFiles($){
-  my ($dir) = @_;
-  opendir(my $dh, $dir) or die "ERROR: could not read dir $dir\n$!\n";
-  my @files = readdir($dh);
-  closedir($dh);
-  $dir =~ s/\/?$//;
-  @files = map {"$dir/$_"} @files;
-  @files = grep {-f $_} @files;
-  return @files;
 }
 
 sub allFilesExist(@){
