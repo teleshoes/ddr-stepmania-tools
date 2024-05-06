@@ -618,17 +618,16 @@ sub ddrnameGetClosestMtimeInfo($$$){
     "--closest-mtime", "$mtime",
   );
 
-  my $out = readProc @ddrnameCmd;
-  my @lines = split /\n/, $out;
+  my @lines = readProc @ddrnameCmd;
   if(@lines == 0){
     return undef;
   }elsif(@lines > 1){
-    die "ERROR: too many scores returned by @ddrnameCmd\n$out";
+    die "ERROR: too many scores returned by @ddrnameCmd\n@lines";
   }else{
     my $line = $lines[0];
     my @fieldVals = split "###", $line, -1;
     if($#fieldNames != $#fieldVals){
-      die "ERROR: malformed output of @ddrnameCmd\n$out";
+      die "ERROR: malformed output of @ddrnameCmd\n@lines";
     }
     my $info = {};
     for(my $i=0; $i<@fieldNames; $i++){
