@@ -6,6 +6,7 @@ use File::Basename qw(basename dirname);
 use lib dirname(abs_path($0));
 
 use SMUtils::Utils qw(
+  dateFmtYMDHMS
   readFile writeFile appendFile readProc md5sum mtime
 );
 
@@ -38,7 +39,6 @@ sub readZeniusNameIdCache();
 sub appendZeniusNameIdCache($$);
 
 sub listDirFiles($);
-sub dateFmt($);
 sub allFilesExist(@);
 sub chunkArr($@);
 
@@ -664,7 +664,7 @@ sub readScoreDataCache($){
 
   my $xmlMtime = mtime($xmlFile);
   $$sd{XML_FILE} = $xmlFile;
-  $$sd{DATETIME} = dateFmt($xmlMtime);
+  $$sd{DATETIME} = dateFmtYMDHMS($xmlMtime);
   $$sd{DATETIME_EPOCH} = $xmlMtime;
 
   return $sd;
@@ -710,7 +710,7 @@ sub calculateScoreDataCache($){
   return {
     XML_FILE        => $xmlFile,
     SIMFILE         => $smFile,
-    DATETIME        => dateFmt($xmlMtime),
+    DATETIME        => dateFmtYMDHMS($xmlMtime),
     DATETIME_EPOCH  => $xmlMtime,
     SONG_DIR        => $songDir,
     SONG_NAME       => $songName,
@@ -1193,12 +1193,6 @@ sub listDirFiles($){
   @files = map {"$dir/$_"} @files;
   @files = grep {-f $_} @files;
   return @files;
-}
-
-sub dateFmt($){
-  my $fmt = `date --date=\@$_[0] +%Y-%m-%d_%H:%M:%S`;
-  chomp $fmt;
-  return $fmt;
 }
 
 sub allFilesExist(@){
