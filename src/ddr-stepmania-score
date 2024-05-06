@@ -6,6 +6,7 @@ use File::Basename qw(basename dirname);
 use lib dirname(abs_path($0));
 
 use SMUtils::Utils qw(
+  readFile md5sum mtime
 );
 
 sub getDDRNAMECommand($$$);
@@ -36,13 +37,10 @@ sub getSongNameWithZeniusTool($);
 sub readZeniusNameIdCache();
 sub appendZeniusNameIdCache($$);
 
-sub readFile($);
 sub listDirFiles($);
-sub mtime($);
 sub dateFmt($);
 sub allFilesExist(@);
 sub chunkArr($@);
-sub md5sum($);
 sub readProc(@);
 
 my $XML_FILE_PATTERN = "$ENV{HOME}/.stepmania-*/Save/Upload/*.xml";
@@ -1202,14 +1200,6 @@ sub appendZeniusNameIdCache($$){
   close FH;
 }
 
-sub readFile($){
-  my ($file) = @_;
-  open FH, "< $file" or die "ERROR: could not read $file\n";
-  my $contents = join '', <FH>;
-  close FH;
-  return $contents;
-}
-
 sub listDirFiles($){
   my ($dir) = @_;
   opendir(my $dh, $dir) or die "ERROR: could not read dir $dir\n$!\n";
@@ -1221,10 +1211,6 @@ sub listDirFiles($){
   return @files;
 }
 
-sub mtime($){
-  my @stat = stat $_[0];
-  return $stat[9];
-}
 sub dateFmt($){
   my $fmt = `date --date=\@$_[0] +%Y-%m-%d_%H:%M:%S`;
   chomp $fmt;
@@ -1253,18 +1239,6 @@ sub chunkArr($@){
     push @$chunk, $elem;
   }
   return @chunkArr;
-}
-
-sub md5sum($){
-  open CMD, "-|", "md5sum", $_[0];
-  my $md5sum = <CMD>;
-  close CMD;
-  chomp $md5sum;
-  if($md5sum =~ /^([0-9a-f]{32})(\s.*|$)$/){
-    return $1;
-  }else{
-    return undef;
-  }
 }
 
 sub readProc(@){
