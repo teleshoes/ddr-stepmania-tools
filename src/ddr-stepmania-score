@@ -1153,10 +1153,9 @@ sub getSongNameWithZeniusTool($){
     return $$cache{$subDir};
   }
 
-  open CMD, "-|", $ZENIUS_TOOL, "--extract-name-id", $subDir;
-  my $songName = join '', <CMD>;
-  close CMD;
+  my $songName = readProc($ZENIUS_TOOL, "--extract-name-id", $subDir);
   chomp $songName;
+
   if($songName =~ /^[a-z0-9\-]+$/){
     appendZeniusNameIdCache($songName, $subDir);
     return $songName;
