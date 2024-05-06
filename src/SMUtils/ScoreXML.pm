@@ -39,6 +39,7 @@ my @SCORE_DETAILS_ATT_ARR = (
   grade               => "Grade",
   percentDP           => "PercentDP",
   surviveSeconds      => "SurviveSeconds",
+  mods                => "Modifiers",
   countW1             => "TapNoteScores/W1",
   countW2             => "TapNoteScores/W2",
   countW3             => "TapNoteScores/W3",
