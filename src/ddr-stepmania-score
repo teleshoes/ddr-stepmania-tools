@@ -5,6 +5,10 @@ use Cwd qw(abs_path);
 use File::Basename qw(basename dirname);
 use lib dirname(abs_path($0));
 
+use SMUtils::ScoreXML qw(
+  extractScoreEntriesFromScore
+  parseScoreDetails
+);
 use SMUtils::Utils qw(
   dateFmtYMDHMS
   readFile writeFile appendFile readProc listDirFiles md5sum mtime
@@ -25,7 +29,6 @@ sub parseSimfileDirRenamesFile($);
 sub parseSimfileVersionsFile($);
 sub parseXmlFile($);
 sub parseSMFileSongStats($$$);
-sub replaceXmlCharEntities($);
 sub gameDiffKey($$);
 sub getFCValue($);
 sub getScoreDDRA($$);
@@ -888,44 +891,40 @@ sub parseSimfileVersionsFile($){
 
 sub parseXmlFile($){
   my ($xmlFile) = @_;
-  my $xml = readFile $xmlFile;
+  my @scoreEntries = extractScoreEntriesFromScore($xmlFile);
+  die "ERROR: no score entries found in $xmlFile\n" if @scoreEntries == 0;
+  die "ERROR: multiple score entries found in $xmlFile\n" if @scoreEntries > 1;
 
-  my $num = '(?:\d+|\d*\.\d+)';
-  my $int = '\d+';
+  my $scoreEntry = $scoreEntries[0];
+  parseScoreDetails($scoreEntry);
 
-  my $info = {};
-  $$info{songDir} = $1        if $xml =~ /<Song Dir=['"]([^'"]+)['"]\/>/;
-  $$info{difficulty} = $1     if $xml =~ /<Steps.* Difficulty=['"]([^'"]+).*\/>/;
-  $$info{game} = $1           if $xml =~ /<Steps.* StepsType=['"]([^'"]+).*\/>/;
-  $$info{mods} = $1           if $xml =~ /<Modifiers>(.*)<\/Modifiers>/;
+  my $sd = $$scoreEntry{scoreDetails};
 
-  $$info{grade} = $1          if $xml =~ /<Grade>(.*)<\/Grade>/;
-  $$info{percentDP} = $1      if $xml =~ /<PercentDP>($num)<\/PercentDP>/;
-  $$info{surviveSeconds} = $1 if $xml =~ /<SurviveSeconds>($num)<\/SurviveSeconds>/;
-  $$info{maxCombo} = $1       if $xml =~ /<MaxCombo>($int)<\/MaxCombo>/;
+  my $info = {
+    songDir            => $$scoreEntry{songDir},
+    difficulty         => $$scoreEntry{smDiff},
+    game               => $$scoreEntry{game},
+    mods               => $$sd{mods},
 
-  $$info{mineOk} = $1         if $xml =~ /<AvoidMine>($int)<\/AvoidMine>/;
-  $$info{mineHit} = $1        if $xml =~ /<HitMine>($int)<\/HitMine>/;
+    grade              => $$sd{grade},
+    percentDP          => $$sd{percentDP},
+    surviveSeconds     => $$sd{surviveSeconds},
+    maxCombo           => $$sd{maxCombo},
 
-  $$info{holdOk} = $1         if $xml =~ /<Held>($int)<\/Held>/;
-  $$info{holdLetGo} = $1      if $xml =~ /<LetGo>($int)<\/LetGo>/;
-  $$info{holdMissed} = $1     if $xml =~ /<MissedHold>($int)<\/MissedHold>/;
+    mineOk             => $$sd{countAvoidMine},
+    mineHit            => $$sd{countHitMine},
 
-  $$info{flawless} = $1       if $xml =~ /<W1>($int)<\/W1>/;
-  $$info{perfect} = $1        if $xml =~ /<W2>($int)<\/W2>/;
-  $$info{great} = $1          if $xml =~ /<W3>($int)<\/W3>/;
-  $$info{good} = $1           if $xml =~ /<W4>($int)<\/W4>/;
-  $$info{bad} = $1            if $xml =~ /<W5>($int)<\/W5>/;
-  $$info{miss} = $1           if $xml =~ /<Miss>($int)<\/Miss>/;
+    holdOk             => $$sd{countHeld},
+    holdLetGo          => $$sd{countLetGo},
+    holdMissed         => $$sd{countMissedHold},
 
-  if(not defined $$info{holdMissed}){
-    $$info{holdMissed} = 0;
-    print STDERR "WARNING: <MissedHold> missing in $xmlFile\n";
-  }
-
-  if(defined $$info{songDir}){
-    $$info{songDir} = replaceXmlCharEntities($$info{songDir});
-  }
+    flawless           => $$sd{countW1},
+    perfect            => $$sd{countW2},
+    great              => $$sd{countW3},
+    good               => $$sd{countW4},
+    bad                => $$sd{countW5},
+    miss               => $$sd{countMiss},
+  };
 
   if(defined $$info{songDir}){
     my $songDir = $$info{songDir};
@@ -946,19 +945,6 @@ sub parseXmlFile($){
     if(not -d "$SONGS_PARENT_DIR/$songDir"){
       die "ERROR: song dir '$songDir' does not exist ($xmlFile)\n";
     }
-  }
-
-  #convert new outfox format StepsType_Dance_Single => dance-single
-  $$info{game} =~ s/^StepsType_//;
-  $$info{game} =~ s/_/-/g;
-  $$info{game} = lc $$info{game};
-
-  for my $key(sort keys %$info){
-    my ($val) = $$info{$key};
-    $val =~ s/&lt;/</g;
-    $val =~ s/&apos;/'/g;
-    $val =~ s/&amp;/&/g;
-    $$info{$key} = $val;
   }
 
   my @requiredAtts = qw(
@@ -1017,16 +1003,6 @@ sub parseSMFileSongStats($$$){
   }
   my $songStats = { map {$fieldNames[$_] => $fieldVals[$_]} (0..$#fieldNames) };
   return $songStats;
-}
-
-sub replaceXmlCharEntities($){
-  my ($str) = @_;
-  $str =~ s/&#60;|&lt;/</g;
-  $str =~ s/&#62;|&gt;/>/g;
-  $str =~ s/&#34;|&quot;/"/g;
-  $str =~ s/&#39;|&apos;/'/g;
-  $str =~ s/&#38;|&amp;/&/g;
-  return $str;
 }
 
 sub gameDiffKey($$){
