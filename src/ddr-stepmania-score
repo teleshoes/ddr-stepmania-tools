@@ -648,9 +648,7 @@ sub readScoreDataCache($){
     return undef;
   }
 
-  open FH, "< $cacheFile" or die "ERROR: could not read $cacheFile\n$1\n";
-  my @lines = <FH>;
-  close FH;
+  my @lines = readFile($cacheFile);
 
   for my $line(@lines){
     next if $line =~ /^\s*$/;
@@ -805,9 +803,7 @@ sub parseSongNameIdOverridesFile($){
   my ($file) = @_;
   my @lines;
   if(-f $file){
-    open my $fh, "< $file" or die "ERROR: could not read file $file\n$!\n";
-    @lines = <$fh>;
-    close $fh;
+    @lines = readFile($file);
   }
   my $songNameIdsBySongDirSuffix = {};
   for my $line(@lines){
@@ -826,9 +822,7 @@ sub parseSimfileDirRenamesFile($){
   my ($file) = @_;
   my @lines;
   if(-f $file){
-    open my $fh, "< $file" or die "ERROR: could not read file $file\n$!\n";
-    @lines = <$fh>;
-    close $fh;
+    @lines = readFile($file);
   }
 
   my $simfileDirRenames = {};
@@ -863,9 +857,7 @@ sub parseSimfileVersionsFile($){
   my ($file) = @_;
   my @lines;
   if(-f $file){
-    open my $fh, "< $file" or die "ERROR: could not read file $file\n$!\n";
-    @lines = <$fh>;
-    close $fh;
+    @lines = readFile($file);
   }
 
   my $simfileVersionsBySongDir = {};
@@ -1178,10 +1170,7 @@ sub readZeniusNameIdCache(){
 
   my @lines;
   if(-f $ZENIUS_NAME_ID_CACHE_FILE){
-    open FH, "< $ZENIUS_NAME_ID_CACHE_FILE"
-      or die "ERROR: could not read $ZENIUS_NAME_ID_CACHE_FILE\n$!\n";
-    @lines = <FH>;
-    close FH;
+    @lines = readFile($ZENIUS_NAME_ID_CACHE_FILE);
   }
 
   for my $line(@lines){
