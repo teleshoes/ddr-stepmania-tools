@@ -441,6 +441,8 @@ sub main(@){
       die "ERROR: unknown SCORE_FILE_MODE: $mode\n";
     }
 
+    $xmlFile = abs_path($xmlFile);
+
     my $sd = getScoreDataByXmlFile($conf, $xmlFile);
 
     if($cmd eq $COMMAND_PRINT){
