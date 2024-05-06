@@ -27,6 +27,11 @@ sub writeFile($$);
 sub md5sum($);
 sub mtime($);
 sub touch($$);
+sub wantarrayToContext($);
+
+my $WANTARRAY_CONTEXT_VOID = "void";
+my $WANTARRAY_CONTEXT_LIST = "list";
+my $WANTARRAY_CONTEXT_SCALAR = "scalar";
 
 sub epochToYMDOrZero($){
   my ($epoch) = @_;
@@ -83,9 +88,17 @@ sub assertMd5sumMatches($$){
 sub readFile($){
   my ($file) = @_;
   open my $fh, "< $file" or die "ERROR: could not read $file\n$!\n";
-  my $contents = join '', <$fh>;
+  my @lines = <$fh>;
   close $fh;
-  return $contents;
+
+  my $wantarrayContext = wantarrayToContext(wantarray);
+  if($wantarrayContext eq $WANTARRAY_CONTEXT_SCALAR){
+    return join '', @lines;
+  }elsif($wantarrayContext eq $WANTARRAY_CONTEXT_LIST){
+    return @lines;
+  }elsif($wantarrayContext eq $WANTARRAY_CONTEXT_VOID){
+    return;
+  }
 }
 
 sub writeFile($$){
@@ -113,6 +126,17 @@ sub mtime($){
 sub touch($$){
   my ($file, $epoch) = @_;
   utime($epoch, $epoch, $file);
+}
+
+sub wantarrayToContext($){
+  my ($wantarrayValue) = @_;
+  if(not defined $wantarrayValue){
+    return $WANTARRAY_CONTEXT_VOID;
+  }elsif($wantarrayValue){
+    return $WANTARRAY_CONTEXT_LIST;
+  }else{
+    return $WANTARRAY_CONTEXT_SCALAR;
+  }
 }
 
 1;
