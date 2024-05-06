@@ -11,12 +11,13 @@ use Time::Local qw(timelocal_posix);
 our @ISA = qw(Exporter);
 our @EXPORT_OK = qw();
 our @EXPORT = qw(
-  dateFmt epochToYMDOrZero epochToYMD dtmStrToEpoch
+  dateFmt dateFmtYMDHMS epochToYMDOrZero epochToYMD dtmStrToEpoch
   assertPresent assertDateTimeFmt assertMd5sumMatches
   readFile writeFile appendFile readProc md5sum mtime touch
 );
 
 sub dateFmt($$);
+sub dateFmtYMDHMS($);
 sub epochToYMDOrZero($);
 sub epochToYMD($);
 sub dtmStrToEpoch($);
@@ -41,6 +42,11 @@ sub dateFmt($$){
   die "ERROR: missing epoch\n" if not defined $epoch;
   die "ERROR: invalid epoch $epoch\n" if $epoch !~ /^-?\d+$/;
   return time2str($fmtSpec, $epoch);
+}
+
+sub dateFmtYMDHMS($){
+  my ($epoch) = @_;
+  return dateFmt("%Y-%m-%d_%H:%M:%S", $epoch);
 }
 
 sub epochToYMDOrZero($){
