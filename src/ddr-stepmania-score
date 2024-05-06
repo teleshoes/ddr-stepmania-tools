@@ -6,7 +6,7 @@ use File::Basename qw(basename dirname);
 use lib dirname(abs_path($0));
 
 use SMUtils::Utils qw(
-  readFile writeFile appendFile md5sum mtime
+  readFile writeFile appendFile readProc md5sum mtime
 );
 
 sub getDDRNAMECommand($$$);
@@ -41,7 +41,6 @@ sub listDirFiles($);
 sub dateFmt($);
 sub allFilesExist(@);
 sub chunkArr($@);
-sub readProc(@);
 
 my $XML_FILE_PATTERN = "$ENV{HOME}/.stepmania-*/Save/Upload/*.xml";
 my $SONGS_PARENT_DIR = "$ENV{HOME}/.stepmania-5.0";
@@ -1225,13 +1224,6 @@ sub chunkArr($@){
     push @$chunk, $elem;
   }
   return @chunkArr;
-}
-
-sub readProc(@){
-  open CMD, "-|", @_ or die "ERROR: could not run \"@_\"\n$!\n";
-  my $out = join '', <CMD>;
-  close CMD;
-  return $out;
 }
 
 &main(@ARGV);
