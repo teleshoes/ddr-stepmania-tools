@@ -11,11 +11,12 @@ use Time::Local qw(timelocal_posix);
 our @ISA = qw(Exporter);
 our @EXPORT_OK = qw();
 our @EXPORT = qw(
-  epochToYMDOrZero epochToYMD dtmStrToEpoch
+  dateFmt epochToYMDOrZero epochToYMD dtmStrToEpoch
   assertPresent assertDateTimeFmt assertMd5sumMatches
   readFile writeFile appendFile readProc md5sum mtime touch
 );
 
+sub dateFmt($$);
 sub epochToYMDOrZero($);
 sub epochToYMD($);
 sub dtmStrToEpoch($);
@@ -35,6 +36,13 @@ my $WANTARRAY_CONTEXT_VOID = "void";
 my $WANTARRAY_CONTEXT_LIST = "list";
 my $WANTARRAY_CONTEXT_SCALAR = "scalar";
 
+sub dateFmt($$){
+  my ($fmtSpec, $epoch) = @_;
+  die "ERROR: missing epoch\n" if not defined $epoch;
+  die "ERROR: invalid epoch $epoch\n" if $epoch !~ /^-?\d+$/;
+  return time2str($fmtSpec, $epoch);
+}
+
 sub epochToYMDOrZero($){
   my ($epoch) = @_;
   return defined $epoch ? epochToYMD($epoch) : "0000-00-00";
@@ -42,8 +50,7 @@ sub epochToYMDOrZero($){
 
 sub epochToYMD($){
   my ($epoch) = @_;
-  die "ERROR: missing epoch\n" if not defined $epoch;
-  return time2str("%Y-%m-%d", $epoch);
+  return dateFmt("%Y-%m-%d", $epoch);
 }
 
 sub dtmStrToEpoch($){
