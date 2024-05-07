@@ -25,6 +25,7 @@ sub calculateScoreDataCache($);
 sub formatScoreData($$);
 sub getSMFileFromSongDir($$);
 sub getDDRSonglistLine($$$);
+sub getFormattedConfigSongNameIdOverrides();
 sub parseSongNameIdOverridesFile($);
 sub parseSimfileDirRenamesFile($);
 sub parseSimfileVersionsFile($);
@@ -68,11 +69,10 @@ my $XML_MTIME_DIFF_ERROR_SECONDS = 600; #FAIL if image file and XML file mtimes 
 #song-name-id overrides to use instead of zenius
 my $CONFIG_SONG_NAME_IDS_BY_SONG_DIR_SUFFIX =
   parseSongNameIdOverridesFile($SONG_NAME_ID_OVERRIDES_FILE);
-my $FMT_HARDCODED_SONG_NAME_IDS = join "\n        ", map {join " ", @$_}
-  chunkArr(3, sort values %$CONFIG_SONG_NAME_IDS_BY_SONG_DIR_SUFFIX);
-
 my $CONFIG_SIMFILE_DIR_RENAMES = parseSimfileDirRenamesFile($SIMFILE_DIR_RENAMES_FILE);
 my $CONFIG_SIMFILE_VERSIONS_BY_SONG_DIR = parseSimfileVersionsFile($SIMFILE_VERSIONS_FILE);
+
+my $FMT_HARDCODED_SONG_NAME_IDS = getFormattedConfigSongNameIdOverrides();
 
 my $SM_DDRA_DIFF_ARR = [
   ["Beginner"  => "beginner"],
@@ -814,6 +814,11 @@ sub getDDRSonglistLine($$$){
   chomp $songlistFeet;
 
   return sprintf "%-40s |%s %s", $song, $abbrev, $songlistFeet;
+}
+
+sub getFormattedConfigSongNameIdOverrides(){
+  return join "\n        ", map {join " ", @$_}
+    chunkArr(3, sort values %$CONFIG_SONG_NAME_IDS_BY_SONG_DIR_SUFFIX);
 }
 
 sub parseSongNameIdOverridesFile($){
