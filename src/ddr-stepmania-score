@@ -7,6 +7,8 @@ use lib dirname(abs_path($0));
 
 use SMUtils::Files qw(
   getSMFileFromSongDir
+  getSongNameIdOverride
+  getFormattedConfigSongNameIdOverrides
 );
 use SMUtils::ScoreXML qw(
   extractScoreEntriesFromScore
@@ -26,9 +28,6 @@ sub getCacheFile($);
 sub calculateScoreDataCache($);
 sub formatScoreData($$);
 sub getDDRSonglistLine($$$);
-sub getFormattedConfigSongNameIdOverrides($$);
-sub ensureSongNameIdOverrides();
-sub parseSongNameIdOverridesFile($);
 sub parseXmlFile($);
 sub parseSMFileSongStats($$$);
 sub gameDiffKey($$);
@@ -39,7 +38,6 @@ sub assertMtimesCloseEnough($$$$);
 
 sub getDDRAGame($);
 sub getDDRADiff($);
-sub getSongNameIdOverride($);
 sub getSongNameWithZeniusTool($);
 sub readZeniusNameIdCache();
 sub appendZeniusNameIdCache($$);
@@ -49,7 +47,6 @@ sub chunkArr($@);
 
 my $CACHE_BASE_DIR = "$ENV{HOME}/.cache/ddr-stepmania-score";
 my $ZENIUS_NAME_ID_CACHE_FILE = "$ENV{HOME}/.cache/ddr-zenius-name-id-cache";
-my $SONG_NAME_ID_OVERRIDES_FILE = "$ENV{HOME}/.config/ddrname-songlist-simfile-overrides";
 
 my $DDR_RADAR_FEET_TOOL = "ddr-radar-feet";
 my $ZENIUS_TOOL = "zenius-ddrsonglist";
@@ -64,10 +61,6 @@ my $DDRNAME_TW = "twdefault";
 
 my $XML_MTIME_DIFF_WARNING_SECONDS = 90; #warn if image file and XML file mtimes diff is greater
 my $XML_MTIME_DIFF_ERROR_SECONDS = 600; #FAIL if image file and XML file mtimes diff is greater
-
-#CONFIG loaded only once, and only as needed
-#  song-name-id overrides to use instead of zenius
-my $CONFIG_SONG_NAME_IDS_BY_SONG_DIR_SUFFIX = undef;
 
 my $SM_DDRA_DIFF_ARR = [
   ["Beginner"  => "beginner"],
@@ -771,61 +764,6 @@ sub getDDRSonglistLine($$$){
   return sprintf "%-40s |%s %s", $song, $abbrev, $songlistFeet;
 }
 
-sub getFormattedConfigSongNameIdOverrides($$){
-  my ($prefix, $suffix) = @_;
-  ensureSongNameIdOverrides();
-  my @songNameIds = values %$CONFIG_SONG_NAME_IDS_BY_SONG_DIR_SUFFIX;
-  my %uniqSongNameIds = map {$_ => 1} @songNameIds;
-
-  my $maxLen = 100 - (length $prefix) - (length $suffix);
-
-  my @lines;
-  my $curLine = "";
-  my $curLen = 0;
-  for my $songNameId(sort keys %uniqSongNameIds){
-    my $newLen = $curLen + length $songNameId;
-    $newLen += 1 if $curLen > 0;
-    if($curLen > 0 and $newLen > $maxLen){
-      push @lines, $curLine;
-      $curLine = "";
-      $curLen = 0;
-    }
-    $curLine .= " " if $curLen > 0;
-    $curLine .= $songNameId;
-    $curLen = length $curLine;
-  }
-  push @lines, $curLine if length $curLen > 0;
-
-  return join "", map {"$prefix$_$suffix"} @lines;
-}
-
-sub ensureSongNameIdOverrides(){
-  if(not defined $CONFIG_SONG_NAME_IDS_BY_SONG_DIR_SUFFIX){
-    $CONFIG_SONG_NAME_IDS_BY_SONG_DIR_SUFFIX =
-      parseSongNameIdOverridesFile($SONG_NAME_ID_OVERRIDES_FILE);
-  }
-}
-
-sub parseSongNameIdOverridesFile($){
-  my ($file) = @_;
-  my @lines;
-  if(-f $file){
-    @lines = readFile($file);
-  }
-  my $songNameIdsBySongDirSuffix = {};
-  for my $line(@lines){
-    next if $line =~ /^\s*$/ or $line =~ /^\s*#/;
-    if($line =~ /^([a-zA-Z0-9\-]+)\s*\|\s*(.+)$/){
-      my ($songNameId, $songDirSuffix) = ($1, $2);
-      $$songNameIdsBySongDirSuffix{$songDirSuffix} = $songNameId;
-    }else{
-      die "ERROR: malformed line in song name ID overrides\n$line";
-    }
-  }
-  return $songNameIdsBySongDirSuffix;
-}
-
-
 sub parseXmlFile($){
   my ($xmlFile) = @_;
   my @scoreEntries = extractScoreEntriesFromScore($xmlFile);
@@ -1027,17 +965,6 @@ sub getDDRADiff($){
   my $ddraDiff = $$DDRA_DIFFICULTIES_BY_STEPMANIA_DIFFICULTY{$smDiff};
   $ddraDiff = $smDiff if not defined $ddraDiff;
   return $ddraDiff;
-}
-
-sub getSongNameIdOverride($){
-  my ($songDir) = @_;
-  ensureSongNameIdOverrides();
-  for my $songDirSuffix(sort keys %$CONFIG_SONG_NAME_IDS_BY_SONG_DIR_SUFFIX){
-    if($songDir =~ /(^|\/)\Q$songDirSuffix\E\/*$/){
-      return $$CONFIG_SONG_NAME_IDS_BY_SONG_DIR_SUFFIX{$songDirSuffix};
-    }
-  }
-  return undef;
 }
 
 sub getSongNameWithZeniusTool($){

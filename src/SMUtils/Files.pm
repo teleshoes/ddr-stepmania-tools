@@ -5,8 +5,12 @@ use warnings;
 use SMUtils::Utils;
 
 sub getSMFileFromSongDir($$);
+sub getSongNameIdOverride($);
+sub getFormattedConfigSongNameIdOverrides($$);
+sub ensureSongNameIdOverrides();
 sub ensureSimfileDirRenames();
 sub ensureSimfileVersions();
+sub parseSongNameIdOverridesFile($);
 sub parseSimfileDirRenamesFile($);
 sub parseSimfileVersionsFile($);
 
@@ -14,6 +18,8 @@ our @ISA = qw(Exporter);
 our @EXPORT_OK = qw();
 our @EXPORT = qw(
   getSMFileFromSongDir
+  getSongNameIdOverride
+  getFormattedConfigSongNameIdOverrides
 );
 
 our $DIR_SONGS_PARENT = "$ENV{HOME}/.stepmania-5.0";
@@ -23,8 +29,13 @@ our $DIR_XML_CACHE_SCORES = "$DIR_XML_CACHE_BASE/scores";
 our $DIR_XML_CACHE_STATS = "$DIR_XML_CACHE_BASE/stats";
 our $DIR_XML_CACHE_UPLOAD = "$DIR_XML_CACHE_BASE/upload";
 
+our $SONG_NAME_ID_OVERRIDES_FILE = "$ENV{HOME}/.config/ddrname-songlist-simfile-overrides";
 our $SIMFILE_DIR_RENAMES_FILE = "$ENV{HOME}/.config/stepmania-simfile-dir-renames";
 our $SIMFILE_VERSIONS_FILE = "$ENV{HOME}/.config/stepmania-simfile-versions";
+
+#CONFIG loaded only once, and only as needed
+#  song-name-id overrides to use instead of zenius
+my $CONFIG_SONG_NAME_IDS_BY_SONG_DIR_SUFFIX = undef;
 
 #CONFIG loaded only once, and only as needed
 #  manual overrides of SONG_DIR, for songs that have been moved or renamed
@@ -78,6 +89,51 @@ sub getSMFileFromSongDir($$){
   }
 }
 
+sub getSongNameIdOverride($){
+  my ($songDir) = @_;
+  ensureSongNameIdOverrides();
+  for my $songDirSuffix(sort keys %$CONFIG_SONG_NAME_IDS_BY_SONG_DIR_SUFFIX){
+    if($songDir =~ /(^|\/)\Q$songDirSuffix\E\/*$/){
+      return $$CONFIG_SONG_NAME_IDS_BY_SONG_DIR_SUFFIX{$songDirSuffix};
+    }
+  }
+  return undef;
+}
+
+sub getFormattedConfigSongNameIdOverrides($$){
+  my ($prefix, $suffix) = @_;
+  ensureSongNameIdOverrides();
+  my @songNameIds = values %$CONFIG_SONG_NAME_IDS_BY_SONG_DIR_SUFFIX;
+  my %uniqSongNameIds = map {$_ => 1} @songNameIds;
+
+  my $maxLen = 100 - (length $prefix) - (length $suffix);
+
+  my @lines;
+  my $curLine = "";
+  my $curLen = 0;
+  for my $songNameId(sort keys %uniqSongNameIds){
+    my $newLen = $curLen + length $songNameId;
+    $newLen += 1 if $curLen > 0;
+    if($curLen > 0 and $newLen > $maxLen){
+      push @lines, $curLine;
+      $curLine = "";
+      $curLen = 0;
+    }
+    $curLine .= " " if $curLen > 0;
+    $curLine .= $songNameId;
+    $curLen = length $curLine;
+  }
+  push @lines, $curLine if length $curLen > 0;
+
+  return join "", map {"$prefix$_$suffix"} @lines;
+}
+
+sub ensureSongNameIdOverrides(){
+  if(not defined $CONFIG_SONG_NAME_IDS_BY_SONG_DIR_SUFFIX){
+    $CONFIG_SONG_NAME_IDS_BY_SONG_DIR_SUFFIX =
+      parseSongNameIdOverridesFile($SONG_NAME_ID_OVERRIDES_FILE);
+  }
+}
 sub ensureSimfileDirRenames(){
   if(not defined $CONFIG_SIMFILE_DIR_RENAMES){
     $CONFIG_SIMFILE_DIR_RENAMES = parseSimfileDirRenamesFile($SIMFILE_DIR_RENAMES_FILE);
@@ -87,6 +143,25 @@ sub ensureSimfileVersions(){
   if(not defined $CONFIG_SIMFILE_VERSIONS_BY_SONG_DIR){
     $CONFIG_SIMFILE_VERSIONS_BY_SONG_DIR = parseSimfileVersionsFile($SIMFILE_VERSIONS_FILE);
   }
+}
+
+sub parseSongNameIdOverridesFile($){
+  my ($file) = @_;
+  my @lines;
+  if(-f $file){
+    @lines = readFile($file);
+  }
+  my $songNameIdsBySongDirSuffix = {};
+  for my $line(@lines){
+    next if $line =~ /^\s*$/ or $line =~ /^\s*#/;
+    if($line =~ /^([a-zA-Z0-9\-]+)\s*\|\s*(.+)$/){
+      my ($songNameId, $songDirSuffix) = ($1, $2);
+      $$songNameIdsBySongDirSuffix{$songDirSuffix} = $songNameId;
+    }else{
+      die "ERROR: malformed line in song name ID overrides\n$line";
+    }
+  }
+  return $songNameIdsBySongDirSuffix;
 }
 
 sub parseSimfileDirRenamesFile($){
