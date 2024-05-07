@@ -831,13 +831,14 @@ sub getFormattedConfigSongNameIdOverrides($$){
   my ($prefix, $suffix) = @_;
   ensureSongNameIdOverrides();
   my @songNameIds = values %$CONFIG_SONG_NAME_IDS_BY_SONG_DIR_SUFFIX;
+  my %uniqSongNameIds = map {$_ => 1} @songNameIds;
 
   my $maxLen = 100 - (length $prefix) - (length $suffix);
 
   my @lines;
   my $curLine = "";
   my $curLen = 0;
-  for my $songNameId(sort @songNameIds){
+  for my $songNameId(sort keys %uniqSongNameIds){
     my $newLen = $curLen + length $songNameId;
     $newLen += 1 if $curLen > 0;
     if($curLen > 0 and $newLen > $maxLen){
