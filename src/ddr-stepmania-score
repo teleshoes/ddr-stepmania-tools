@@ -42,6 +42,7 @@ sub assertMtimesCloseEnough($$$$);
 
 sub getDDRAGame($);
 sub getDDRADiff($);
+sub getSongNameIdOverride($);
 sub getSongNameWithZeniusTool($);
 sub readZeniusNameIdCache();
 sub appendZeniusNameIdCache($$);
@@ -1145,7 +1146,7 @@ sub getDDRADiff($){
   return $ddraDiff;
 }
 
-sub getSongNameWithZeniusTool($){
+sub getSongNameIdOverride($){
   my ($songDir) = @_;
   ensureSongNameIdOverrides();
   for my $songDirSuffix(sort keys %$CONFIG_SONG_NAME_IDS_BY_SONG_DIR_SUFFIX){
@@ -1153,6 +1154,16 @@ sub getSongNameWithZeniusTool($){
       return $$CONFIG_SONG_NAME_IDS_BY_SONG_DIR_SUFFIX{$songDirSuffix};
     }
   }
+  return undef;
+}
+
+sub getSongNameWithZeniusTool($){
+  my ($songDir) = @_;
+  my $override = getSongNameIdOverride($songDir);
+  if(defined $override){
+    return $override;
+  }
+
   my $subDir = $songDir;
   $subDir =~ s/\/+$//g;
   $subDir =~ s/.*\///;
