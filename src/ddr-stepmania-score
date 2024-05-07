@@ -26,6 +26,9 @@ sub formatScoreData($$);
 sub getSMFileFromSongDir($$);
 sub getDDRSonglistLine($$$);
 sub getFormattedConfigSongNameIdOverrides();
+sub ensureSongNameIdOverrides();
+sub ensureSimfileDirRenames();
+sub ensureSimfileVersions();
 sub parseSongNameIdOverridesFile($);
 sub parseSimfileDirRenamesFile($);
 sub parseSimfileVersionsFile($);
@@ -66,13 +69,17 @@ my $DDRNAME_TW = "twdefault";
 my $XML_MTIME_DIFF_WARNING_SECONDS = 90; #warn if image file and XML file mtimes diff is greater
 my $XML_MTIME_DIFF_ERROR_SECONDS = 600; #FAIL if image file and XML file mtimes diff is greater
 
+#CONFIG loaded only once, and only as needed
 #  song-name-id overrides to use instead of zenius
-my $CONFIG_SONG_NAME_IDS_BY_SONG_DIR_SUFFIX =
-  parseSongNameIdOverridesFile($SONG_NAME_ID_OVERRIDES_FILE);
+my $CONFIG_SONG_NAME_IDS_BY_SONG_DIR_SUFFIX = undef;
+
+#CONFIG loaded only once, and only as needed
 #  manual overrides of SONG_DIR, for songs that have been moved or renamed
-my $CONFIG_SIMFILE_DIR_RENAMES = parseSimfileDirRenamesFile($SIMFILE_DIR_RENAMES_FILE);
+my $CONFIG_SIMFILE_DIR_RENAMES = undef;
+
+#CONFIG loaded only once, and only as needed
 #  paths to alternate SM_FILEs within a song dir, for a specific date/time range
-my $CONFIG_SIMFILE_VERSIONS_BY_SONG_DIR = parseSimfileVersionsFile($SIMFILE_VERSIONS_FILE);
+my $CONFIG_SIMFILE_VERSIONS_BY_SONG_DIR = undef;
 
 my $FMT_HARDCODED_SONG_NAME_IDS = getFormattedConfigSongNameIdOverrides();
 
@@ -763,6 +770,9 @@ sub formatScoreData($$){
 sub getSMFileFromSongDir($$){
   my ($songDir, $epoch) = @_;
 
+  ensureSimfileDirRenames();
+  ensureSimfileVersions();
+
   if($songDir !~ /^Songs\/.*\/$/){
     die "ERROR: song dir must start with 'Songs/' and end with '/' ($songDir)\n";
   }
@@ -819,8 +829,26 @@ sub getDDRSonglistLine($$$){
 }
 
 sub getFormattedConfigSongNameIdOverrides(){
+  ensureSongNameIdOverrides();
   return join "\n        ", map {join " ", @$_}
     chunkArr(3, sort values %$CONFIG_SONG_NAME_IDS_BY_SONG_DIR_SUFFIX);
+}
+
+sub ensureSongNameIdOverrides(){
+  if(not defined $CONFIG_SONG_NAME_IDS_BY_SONG_DIR_SUFFIX){
+    $CONFIG_SONG_NAME_IDS_BY_SONG_DIR_SUFFIX =
+      parseSongNameIdOverridesFile($SONG_NAME_ID_OVERRIDES_FILE);
+  }
+}
+sub ensureSimfileDirRenames(){
+  if(not defined $CONFIG_SIMFILE_DIR_RENAMES){
+    $CONFIG_SIMFILE_DIR_RENAMES = parseSimfileDirRenamesFile($SIMFILE_DIR_RENAMES_FILE);
+  }
+}
+sub ensureSimfileVersions(){
+  if(not defined $CONFIG_SIMFILE_VERSIONS_BY_SONG_DIR){
+    $CONFIG_SIMFILE_VERSIONS_BY_SONG_DIR = parseSimfileVersionsFile($SIMFILE_VERSIONS_FILE);
+  }
 }
 
 sub parseSongNameIdOverridesFile($){
@@ -1119,6 +1147,7 @@ sub getDDRADiff($){
 
 sub getSongNameWithZeniusTool($){
   my ($songDir) = @_;
+  ensureSongNameIdOverrides();
   for my $songDirSuffix(sort keys %$CONFIG_SONG_NAME_IDS_BY_SONG_DIR_SUFFIX){
     if($songDir =~ /(^|\/)\Q$songDirSuffix\E\/*$/){
       return $$CONFIG_SONG_NAME_IDS_BY_SONG_DIR_SUFFIX{$songDirSuffix};
