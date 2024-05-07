@@ -25,7 +25,7 @@ sub calculateScoreDataCache($);
 sub formatScoreData($$);
 sub getSMFileFromSongDir($$);
 sub getDDRSonglistLine($$$);
-sub getFormattedConfigSongNameIdOverrides();
+sub getFormattedConfigSongNameIdOverrides($$);
 sub ensureSongNameIdOverrides();
 sub ensureSimfileDirRenames();
 sub ensureSimfileVersions();
@@ -229,7 +229,7 @@ my $usage = "Usage:
         -run `$ZENIUS_TOOL --extract-name-id BASENAME_SONG_DIR`
         -override this value for certain hardcoded SONG_DIR values
         -the following SONG_NAME values have hardcoded SONG_DIR values:"
-          . getFormattedConfigSongNameIdOverrides() . "
+          . getFormattedConfigSongNameIdOverrides("\n        ", "") . "
     (3) parse SM_GAME/SM_DIFF into DDRA_GAME / DDRA_DIFFICULTY using hardcoded transforms
     (4) locate the stepmania SIMFILE (*.sm or *.ssc) in
           $SMUtils::Files::DIR_SONGS_PARENT/<SONG_DIR>/*.*
@@ -827,13 +827,13 @@ sub getDDRSonglistLine($$$){
   return sprintf "%-40s |%s %s", $song, $abbrev, $songlistFeet;
 }
 
-sub getFormattedConfigSongNameIdOverrides(){
+sub getFormattedConfigSongNameIdOverrides($$){
+  my ($prefix, $suffix) = @_;
   ensureSongNameIdOverrides();
   my @songNameIds = sort values %$CONFIG_SONG_NAME_IDS_BY_SONG_DIR_SUFFIX;
   my @chunkArrs = chunkArr(3, @songNameIds);
   my @chunkStrs = map {join " ", @$_} @chunkArrs;
-  my @lines = map {"\n        $_"} @chunkStrs;
-  return join "", @lines;
+  return join "", map {"$prefix$_$suffix"} @chunkStrs;
 }
 
 sub ensureSongNameIdOverrides(){
