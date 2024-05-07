@@ -33,7 +33,7 @@ sub parseSMFileSongStats($$$);
 sub gameDiffKey($$);
 sub getFCValue($);
 sub getScoreDDRA($$);
-sub getOldestXmlFileAfterMtime($);
+sub getOldestFileAfterMtime($@);
 sub assertMtimesCloseEnough($$$$);
 
 sub getDDRAGame($);
@@ -419,7 +419,10 @@ sub main(@){
     if($mode eq $SCORE_FILE_MODE_DIRECT_XML){
       $xmlFile = $file;
     }elsif($mode eq $SCORE_FILE_MODE_CLOSEST_XML_BY_MTIME){
-      $xmlFile = getOldestXmlFileAfterMtime mtime($file);
+      $xmlFile = getOldestFileAfterMtime(
+        mtime($file),
+        glob "$SMUtils::Files::DIR_XML_CACHE_SCORES/*.xml"
+      );
       if($$conf{checkMtimes}){
         assertMtimesCloseEnough($file, $xmlFile,
           $XML_MTIME_DIFF_WARNING_SECONDS, $XML_MTIME_DIFF_ERROR_SECONDS);
@@ -914,23 +917,22 @@ sub getScoreDDRA($$){
   return $score;
 }
 
-sub getOldestXmlFileAfterMtime($){
-  my ($targetMtime) = @_;
+sub getOldestFileAfterMtime($@){
+  my ($targetMtime, @files) = @_;
 
-  my @xmlFiles = glob "$SMUtils::Files::DIR_XML_CACHE_SCORES/*.xml";
-  my %mtimes = map {$_ => mtime $_} @xmlFiles;
-  @xmlFiles = sort {$mtimes{$a} <=> $mtimes{$b}} @xmlFiles;
+  my %mtimes = map {$_ => mtime $_} @files;
+  @files = sort {$mtimes{$a} <=> $mtimes{$b}} @files;
 
-  my $closestXmlFile;
-  for my $xmlFile(@xmlFiles){
-    my $xmlMtime = $mtimes{$xmlFile};
-    if($targetMtime < $xmlMtime){
+  my $closestFile;
+  for my $file(@files){
+    my $mtime = $mtimes{$file};
+    if($targetMtime < $mtime){
       last;
     }
-    $closestXmlFile = $xmlFile;
+    $closestFile = $file;
   }
 
-  return $closestXmlFile;
+  return $closestFile;
 }
 
 sub assertMtimesCloseEnough($$$$){
