@@ -830,10 +830,28 @@ sub getDDRSonglistLine($$$){
 sub getFormattedConfigSongNameIdOverrides($$){
   my ($prefix, $suffix) = @_;
   ensureSongNameIdOverrides();
-  my @songNameIds = sort values %$CONFIG_SONG_NAME_IDS_BY_SONG_DIR_SUFFIX;
-  my @chunkArrs = chunkArr(3, @songNameIds);
-  my @chunkStrs = map {join " ", @$_} @chunkArrs;
-  return join "", map {"$prefix$_$suffix"} @chunkStrs;
+  my @songNameIds = values %$CONFIG_SONG_NAME_IDS_BY_SONG_DIR_SUFFIX;
+
+  my $maxLen = 100 - (length $prefix) - (length $suffix);
+
+  my @lines;
+  my $curLine = "";
+  my $curLen = 0;
+  for my $songNameId(sort @songNameIds){
+    my $newLen = $curLen + length $songNameId;
+    $newLen += 1 if $curLen > 0;
+    if($curLen > 0 and $newLen > $maxLen){
+      push @lines, $curLine;
+      $curLine = "";
+      $curLen = 0;
+    }
+    $curLine .= " " if $curLen > 0;
+    $curLine .= $songNameId;
+    $curLen = length $curLine;
+  }
+  push @lines, $curLine if length $curLen > 0;
+
+  return join "", map {"$prefix$_$suffix"} @lines;
 }
 
 sub ensureSongNameIdOverrides(){
