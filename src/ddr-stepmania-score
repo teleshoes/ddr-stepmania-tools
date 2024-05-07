@@ -5,6 +5,7 @@ use Cwd qw(abs_path);
 use File::Basename qw(basename dirname);
 use lib dirname(abs_path($0));
 
+use SMUtils::Files qw();
 use SMUtils::ScoreXML qw(
   extractScoreEntriesFromScore
   parseScoreDetails
