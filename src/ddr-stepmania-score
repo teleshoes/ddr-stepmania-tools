@@ -70,8 +70,8 @@ my $SONG_NAME_IDS_BY_SONG_DIR_SUFFIX = parseSongNameIdOverridesFile($SONG_NAME_I
 my $FMT_HARDCODED_SONG_NAME_IDS = join "\n        ", map {join " ", @$_}
   chunkArr(3, sort values %$SONG_NAME_IDS_BY_SONG_DIR_SUFFIX);
 
-my $SIMFILE_DIR_RENAMES = parseSimfileDirRenamesFile($SIMFILE_DIR_RENAMES_FILE);
-my $SIMFILE_VERSIONS_BY_SONG_DIR = parseSimfileVersionsFile($SIMFILE_VERSIONS_FILE);
+my $CONFIG_SIMFILE_DIR_RENAMES = parseSimfileDirRenamesFile($SIMFILE_DIR_RENAMES_FILE);
+my $CONFIG_SIMFILE_VERSIONS_BY_SONG_DIR = parseSimfileVersionsFile($SIMFILE_VERSIONS_FILE);
 
 my $SM_DDRA_DIFF_ARR = [
   ["Beginner"  => "beginner"],
@@ -767,8 +767,8 @@ sub getSMFileFromSongDir($$){
   my $songAbsDir = "$SMUtils::Files::DIR_SONGS_PARENT/$songDir";
 
   if(not -d "$songAbsDir"){
-    if(defined $$SIMFILE_DIR_RENAMES{$songDir}){
-      $songDir = $$SIMFILE_DIR_RENAMES{$songDir};
+    if(defined $$CONFIG_SIMFILE_DIR_RENAMES{$songDir}){
+      $songDir = $$CONFIG_SIMFILE_DIR_RENAMES{$songDir};
       $songAbsDir = "$SMUtils::Files::DIR_SONGS_PARENT/$songDir";
       if(not -d "$songAbsDir"){
         die "ERROR: renamed song dir '$songAbsDir' also does not exist\n";
@@ -780,9 +780,9 @@ sub getSMFileFromSongDir($$){
     die "ERROR: song dir '$songAbsDir' does not exist\n";
   }
 
-  if(defined $$SIMFILE_VERSIONS_BY_SONG_DIR{$songDir}){
+  if(defined $$CONFIG_SIMFILE_VERSIONS_BY_SONG_DIR{$songDir}){
     #use older version of simfile if configured
-    my @versions = @{$$SIMFILE_VERSIONS_BY_SONG_DIR{$songDir}};
+    my @versions = @{$$CONFIG_SIMFILE_VERSIONS_BY_SONG_DIR{$songDir}};
     for my $v(@versions){
       if($$v{startEpoch} <= $epoch && $epoch <= $$v{endEpoch}){
         die "$$v{startEpoch}   $epoch   $$v{endEpoch}\n";
