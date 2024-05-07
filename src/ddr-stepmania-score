@@ -760,6 +760,26 @@ sub formatScoreData($$){
 sub getSMFileFromSongDir($$){
   my ($songDir, $epoch) = @_;
 
+  if($songDir !~ /^Songs\/.*\/$/){
+    die "ERROR: song dir must start with 'Songs/' and end with '/' ($songDir)\n";
+  }
+
+  my $songAbsDir = "$SONGS_PARENT_DIR/$songDir";
+
+  if(not -d "$songAbsDir"){
+    if(defined $$SIMFILE_DIR_RENAMES{$songDir}){
+      $songDir = $$SIMFILE_DIR_RENAMES{$songDir};
+      $songAbsDir = "$SONGS_PARENT_DIR/$songDir";
+      if(not -d "$songAbsDir"){
+        die "ERROR: renamed song dir '$songAbsDir' also does not exist\n";
+      }
+    }
+  }
+
+  if(not -d "$songAbsDir"){
+    die "ERROR: song dir '$songAbsDir' does not exist\n";
+  }
+
   if(defined $$SIMFILE_VERSIONS_BY_SONG_DIR{$songDir}){
     my @versions = @{$$SIMFILE_VERSIONS_BY_SONG_DIR{$songDir}};
     for my $v(@versions){
@@ -768,11 +788,6 @@ sub getSMFileFromSongDir($$){
         return $$v{absSMFile};
       }
     }
-  }
-
-  my $songAbsDir = "$SONGS_PARENT_DIR/$songDir";
-  if(not -d $songAbsDir){
-    die "ERROR: \"$songAbsDir\" is not a dir\n";
   }
 
   my @smFiles = grep {$_ =~ /\.(ssc|sm)$/i} listDirFiles $songAbsDir;
@@ -926,27 +941,6 @@ sub parseXmlFile($){
     miss               => $$sd{countMiss},
   };
 
-  if(defined $$info{songDir}){
-    my $songDir = $$info{songDir};
-    if($songDir !~ /^Songs\/.*\/$/){
-      die "ERROR: song dir must start with 'Songs/' and end with '/' ($xmlFile)\n";
-    }
-
-    if(not -d "$SONGS_PARENT_DIR/$songDir"){
-      if(defined $$SIMFILE_DIR_RENAMES{$songDir}){
-        $songDir = $$SIMFILE_DIR_RENAMES{$songDir};
-        if(not -d "$SONGS_PARENT_DIR/$songDir"){
-          die "ERROR: replacement song dir '$songDir' also does not exist ($xmlFile)\n";
-        }
-        $$info{songDir} = $songDir;
-      }
-    }
-
-    if(not -d "$SONGS_PARENT_DIR/$songDir"){
-      die "ERROR: song dir '$songDir' does not exist ($xmlFile)\n";
-    }
-  }
-
   my @requiredAtts = qw(
     songDir difficulty game grade percentDP
     holdOk holdLetGo holdMissed
@@ -956,6 +950,10 @@ sub parseXmlFile($){
 
   for my $att(@requiredAtts){
     die "ERROR: could not parse '$att' in $xmlFile\n" if not defined $$info{$att};
+  }
+
+  if($$info{songDir} !~ /^Songs\/.*\/$/){
+    die "ERROR: song dir must start with 'Songs/' and end with '/' ($xmlFile)\n";
   }
 
   $$info{timingData} = sprintf("%d+%d+%d+%d+%d+%d|%d+%d+%d|%d+%d",
@@ -971,7 +969,6 @@ sub parseXmlFile($){
     $$info{mineOk},
     $$info{mineHit},
   );
-
 
   if(defined $$info{percentDP}){
     #percentDP is a ratio in the XML...
