@@ -44,7 +44,7 @@ sub appendZeniusNameIdCache($$);
 sub allFilesExist(@);
 sub chunkArr($@);
 
-my $XML_FILE_PATTERN = "$ENV{HOME}/.cache/stepmania-score-xml/scores/*.xml";
+my $XML_FILE_DIR = "$ENV{HOME}/.cache/stepmania-score-xml/scores";
 my $SONGS_PARENT_DIR = "$ENV{HOME}/.stepmania-5.0";
 my $CACHE_BASE_DIR = "$ENV{HOME}/.cache/ddr-stepmania-score";
 my $ZENIUS_NAME_ID_CACHE_FILE = "$ENV{HOME}/.cache/ddr-zenius-name-id-cache";
@@ -145,7 +145,7 @@ my $usage = "Usage:
               -obtain SCORE_DATA from XML_SCORE_FILE
         (2) if FILE ends in .png/jpg/.jpeg/.mkv/.mp4 (or --img is given):
               -use FILE as IMG_FILE
-              -take all XML score file matching $XML_FILE_PATTERN
+              -take all XML score file matching $XML_FILE_DIR/*.xml
               -ignore any XML files with mtime after IMG_FILE mtime
               -of the remaining, select the oldest file as XML_SCORE_FILE
       (C) obtain SCORE_DATA from XML_SCORE_FILE (see SCORE_DATA)
@@ -1062,7 +1062,7 @@ sub getScoreDDRA($$){
 sub getOldestXmlFileAfterMtime($){
   my ($targetMtime) = @_;
 
-  my @xmlFiles = glob $XML_FILE_PATTERN;
+  my @xmlFiles = glob "$XML_FILE_DIR/*.xml";
   my %mtimes = map {$_ => mtime $_} @xmlFiles;
   @xmlFiles = sort {$mtimes{$a} <=> $mtimes{$b}} @xmlFiles;
 
