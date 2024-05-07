@@ -44,7 +44,7 @@ sub appendZeniusNameIdCache($$);
 sub allFilesExist(@);
 sub chunkArr($@);
 
-my $XML_FILE_PATTERN = "$ENV{HOME}/.stepmania-*/Save/Upload/*.xml";
+my $XML_FILE_PATTERN = "$ENV{HOME}/.cache/stepmania-score-xml/scores/*.xml";
 my $SONGS_PARENT_DIR = "$ENV{HOME}/.stepmania-5.0";
 my $CACHE_BASE_DIR = "$ENV{HOME}/.cache/ddr-stepmania-score";
 my $ZENIUS_NAME_ID_CACHE_FILE = "$ENV{HOME}/.cache/ddr-zenius-name-id-cache";
