@@ -82,8 +82,6 @@ my $CONFIG_SIMFILE_DIR_RENAMES = undef;
 #  paths to alternate SM_FILEs within a song dir, for a specific date/time range
 my $CONFIG_SIMFILE_VERSIONS_BY_SONG_DIR = undef;
 
-my $FMT_HARDCODED_SONG_NAME_IDS = getFormattedConfigSongNameIdOverrides();
-
 my $SM_DDRA_DIFF_ARR = [
   ["Beginner"  => "beginner"],
   ["Easy"      => "basic"],
@@ -230,8 +228,8 @@ my $usage = "Usage:
         -extract BASENAME_SONG_DIR (the last element of the SONG_DIR path, not including group name)
         -run `$ZENIUS_TOOL --extract-name-id BASENAME_SONG_DIR`
         -override this value for certain hardcoded SONG_DIR values
-        -the following SONG_NAME values have hardcoded SONG_DIR values:
-          $FMT_HARDCODED_SONG_NAME_IDS
+        -the following SONG_NAME values have hardcoded SONG_DIR values:"
+          . getFormattedConfigSongNameIdOverrides() . "
     (3) parse SM_GAME/SM_DIFF into DDRA_GAME / DDRA_DIFFICULTY using hardcoded transforms
     (4) locate the stepmania SIMFILE (*.sm or *.ssc) in
           $SMUtils::Files::DIR_SONGS_PARENT/<SONG_DIR>/*.*
@@ -831,8 +829,11 @@ sub getDDRSonglistLine($$$){
 
 sub getFormattedConfigSongNameIdOverrides(){
   ensureSongNameIdOverrides();
-  return join "\n        ", map {join " ", @$_}
-    chunkArr(3, sort values %$CONFIG_SONG_NAME_IDS_BY_SONG_DIR_SUFFIX);
+  my @songNameIds = sort values %$CONFIG_SONG_NAME_IDS_BY_SONG_DIR_SUFFIX;
+  my @chunkArrs = chunkArr(3, @songNameIds);
+  my @chunkStrs = map {join " ", @$_} @chunkArrs;
+  my @lines = map {"\n        $_"} @chunkStrs;
+  return join "", @lines;
 }
 
 sub ensureSongNameIdOverrides(){
