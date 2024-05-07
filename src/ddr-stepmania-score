@@ -42,8 +42,6 @@ sub getSongNameWithZeniusTool($);
 sub readZeniusNameIdCache();
 sub appendZeniusNameIdCache($$);
 
-sub allFilesExist(@);
-
 my $CACHE_BASE_DIR = "$ENV{HOME}/.cache/ddr-stepmania-score";
 my $ZENIUS_NAME_ID_CACHE_FILE = "$ENV{HOME}/.cache/ddr-zenius-name-id-cache";
 
@@ -1013,13 +1011,6 @@ sub readZeniusNameIdCache(){
 sub appendZeniusNameIdCache($$){
   my ($songName, $query) = @_;
   appendFile($ZENIUS_NAME_ID_CACHE_FILE, "$songName:$query\n");
-}
-
-sub allFilesExist(@){
-  for my $file(@_){
-    return 0 if not -f $file;
-  }
-  return 1;
 }
 
 &main(@ARGV);
