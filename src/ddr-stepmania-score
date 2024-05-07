@@ -229,7 +229,7 @@ my $usage = "Usage:
         -run `$ZENIUS_TOOL --extract-name-id BASENAME_SONG_DIR`
         -override this value for certain hardcoded SONG_DIR values
         -the following SONG_NAME values have hardcoded SONG_DIR values:"
-          . getFormattedConfigSongNameIdOverrides("\n        ", "") . "
+          . getFormattedConfigSongNameIdOverrides("\n          ", "") . "
     (3) parse SM_GAME/SM_DIFF into DDRA_GAME / DDRA_DIFFICULTY using hardcoded transforms
     (4) locate the stepmania SIMFILE (*.sm or *.ssc) in
           $SMUtils::Files::DIR_SONGS_PARENT/<SONG_DIR>/*.*
