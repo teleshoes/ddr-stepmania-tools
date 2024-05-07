@@ -1790,14 +1790,14 @@ sub parseSMFile($){
   while($sm =~ /
     \#NOTES                  \s*:\s*
     (?<game>$reName)         \s*:\s*
-    [^:]*?                   \s*:\s*
+    (?<description>[^:]*?)   \s*:\s*
     (?<difficulty>$reName)   \s*:\s*
     (?<smFeet>[^:]*?)        \s*:\s*
     (?<smRadar>[^:]*?)       \s*:\s*
     (?<notes>[^;:]+?)        (?:[;:]|$)
   /gsxi){
-    my ($game, $difficulty, $smFeet, $smRadar, $notes) = (
-      $+{game}, $+{difficulty}, $+{smFeet}, $+{smRadar}, $+{notes});
+    my ($game, $desc, $difficulty, $smFeet, $smRadar, $notes) = (
+      $+{game}, $+{description}, $+{difficulty}, $+{smFeet}, $+{smRadar}, $+{notes});
 
     $smFeet = "" if $smFeet !~ /^\d+$/;
 
@@ -1809,6 +1809,7 @@ sub parseSMFile($){
     push @noteSetInfos, {
       game    => $game,
       diff    => $difficulty,
+      desc    => $desc,
       smFeet  => $smFeet,
       smRadar => $smRadar,
       notes   => $notes,
@@ -1821,6 +1822,7 @@ sub parseSMFile($){
   my @sscNoteSets = $sm =~ /\#NOTEDATA\s*:.*?#NOTES\s*:[^;]*;/gsi;
   for my $noteSet(@sscNoteSets){
     my $game = $1       if $noteSet =~ /\#STEPSTYPE    \s*:\s*   ($reName)   \s*;\s*/sxi;
+    my $desc = $1       if $noteSet =~ /\#DESCRIPTION  \s*:\s*   ([^;]*)     \s*;\s*/sxi;
     my $difficulty = $1 if $noteSet =~ /\#DIFFICULTY   \s*:\s*   ($reName)   \s*;\s*/sxi;
     my $smFeet = $1     if $noteSet =~ /\#METER        \s*:\s*   (\d+)       \s*;\s*/sxi;
     my $smRadar = $1    if $noteSet =~ /\#RADARVALUES  \s*:\s*   ([^;]+)     \s*;\s*/sxi;
@@ -1838,6 +1840,7 @@ sub parseSMFile($){
     push @noteSetInfos, {
       game    => $game,
       diff    => $difficulty,
+      desc    => $desc,
       smFeet  => $smFeet,
       smRadar => $smRadar,
       notes   => $notes,
