@@ -128,6 +128,9 @@ sub extractScoreEntriesFromStats($){
         my $percentDP = $scoreNode->findvalue("./PercentDP");
 
         push @scoreEntries, {
+          xmlFile       => $statsFile,
+          xmlSchemaType => "stats",
+
           songDir       => $songDir,
           game          => $game,
           smDiff        => $smDiff,
@@ -195,6 +198,9 @@ sub extractScoreEntriesFromUpload($){
     my $epoch = dtmStrToEpoch($dateTimeXML);
 
     push @scoreEntries, {
+      xmlFile       => $uploadFile,
+      xmlSchemaType => "upload",
+
       songDir       => $songDir,
       game          => $game,
       smDiff        => $smDiff,
@@ -223,6 +229,9 @@ sub extractScoreEntriesFromScore($){
   my @scoreEntries = extractScoreEntriesFromUpload($scoreFile);
   if(@scoreEntries != 1){
     die "ERROR: score file must contain exactly one score '$scoreFile'\n";
+  }
+  for my $scoreEntry(@scoreEntries){
+    $$scoreEntry{xmlSchemaType} = "score";
   }
 
   my $playerNumFromFilename;
