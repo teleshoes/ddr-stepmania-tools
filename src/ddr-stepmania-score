@@ -5,7 +5,9 @@ use Cwd qw(abs_path);
 use File::Basename qw(basename dirname);
 use lib dirname(abs_path($0));
 
-use SMUtils::Files qw();
+use SMUtils::Files qw(
+  getSMFileFromSongDir
+);
 use SMUtils::ScoreXML qw(
   extractScoreEntriesFromScore
   parseScoreDetails
@@ -23,15 +25,10 @@ sub writeScoreDataCache($$);
 sub getCacheFile($);
 sub calculateScoreDataCache($);
 sub formatScoreData($$);
-sub getSMFileFromSongDir($$);
 sub getDDRSonglistLine($$$);
 sub getFormattedConfigSongNameIdOverrides($$);
 sub ensureSongNameIdOverrides();
-sub ensureSimfileDirRenames();
-sub ensureSimfileVersions();
 sub parseSongNameIdOverridesFile($);
-sub parseSimfileDirRenamesFile($);
-sub parseSimfileVersionsFile($);
 sub parseXmlFile($);
 sub parseSMFileSongStats($$$);
 sub gameDiffKey($$);
@@ -53,8 +50,6 @@ sub chunkArr($@);
 my $CACHE_BASE_DIR = "$ENV{HOME}/.cache/ddr-stepmania-score";
 my $ZENIUS_NAME_ID_CACHE_FILE = "$ENV{HOME}/.cache/ddr-zenius-name-id-cache";
 my $SONG_NAME_ID_OVERRIDES_FILE = "$ENV{HOME}/.config/ddrname-songlist-simfile-overrides";
-my $SIMFILE_DIR_RENAMES_FILE = "$ENV{HOME}/.config/stepmania-simfile-dir-renames";
-my $SIMFILE_VERSIONS_FILE = "$ENV{HOME}/.config/stepmania-simfile-versions";
 
 my $DDR_RADAR_FEET_TOOL = "ddr-radar-feet";
 my $ZENIUS_TOOL = "zenius-ddrsonglist";
@@ -73,14 +68,6 @@ my $XML_MTIME_DIFF_ERROR_SECONDS = 600; #FAIL if image file and XML file mtimes 
 #CONFIG loaded only once, and only as needed
 #  song-name-id overrides to use instead of zenius
 my $CONFIG_SONG_NAME_IDS_BY_SONG_DIR_SUFFIX = undef;
-
-#CONFIG loaded only once, and only as needed
-#  manual overrides of SONG_DIR, for songs that have been moved or renamed
-my $CONFIG_SIMFILE_DIR_RENAMES = undef;
-
-#CONFIG loaded only once, and only as needed
-#  paths to alternate SM_FILEs within a song dir, for a specific date/time range
-my $CONFIG_SIMFILE_VERSIONS_BY_SONG_DIR = undef;
 
 my $SM_DDRA_DIFF_ARR = [
   ["Beginner"  => "beginner"],
@@ -766,49 +753,6 @@ sub formatScoreData($$){
   return $s;
 }
 
-sub getSMFileFromSongDir($$){
-  my ($songDir, $epoch) = @_;
-
-  ensureSimfileDirRenames();
-  ensureSimfileVersions();
-
-  if($songDir !~ /^Songs\/.*\/$/){
-    die "ERROR: song dir must start with 'Songs/' and end with '/' ($songDir)\n";
-  }
-
-  my $songAbsDir = "$SMUtils::Files::DIR_SONGS_PARENT/$songDir";
-
-  if(not -d "$songAbsDir"){
-    if(defined $$CONFIG_SIMFILE_DIR_RENAMES{$songDir}){
-      $songDir = $$CONFIG_SIMFILE_DIR_RENAMES{$songDir};
-      $songAbsDir = "$SMUtils::Files::DIR_SONGS_PARENT/$songDir";
-      if(not -d "$songAbsDir"){
-        die "ERROR: renamed song dir '$songAbsDir' also does not exist\n";
-      }
-    }
-  }
-
-  if(not -d "$songAbsDir"){
-    die "ERROR: song dir '$songAbsDir' does not exist\n";
-  }
-
-  if(defined $$CONFIG_SIMFILE_VERSIONS_BY_SONG_DIR{$songDir}){
-    #use older version of simfile if configured
-    my @versions = @{$$CONFIG_SIMFILE_VERSIONS_BY_SONG_DIR{$songDir}};
-    for my $v(@versions){
-      if($$v{startEpoch} <= $epoch && $epoch <= $$v{endEpoch}){
-        die "$$v{startEpoch}   $epoch   $$v{endEpoch}\n";
-        return $$v{absSMFile};
-      }
-    }
-  }else{
-    #find the first SM/SSC file directly underneath SONG_DIR
-    my @smFiles = grep {$_ =~ /\.(ssc|sm)$/i} listDirFiles $songAbsDir;
-    die "ERROR: could not find SSC or SM file in $songAbsDir\n" if @smFiles == 0;
-    return $smFiles[0];
-  }
-}
-
 sub getDDRSonglistLine($$$){
   my ($songDir, $song, $smFile) = @_;
 
@@ -861,16 +805,6 @@ sub ensureSongNameIdOverrides(){
       parseSongNameIdOverridesFile($SONG_NAME_ID_OVERRIDES_FILE);
   }
 }
-sub ensureSimfileDirRenames(){
-  if(not defined $CONFIG_SIMFILE_DIR_RENAMES){
-    $CONFIG_SIMFILE_DIR_RENAMES = parseSimfileDirRenamesFile($SIMFILE_DIR_RENAMES_FILE);
-  }
-}
-sub ensureSimfileVersions(){
-  if(not defined $CONFIG_SIMFILE_VERSIONS_BY_SONG_DIR){
-    $CONFIG_SIMFILE_VERSIONS_BY_SONG_DIR = parseSimfileVersionsFile($SIMFILE_VERSIONS_FILE);
-  }
-}
 
 sub parseSongNameIdOverridesFile($){
   my ($file) = @_;
@@ -891,77 +825,6 @@ sub parseSongNameIdOverridesFile($){
   return $songNameIdsBySongDirSuffix;
 }
 
-sub parseSimfileDirRenamesFile($){
-  my ($file) = @_;
-  my @lines;
-  if(-f $file){
-    @lines = readFile($file);
-  }
-
-  my $simfileDirRenames = {};
-  my $orig = undef;
-  for my $line(@lines){
-    next if $line =~ /^\s*$/ or $line =~ /^\s*#/;
-    if($line =~ /^\s*=>\s*(\S.*)$/){
-      my $repl = $1;
-      if(not defined $orig){
-        die "ERROR: malformed simfile dir renames file $file\n";
-      }
-      chomp $orig;
-      chomp $repl;
-      if($orig !~ /^Songs\// or $repl !~ /^Songs\//){
-        die "ERROR: simfile dir renames must start with 'Songs/'\n";
-      }elsif($orig !~ /\/$/ or $repl !~ /\/$/){
-        die "ERROR: simfile dir renames must end with '/'\n";
-      }
-      $$simfileDirRenames{$orig} = $repl;
-      $orig = undef;
-    }else{
-      if(defined $orig){
-        die "ERROR: malformed simfile dir renames file $file\n";
-      }
-      $orig = $line;
-    }
-  }
-  return $simfileDirRenames;
-}
-
-sub parseSimfileVersionsFile($){
-  my ($file) = @_;
-  my @lines;
-  if(-f $file){
-    @lines = readFile($file);
-  }
-
-  my $simfileVersionsBySongDir = {};
-  for my $line(@lines){
-    chomp $line;
-    next if $line =~ /^\s*$/ or $line =~ /^\s*#/;
-    if($line =~ /^\s*(\d+)\s*:\s*(\d+)\s*:\s*(Songs\/[^:]*\/)\s*:\s*([^:]+)$/){
-      my ($startEpoch, $endEpoch, $songDir, $relSMFile) = ($1, $2, $3, $4);
-
-      my $absDir = "$SMUtils::Files::DIR_SONGS_PARENT/$songDir";
-      $absDir =~ s/\/$//;
-      my $absSMFile = "$absDir/$relSMFile";
-      if(not -f $absSMFile){
-        die "ERROR: could not find SM_FILE version $absSMFile\n";
-      }
-
-      if(not defined $$simfileVersionsBySongDir{$songDir}){
-        $$simfileVersionsBySongDir{$songDir} = [];
-      }
-      push @{$$simfileVersionsBySongDir{$songDir}}, {
-        startEpoch => $startEpoch,
-        endEpoch   => $endEpoch,
-        songDir    => $songDir,
-        absSMFile  => $absSMFile,
-      };
-    }else{
-      die "ERROR: malformed versions line in $file\n$line\n";
-    }
-  }
-  return $simfileVersionsBySongDir;
-}
 
 sub parseXmlFile($){
   my ($xmlFile) = @_;
