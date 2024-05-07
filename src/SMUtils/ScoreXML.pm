@@ -128,17 +128,17 @@ sub extractScoreEntriesFromStats($){
         my $percentDP = $scoreNode->findvalue("./PercentDP");
 
         push @scoreEntries, {
-          songDir     => $songDir,
-          game        => $game,
-          smDiff      => $smDiff,
-          machineGuid => $machineGuid,
-          playerNum   => undef,
-          epoch       => $epoch,
-          percentDP   => $percentDP,
+          songDir       => $songDir,
+          game          => $game,
+          smDiff        => $smDiff,
+          machineGuid   => $machineGuid,
+          playerNum     => undef,
+          epoch         => $epoch,
+          percentDP     => $percentDP,
 
-          songNode    => $songNode,
-          stepsNode   => $stepsNode,
-          scoreNode   => $scoreNode,
+          songNode      => $songNode,
+          stepsNode     => $stepsNode,
+          scoreNode     => $scoreNode,
         };
       }
     }
@@ -195,17 +195,17 @@ sub extractScoreEntriesFromUpload($){
     my $epoch = dtmStrToEpoch($dateTimeXML);
 
     push @scoreEntries, {
-      songDir     => $songDir,
-      game        => $game,
-      smDiff      => $smDiff,
-      machineGuid => $machineGuid,
-      playerNum   => $playerNum,
-      percentDP   => $percentDP,
-      epoch       => $epoch,
+      songDir       => $songDir,
+      game          => $game,
+      smDiff        => $smDiff,
+      machineGuid   => $machineGuid,
+      playerNum     => $playerNum,
+      percentDP     => $percentDP,
+      epoch         => $epoch,
 
-      songNode    => $songNode,
-      stepsNode   => $stepsNode,
-      scoreNode   => $scoreNode,
+      songNode      => $songNode,
+      stepsNode     => $stepsNode,
+      scoreNode     => $scoreNode,
     };
   }
 
@@ -219,8 +219,8 @@ sub extractScoreEntriesFromUpload($){
 #same syntax as upload file, except one per file max
 sub extractScoreEntriesFromScore($){
   my ($scoreFile) = @_;
-  my @scoreEntries = extractScoreEntriesFromUpload($scoreFile);
 
+  my @scoreEntries = extractScoreEntriesFromUpload($scoreFile);
   if(@scoreEntries != 1){
     die "ERROR: score file must contain exactly one score '$scoreFile'\n";
   }
