@@ -66,10 +66,12 @@ my $DDRNAME_TW = "twdefault";
 my $XML_MTIME_DIFF_WARNING_SECONDS = 90; #warn if image file and XML file mtimes diff is greater
 my $XML_MTIME_DIFF_ERROR_SECONDS = 600; #FAIL if image file and XML file mtimes diff is greater
 
-#song-name-id overrides to use instead of zenius
+#  song-name-id overrides to use instead of zenius
 my $CONFIG_SONG_NAME_IDS_BY_SONG_DIR_SUFFIX =
   parseSongNameIdOverridesFile($SONG_NAME_ID_OVERRIDES_FILE);
+#  manual overrides of SONG_DIR, for songs that have been moved or renamed
 my $CONFIG_SIMFILE_DIR_RENAMES = parseSimfileDirRenamesFile($SIMFILE_DIR_RENAMES_FILE);
+#  paths to alternate SM_FILEs within a song dir, for a specific date/time range
 my $CONFIG_SIMFILE_VERSIONS_BY_SONG_DIR = parseSimfileVersionsFile($SIMFILE_VERSIONS_FILE);
 
 my $FMT_HARDCODED_SONG_NAME_IDS = getFormattedConfigSongNameIdOverrides();
