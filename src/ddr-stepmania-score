@@ -66,9 +66,10 @@ my $XML_MTIME_DIFF_WARNING_SECONDS = 90; #warn if image file and XML file mtimes
 my $XML_MTIME_DIFF_ERROR_SECONDS = 600; #FAIL if image file and XML file mtimes diff is greater
 
 #song-name-id overrides to use instead of zenius
-my $SONG_NAME_IDS_BY_SONG_DIR_SUFFIX = parseSongNameIdOverridesFile($SONG_NAME_ID_OVERRIDES_FILE);
+my $CONFIG_SONG_NAME_IDS_BY_SONG_DIR_SUFFIX =
+  parseSongNameIdOverridesFile($SONG_NAME_ID_OVERRIDES_FILE);
 my $FMT_HARDCODED_SONG_NAME_IDS = join "\n        ", map {join " ", @$_}
-  chunkArr(3, sort values %$SONG_NAME_IDS_BY_SONG_DIR_SUFFIX);
+  chunkArr(3, sort values %$CONFIG_SONG_NAME_IDS_BY_SONG_DIR_SUFFIX);
 
 my $CONFIG_SIMFILE_DIR_RENAMES = parseSimfileDirRenamesFile($SIMFILE_DIR_RENAMES_FILE);
 my $CONFIG_SIMFILE_VERSIONS_BY_SONG_DIR = parseSimfileVersionsFile($SIMFILE_VERSIONS_FILE);
@@ -1111,9 +1112,9 @@ sub getDDRADiff($){
 
 sub getSongNameWithZeniusTool($){
   my ($songDir) = @_;
-  for my $songDirSuffix(sort keys %$SONG_NAME_IDS_BY_SONG_DIR_SUFFIX){
+  for my $songDirSuffix(sort keys %$CONFIG_SONG_NAME_IDS_BY_SONG_DIR_SUFFIX){
     if($songDir =~ /(^|\/)\Q$songDirSuffix\E\/*$/){
-      return $$SONG_NAME_IDS_BY_SONG_DIR_SUFFIX{$songDirSuffix};
+      return $$CONFIG_SONG_NAME_IDS_BY_SONG_DIR_SUFFIX{$songDirSuffix};
     }
   }
   my $subDir = $songDir;
