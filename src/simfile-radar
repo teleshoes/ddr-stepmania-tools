@@ -92,6 +92,7 @@ sub getTotalFreezeRowCount($);
 sub getMaxMeasureDensity($);
 sub bpmToNanoSecondsPerRow($);
 sub removeWarps($$$);
+sub removeBrokenHolds($);
 sub calculateNotesPerSecondInfo($$$);
 sub getTotalNoteIrregularity($);
 sub getBPMChangeAmount($$);
@@ -1075,6 +1076,45 @@ sub removeWarps($$$){
   return ($rows, $bpmsByRow, $stopsByRow);
 }
 
+sub removeBrokenHolds($){
+  my ($rows) = @_;
+
+  my $warningMsg = "";
+  my $heldArrows = {};
+  for(my $rowIdx=0; $rowIdx<@$rows; $rowIdx++){
+    my $row = $$rows[$rowIdx];
+    next if $row !~ /[234]/;
+
+    my @arrows = split '', $row;
+    for(my $arrowIdx=0; $arrowIdx<@arrows; $arrowIdx++){
+      if($arrows[$arrowIdx] =~ /[24]/){    #hold or roll start
+        if(defined $$heldArrows{$arrowIdx}){
+          $arrows[$arrowIdx] = "0";
+          my $newRow = join '', @arrows;
+          $warningMsg .= "  -DUPLICATE HOLD/ROLL START: row#$rowIdx '$row' => '$newRow'\n";
+          $$rows[$rowIdx] = $newRow;
+        }
+        $$heldArrows{$arrowIdx} = 1;
+      }elsif($arrows[$arrowIdx] =~ /[3]/){ #hold or roll end
+        if(not defined $$heldArrows{$arrowIdx}){
+          $arrows[$arrowIdx] = "0";
+          my $newRow = join '', @arrows;
+          $warningMsg .= "  -REDUNDANT HOLD/ROLL RELEASE: row#$rowIdx '$row' => '$newRow'\n";
+          $$rows[$rowIdx] = $newRow;
+        }
+        undef $$heldArrows{$arrowIdx};
+      }
+    }
+  }
+
+  if(length $warningMsg > 0){
+    print STDERR "\n\n\nWARNING: BROKEN HOLD/ROLL ROWS\n$warningMsg\n\n\n";
+  }
+
+  return $rows;
+}
+
+
 #slice note rows into segments, and calculate the notes-per-second of each segment
 #  -calculate max+avg NPS variables,
 #     each with a certain segment size (by fixed time or by measure count),
@@ -1500,6 +1540,7 @@ sub calculateNoteSetStats($$){
   }
 
   ($rows, $bpmsByRow, $stopsByRow) = removeWarps($rows, $bpmsByRow, $stopsByRow);
+  $rows = removeBrokenHolds($rows);
 
   #analysis + data-collection
   $s = {%$s,                     %{getNoteCounts($rows)},
