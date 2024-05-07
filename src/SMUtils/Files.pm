@@ -77,7 +77,6 @@ sub getSMFileFromSongDir($$){
     my @versions = @{$$CONFIG_SIMFILE_VERSIONS_BY_SONG_DIR{$songDir}};
     for my $v(@versions){
       if($$v{startEpoch} <= $epoch && $epoch <= $$v{endEpoch}){
-        die "$$v{startEpoch}   $epoch   $$v{endEpoch}\n";
         return $$v{absSMFile};
       }
     }
