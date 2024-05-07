@@ -43,7 +43,6 @@ sub readZeniusNameIdCache();
 sub appendZeniusNameIdCache($$);
 
 sub allFilesExist(@);
-sub chunkArr($@);
 
 my $CACHE_BASE_DIR = "$ENV{HOME}/.cache/ddr-stepmania-score";
 my $ZENIUS_NAME_ID_CACHE_FILE = "$ENV{HOME}/.cache/ddr-zenius-name-id-cache";
@@ -1021,23 +1020,6 @@ sub allFilesExist(@){
     return 0 if not -f $file;
   }
   return 1;
-}
-
-sub chunkArr($@){
-  my ($chunkSize, @arr) = @_;
-  my @chunkArr;
-  my $chunk = undef;
-  for my $elem(@arr){
-    if(defined $chunk and @$chunk >= $chunkSize){
-      $chunk = undef;
-    }
-    if(not defined $chunk){
-      $chunk = [];
-      push @chunkArr, $chunk;
-    }
-    push @$chunk, $elem;
-  }
-  return @chunkArr;
 }
 
 &main(@ARGV);
