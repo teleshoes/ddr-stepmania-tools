@@ -45,7 +45,6 @@ sub appendZeniusNameIdCache($$);
 sub allFilesExist(@);
 sub chunkArr($@);
 
-my $SONGS_PARENT_DIR = "$ENV{HOME}/.stepmania-5.0";
 my $CACHE_BASE_DIR = "$ENV{HOME}/.cache/ddr-stepmania-score";
 my $ZENIUS_NAME_ID_CACHE_FILE = "$ENV{HOME}/.cache/ddr-zenius-name-id-cache";
 my $SONG_NAME_ID_OVERRIDES_FILE = "$ENV{HOME}/.config/ddrname-songlist-simfile-overrides";
@@ -223,7 +222,8 @@ my $usage = "Usage:
         -the following SONG_NAME values have hardcoded SONG_DIR values:
           $FMT_HARDCODED_SONG_NAME_IDS
     (3) parse SM_GAME/SM_DIFF into DDRA_GAME / DDRA_DIFFICULTY using hardcoded transforms
-    (4) locate the stepmania SIMFILE (*.sm or *.ssc) in $SONGS_PARENT_DIR/<SONG_DIR>/*.*
+    (4) locate the stepmania SIMFILE (*.sm or *.ssc) in
+          $SMUtils::Files::DIR_SONGS_PARENT/<SONG_DIR>/*.*
     (5) parse the SIMFILE with $SIMFILE_RADAR_TOOL
         -fetch stats for game=SM_GAME and diff=SM_DIFF:
           -DDR_HOLD_ROW_COUNTS is DDRA-style count of number of rows with holds (single/multi arrow)
@@ -764,12 +764,12 @@ sub getSMFileFromSongDir($$){
     die "ERROR: song dir must start with 'Songs/' and end with '/' ($songDir)\n";
   }
 
-  my $songAbsDir = "$SONGS_PARENT_DIR/$songDir";
+  my $songAbsDir = "$SMUtils::Files::DIR_SONGS_PARENT/$songDir";
 
   if(not -d "$songAbsDir"){
     if(defined $$SIMFILE_DIR_RENAMES{$songDir}){
       $songDir = $$SIMFILE_DIR_RENAMES{$songDir};
-      $songAbsDir = "$SONGS_PARENT_DIR/$songDir";
+      $songAbsDir = "$SMUtils::Files::DIR_SONGS_PARENT/$songDir";
       if(not -d "$songAbsDir"){
         die "ERROR: renamed song dir '$songAbsDir' also does not exist\n";
       }
@@ -883,7 +883,7 @@ sub parseSimfileVersionsFile($){
     if($line =~ /^\s*(\d+)\s*:\s*(\d+)\s*:\s*(Songs\/[^:]*\/)\s*:\s*([^:]+)$/){
       my ($startEpoch, $endEpoch, $songDir, $relSMFile) = ($1, $2, $3, $4);
 
-      my $absDir = "$SONGS_PARENT_DIR/$songDir";
+      my $absDir = "$SMUtils::Files::DIR_SONGS_PARENT/$songDir";
       $absDir =~ s/\/$//;
       my $absSMFile = "$absDir/$relSMFile";
       if(not -f $absSMFile){
