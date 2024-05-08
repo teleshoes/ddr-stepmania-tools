@@ -171,28 +171,13 @@ sub parseSimfileDirRenamesFile($){
   }
 
   my $simfileDirRenames = {};
-  my $orig = undef;
   for my $line(@lines){
     next if $line =~ /^\s*$/ or $line =~ /^\s*#/;
-    if($line =~ /^\s*=>\s*(\S.*)$/){
-      my $repl = $1;
-      if(not defined $orig){
-        die "ERROR: malformed simfile dir renames file $file\n";
-      }
-      chomp $orig;
-      chomp $repl;
-      if($orig !~ /^Songs\// or $repl !~ /^Songs\//){
-        die "ERROR: simfile dir renames must start with 'Songs/'\n";
-      }elsif($orig !~ /\/$/ or $repl !~ /\/$/){
-        die "ERROR: simfile dir renames must end with '/'\n";
-      }
+    if($line =~ /^\s*(Songs\/[^:]*\/)\s*:\s*(Songs\/[^:]*\/)\s*$/){
+      my ($orig, $repl) = ($1, $2);
       $$simfileDirRenames{$orig} = $repl;
-      $orig = undef;
     }else{
-      if(defined $orig){
-        die "ERROR: malformed simfile dir renames file $file\n";
-      }
-      $orig = $line;
+      die "ERROR: malformed song dir rename line $line\n";
     }
   }
   return $simfileDirRenames;
