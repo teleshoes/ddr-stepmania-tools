@@ -148,7 +148,11 @@ sub extractScoreEntriesFromStats($){
   }
 
   if(@scoreEntries == 0){
-    print STDERR "WARNING: no score entries found in stats file $statsFile\n";
+    if($statsFile =~ /\.empty\./){
+      #suppress warnings for known-empty stats files
+    }else{
+      print STDERR "WARNING: no score entries found in stats file $statsFile\n";
+    }
   }
 
   return @scoreEntries;
