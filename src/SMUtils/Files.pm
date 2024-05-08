@@ -80,12 +80,12 @@ sub getSMFileFromSongDir($$){
         return $$v{absSMFile};
       }
     }
-  }else{
-    #find the first SM/SSC file directly underneath SONG_DIR
-    my @smFiles = grep {$_ =~ /\.(ssc|sm)$/i} listDirFiles $songAbsDir;
-    die "ERROR: could not find SSC or SM file in $songAbsDir\n" if @smFiles == 0;
-    return $smFiles[0];
   }
+
+  #find the first SM/SSC file directly underneath SONG_DIR
+  my @smFiles = grep {$_ =~ /\.(ssc|sm)$/i} listDirFiles $songAbsDir;
+  die "ERROR: could not find SSC or SM file in $songAbsDir\n" if @smFiles == 0;
+  return $smFiles[0];
 }
 
 sub getSongNameIdOverride($){
