@@ -339,8 +339,11 @@ sub parseScoreDetails($){
 
   #fill in <MissedHold>=0 if <LetGo> is present and <MissedHold> is not
   #  some old scores predate <MissedHold>, and were updated in stats but not upload
-  if($$details{countLetGo} =~ /\d+/ and $$details{countMissedHold} eq ""){
+  if($$details{countMissedHold} eq ""){
     print STDERR "WARNING: <MissedHold> missing for score with epoch=$$scoreEntry{epoch}\n";
+    if($$details{countLetGo} !~ /^\d+$/){
+      die "ERROR: missing <LetGo> and <MissedHold> for score epoch=$$scoreEntry{epoch}\n";
+    }
     $$details{countMissedHold} = 0;
   }
 
