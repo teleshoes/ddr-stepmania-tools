@@ -487,11 +487,12 @@ my $usage = "Usage:
         single-arrow-roll-start, multi-arrow-roll-start
       e.g.: '0400', '4400'
     COUNT_JUMP_ROWS
-      total number of rows in NOTE_ROWS that contain:
-        mutli-arrow-tap,
-        multi-arrow-hold-start
-        multi-arrow-roll-start
-      e.g.: '1100', '0202', '4400'
+      total number of rows in NOTE_ROWS that contain any of the following:
+        mutli-arrow-tap, multi-arrow-hold-start, multi-arrow-roll-start
+      OR contain at least TWO of the following:
+        single-arrow-tap, single-arrow-hold-start, single-arrow-roll-start
+      (this includes more than 2 arrows at once, i.e.: hands/brackets)
+      e.g.: '1100', '2100', '0202', '4400', '1111'
     COUNT_MINE_ROWS
       total number of rows in NOTE_ROWS that contain:
         single-mine,              multi-mine
