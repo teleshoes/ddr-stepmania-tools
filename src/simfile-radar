@@ -1081,29 +1081,49 @@ sub removeBrokenHolds($){
   my ($rows) = @_;
 
   my $warningMsg = "";
-  my $heldArrows = {};
+  my $heldArrowStartRowIdx = {};
+  my $numHeldArrows = 0;
   for(my $rowIdx=0; $rowIdx<@$rows; $rowIdx++){
     my $row = $$rows[$rowIdx];
-    next if $row !~ /[234]/;
+    next if $row =~ /^0+$/;
+    next if $row !~ /[234]/ and $numHeldArrows == 0;
 
     my @arrows = split '', $row;
     for(my $arrowIdx=0; $arrowIdx<@arrows; $arrowIdx++){
       if($arrows[$arrowIdx] =~ /[24]/){    #hold or roll start
-        if(defined $$heldArrows{$arrowIdx}){
+        if(defined $$heldArrowStartRowIdx{$arrowIdx}){
           $arrows[$arrowIdx] = "0";
           my $newRow = join '', @arrows;
-          $warningMsg .= "  -DUPLICATE HOLD/ROLL START: row#$rowIdx '$row' => '$newRow'\n";
+          $warningMsg .= "  -HOLD/ROLL STARTED AGAIN:        row#$rowIdx '$row' => '$newRow'\n";
           $$rows[$rowIdx] = $newRow;
+        }else{
+          $$heldArrowStartRowIdx{$arrowIdx} = $rowIdx;
+          $numHeldArrows++;
         }
-        $$heldArrows{$arrowIdx} = 1;
       }elsif($arrows[$arrowIdx] =~ /[3]/){ #hold or roll end
-        if(not defined $$heldArrows{$arrowIdx}){
+        if(not defined $$heldArrowStartRowIdx{$arrowIdx}){
           $arrows[$arrowIdx] = "0";
           my $newRow = join '', @arrows;
-          $warningMsg .= "  -REDUNDANT HOLD/ROLL RELEASE: row#$rowIdx '$row' => '$newRow'\n";
+          $warningMsg .= "  -HOLD/ROLL RELEASE BEFORE START: row#$rowIdx '$row' => '$newRow'\n";
           $$rows[$rowIdx] = $newRow;
+        }else{
+          undef $$heldArrowStartRowIdx{$arrowIdx};
+          $numHeldArrows--;
         }
-        undef $$heldArrows{$arrowIdx};
+      }elsif($arrows[$arrowIdx] !~ /0/){
+        #non-release note in the middle of a hold => remove the hold
+        if(defined $$heldArrowStartRowIdx{$arrowIdx}){
+          my $startRowIdx = $$heldArrowStartRowIdx{$arrowIdx};
+          my $startRow = $$rows[$startRowIdx];
+          my @startArrows = split '', $startRow;
+          $startArrows[$arrowIdx] = 0;
+          my $newRow = join '', @startArrows;
+          $warningMsg .= "  -HOLD/ROLL NEVER RELEASED:       row#$startRowIdx '$startRow' => '$newRow'\n";
+          $$rows[$startRowIdx] = $newRow;
+
+          undef $$heldArrowStartRowIdx{$arrowIdx};
+          $numHeldArrows--;
+       }
       }
     }
   }
