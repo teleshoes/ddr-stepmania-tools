@@ -1087,7 +1087,7 @@ sub removeBrokenHolds($$){
   my $numHeldArrows = 0;
   for(my $rowIdx=0; $rowIdx<@$rows; $rowIdx++){
     my $row = $$rows[$rowIdx];
-    next if $row =~ /^0+$/;
+    next if $row =~ /^0+$/ and $rowIdx != $#$rows;
     next if $row !~ /[234]/ and $numHeldArrows == 0;
 
     my @arrows = split '', $row;
@@ -1112,8 +1112,9 @@ sub removeBrokenHolds($$){
           undef $$heldArrowStartRowIdx{$arrowIdx};
           $numHeldArrows--;
         }
-      }elsif($arrows[$arrowIdx] !~ /0/){
+      }elsif($arrows[$arrowIdx] !~ /0/ or $rowIdx == $#$rows){
         #non-release note in the middle of a hold => remove the hold
+        # OR hold is not released and this is the last row of the song
         if(defined $$heldArrowStartRowIdx{$arrowIdx}){
           my $startRowIdx = $$heldArrowStartRowIdx{$arrowIdx};
           my $startRow = $$rows[$startRowIdx];
