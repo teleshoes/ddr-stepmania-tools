@@ -92,7 +92,7 @@ sub getTotalFreezeRowCount($);
 sub getMaxMeasureDensity($);
 sub bpmToNanoSecondsPerRow($);
 sub removeWarps($$$);
-sub removeBrokenHolds($);
+sub removeBrokenHolds($$);
 sub calculateNotesPerSecondInfo($$$);
 sub getTotalNoteIrregularity($);
 sub getBPMChangeAmount($$);
@@ -1077,8 +1077,8 @@ sub removeWarps($$$){
   return ($rows, $bpmsByRow, $stopsByRow);
 }
 
-sub removeBrokenHolds($){
-  my ($rows) = @_;
+sub removeBrokenHolds($$){
+  my ($rows, $infoMsg) = @_;
 
   my $warningMsg = "";
   my $heldArrowStartRowIdx = {};
@@ -1129,7 +1129,7 @@ sub removeBrokenHolds($){
   }
 
   if(length $warningMsg > 0){
-    print STDERR "\n\n\nWARNING: BROKEN HOLD/ROLL ROWS\n$warningMsg\n\n\n";
+    print STDERR "\n\n\nWARNING: BROKEN HOLD/ROLL ROWS $infoMsg\n$warningMsg\n\n\n";
   }
 
   return $rows;
@@ -1561,7 +1561,7 @@ sub calculateNoteSetStats($$){
   }
 
   ($rows, $bpmsByRow, $stopsByRow) = removeWarps($rows, $bpmsByRow, $stopsByRow);
-  $rows = removeBrokenHolds($rows);
+  $rows = removeBrokenHolds($rows, "$$s{SONG_NAME_ID}-$$s{GAME}-$$s{DIFF_SM}");
 
   #analysis + data-collection
   $s = {%$s,                     %{getNoteCounts($rows)},
