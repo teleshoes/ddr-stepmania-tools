@@ -5,6 +5,7 @@ use warnings;
 use SMUtils::Utils;
 
 sub getSMFileFromSongDir($$);
+sub maybeGetSMFileFromSongDir($$);
 sub getSongNameIdOverride($);
 sub getFormattedConfigSongNameIdOverrides($$);
 sub ensureSongNameIdOverrides();
@@ -18,6 +19,7 @@ our @ISA = qw(Exporter);
 our @EXPORT_OK = qw();
 our @EXPORT = qw(
   getSMFileFromSongDir
+  maybeGetSMFileFromSongDir
   getSongNameIdOverride
   getFormattedConfigSongNameIdOverrides
 );
@@ -48,44 +50,84 @@ my $CONFIG_SIMFILE_VERSIONS_BY_SONG_DIR = undef;
 
 sub getSMFileFromSongDir($$){
   my ($songDir, $epoch) = @_;
+  my $result = maybeGetSMFileFromSongDir($songDir, $epoch);
+  if(defined $$result{simfile}){
+    return $$result{simfile};
+  }else{
+    my $errorMsg = "simfile not found for $songDir";
+    $errorMsg = $$result{errorMsg} if defined $$result{errorMsg};
+    die "ERROR: $errorMsg\n";
+  }
+}
+
+sub maybeGetSMFileFromSongDir($$){
+  my ($songDir, $epoch) = @_;
+  my $result = {
+    simfile               => undef,
+    songAbsDir            => undef,
+    isRenamedSongDir      => 0,
+    isOlderVersionSimfile => 0,
+    errorMsg              => undef,
+  };
 
   ensureSimfileDirRenames();
   ensureSimfileVersions();
 
   if($songDir !~ /^Songs\/.*\/$/){
-    die "ERROR: song dir must start with 'Songs/' and end with '/' ($songDir)\n";
+    $$result{errorMsg} = "song dir must start with 'Songs/' and end with '/' ($songDir)";
+    return $result;
   }
 
-  my $songAbsDir = "$SMUtils::Files::DIR_SONGS_PARENT/$songDir";
+  my $songAbsDir = "$DIR_SONGS_PARENT/$songDir";
 
-  if(not -d "$songAbsDir"){
+  if(not -d $songAbsDir){
     if(defined $$CONFIG_SIMFILE_DIR_RENAMES{$songDir}){
+      $$result{isRenamedSongDir} = 1;
       $songDir = $$CONFIG_SIMFILE_DIR_RENAMES{$songDir};
-      $songAbsDir = "$SMUtils::Files::DIR_SONGS_PARENT/$songDir";
+      $songAbsDir = "$DIR_SONGS_PARENT/$songDir";
       if(not -d "$songAbsDir"){
-        die "ERROR: renamed song dir '$songAbsDir' also does not exist\n";
+        $$result{errorMsg} = "renamed song dir '$songAbsDir' also does not exist";
+        return $result;
       }
     }
   }
 
-  if(not -d "$songAbsDir"){
-    die "ERROR: song dir '$songAbsDir' does not exist\n";
+  if(-d $songAbsDir){
+    $$result{songAbsDir} = $songAbsDir;
+  }else{
+    $$result{errorMsg} = "song dir '$songAbsDir' does not exist";
+    return $result;
   }
 
-  if(defined $$CONFIG_SIMFILE_VERSIONS_BY_SONG_DIR{$songDir}){
-    #use older version of simfile if configured
-    my @versions = @{$$CONFIG_SIMFILE_VERSIONS_BY_SONG_DIR{$songDir}};
-    for my $v(@versions){
-      if($$v{startEpoch} <= $epoch && $epoch <= $$v{endEpoch}){
-        return $$v{absSMFile};
+  # use older version of simfile if version configured for date
+  if(not defined $$result{simfile}){
+    if(defined $$CONFIG_SIMFILE_VERSIONS_BY_SONG_DIR{$songDir}){
+      my @versions = @{$$CONFIG_SIMFILE_VERSIONS_BY_SONG_DIR{$songDir}};
+      for my $v(@versions){
+        if($$v{startEpoch} <= $epoch && $epoch <= $$v{endEpoch}){
+          $$result{isOlderVersionSimfile} = 1;
+          $$result{simfile} = $$v{absSMFile};
+          last;
+        }
       }
     }
   }
 
-  #find the first SM/SSC file directly underneath SONG_DIR
-  my @smFiles = sort grep {$_ =~ /\.(ssc|sm)$/i} listDirFiles $songAbsDir;
-  die "ERROR: could not find SSC or SM file in $songAbsDir\n" if @smFiles == 0;
-  return $smFiles[0];
+  # find the first SM/SSC file directly underneath SONG_DIR
+  if(not defined $$result{simfile}){
+    my @smFiles = sort grep {$_ =~ /\.(ssc|sm)$/i} listDirFiles $songAbsDir;
+    if(@smFiles > 0){
+      $$result{simfile} = $smFiles[0];
+    }
+  }
+
+  # fail if no simfile found
+  if(not defined $$result{simfile}){
+    $$result{errorMsg} = "could not find SSC or SM file in $songAbsDir";
+    return $result;
+  }
+
+  return $result;
 }
 
 sub getSongNameIdOverride($){
