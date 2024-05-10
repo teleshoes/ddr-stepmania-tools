@@ -5,6 +5,7 @@ use warnings;
 use open qw( :std :encoding(UTF-8) );
 use Date::Format qw(time2str);
 use Date::Parse qw(str2time);
+use Encode;
 use Digest::MD5;
 use Time::Local qw(timelocal_posix);
 
@@ -29,6 +30,7 @@ sub readFile($);
 sub writeFile($$);
 sub appendFile($$);
 sub readProc(@);
+sub maybeDecodeFile($$);
 sub listDirFiles($);
 sub md5sum($);
 sub mtime($);
@@ -147,11 +149,23 @@ sub readProc(@){
   }
 }
 
+sub maybeDecodeFile($$){
+  my ($dir, $file) = @_;
+  if(not -e "$dir/$file"){
+    my $decodedFile = eval { Encode::decode("utf8", $_); };
+    if(defined $decodedFile and length $decodedFile > 0 and -e "$dir/$decodedFile"){
+      return $decodedFile;
+    }
+  }
+  return $file;
+}
+
 sub listDirFiles($){
   my ($dir) = @_;
   opendir(my $dh, $dir) or die "ERROR: could not read dir $dir\n$!\n";
   my @files = readdir($dh);
   closedir($dh);
+  @files = map {maybeDecodeFile($dir, $_)} @files;
   $dir =~ s/\/?$//;
   @files = map {"$dir/$_"} @files;
   @files = grep {-f $_} @files;
