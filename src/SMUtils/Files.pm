@@ -18,6 +18,7 @@ sub parseSimfileVersionsFile($);
 our @ISA = qw(Exporter);
 our @EXPORT_OK = qw();
 our @EXPORT = qw(
+  getScoreXMLFiles
   getSMFileFromSongDir
   maybeGetSMFileFromSongDir
   getSongNameIdOverride
@@ -47,6 +48,14 @@ my $CONFIG_SIMFILE_DIR_RENAMES = undef;
 #  paths to alternate SM_FILEs within a song dir, for a specific date/time range
 my $CONFIG_SIMFILE_VERSIONS_BY_SONG_DIR = undef;
 
+
+sub getScoreXMLFiles(){
+  my @xmlFiles = sort grep {$_ =~ /\.(xml)$/i} listDirFiles $DIR_XML_CACHE_SCORES;
+  if(@xmlFiles == 0){
+    die "ERROR: could not find scores $DIR_XML_CACHE_SCORES/*.xml\n";
+  }
+  return @xmlFiles;
+}
 
 sub getSMFileFromSongDir($$){
   my ($songDir, $epoch) = @_;
