@@ -519,6 +519,10 @@ my $usage = "Usage:
     COUNT_ROLLS
       total number of roll ARROWS in all rows in NOTE_ROWS
         e.g.: a row with a jump-roll ('4400') increases COUNT_ROLLS by 2, and COUNT_ROLL_ROWS by 1
+    COUNT_HOLDS_AND_ROLLS
+      total number of hold or roll ARROWS in all rows in NOTE_ROWS
+      exactly equal to: COUNT_HOLDS + COUNT_ROLLS
+        e.g.: a row with a hold+roll ('2400') increases COUNT_HOLDS_AND_ROLLS by 1, and COUNT_HOLD_ROWS by 1
     COUNT_MINES
       total number of MINES in all rows in NOTE_ROWS
         e.g.: a row with 3 mines ('0MMM') increases COUNT_MINES by 3, and COUNT_MINE_ROWS by 1
@@ -941,6 +945,8 @@ sub getNoteCounts($){
     $$noteCounts{COUNT_ROLLS} += @{[ $row =~ /4/g ]};
     $$noteCounts{COUNT_MINES} += @{[ $row =~ /M/g ]};
   }
+
+  $$noteCounts{COUNT_HOLDS_AND_ROLLS} = $$noteCounts{COUNT_HOLDS} + $$noteCounts{COUNT_ROLLS};
 
   return $noteCounts;
 }
