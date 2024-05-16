@@ -276,10 +276,17 @@ my $usage = "Usage:
       but is taken, as-is, from the simfile, if present
     SONG_DUR
       song duration, in fractional seconds
-      this is calculated using BPM_ROWS, STOP_ROWS and SONG_ROW_COUNT
-      e.g.: 121.000666666667
+        -calculate duration of each row from 0 to SONG_ROW_COUNT-1, using BPM_ROWS and STOP_ROWS
+          CUR_BPM = current bpm (the latest bpm from BPM_ROWS less than the current row)
+          CUR_STOP_S = the stop for the current row, if any
+          CUR_BEATS_PER_SEC = ROW_BPM / 60
+          ROWS_PER_BEAT = $ROWS_PER_BEAT
+          CUR_ROWS_PER_SEC = ROWS_PER_BEAT * CUR_BEATS_PER_SEC
+          CUR_DUR = 1/CUR_ROWS_PER_SEC + CUR_STOP_S
+        -sum all of these row durations, EXCEPT THE LAST ROW
+      e.g.: '132' or '121.000666666667'
     SONG_DUR_FMT
-      SONG_DUR formatted M:SS (e.g.: 2:01)
+      SONG_DUR formatted M:SS (e.g.: '2:01'  or '193:59')
     NOTE_ROWS
       a comma-separated list of *expanded* note rows in one game+difficulty of the song
       there are $ROWS_PER_MEASURE rows for each measure
