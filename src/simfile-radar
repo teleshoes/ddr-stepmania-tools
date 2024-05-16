@@ -1035,6 +1035,9 @@ sub getMaxMeasureDensity($){
 
 sub bpmToNanoSecondsPerRow($){
   my ($bpm) = @_;
+  if(not defined $bpm or $bpm eq "" or $bpm == 0){
+    return 0;
+  }
   my $beatsPerSec = $bpm / 60.0;
   my $rowsPerSec = $ROWS_PER_BEAT * $beatsPerSec;
   my $nanosecPerRow = $NANOSEC_PER_SEC / $rowsPerSec;
