@@ -1243,7 +1243,12 @@ sub calculateNotesPerSecondInfo($$$){
   my $songDurS = 0;
 
   my @bpmChangeRows = sort {$a <=> $b} keys %$bpmsByRow;
-  my $firstBpm = $$bpmsByRow{$bpmChangeRows[0]};
+  my $firstBpm;
+  if(@bpmChangeRows > 0){
+    $firstBpm = $$bpmsByRow{$bpmChangeRows[0]};
+  }else{
+    $firstBpm = 0;
+  }
 
   #seconds until the next row (not the next note)
   #  defined for the last row as if there was an empty row after it, at the same bpm
