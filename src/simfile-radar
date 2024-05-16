@@ -526,6 +526,13 @@ my $usage = "Usage:
     COUNT_MINES
       total number of MINES in all rows in NOTE_ROWS
         e.g.: a row with 3 mines ('0MMM') increases COUNT_MINES by 3, and COUNT_MINE_ROWS by 1
+    MAX_SM_DANCE_POINTS
+      maximum number of dance points in stepmania = COUNT_NOTE_ROW*3 + COUNT_HOLDS_AND_ROLLS*3
+        -judgment *ROWS* plus hold *ARROWS*, because stepamnia is crazy
+        -held arrows include rolls and normal holds/freezes
+        -stepmania dance points:
+           FANTASTIC_ROWS*3 + PERFECT_ROWS*2 + GREAT_ROWS*1 + HELD_ARROWS*3 - HIT_MINE_ARROWS*2
+
 
     TOTAL_NOTES                = COUNT_NOTE_ROWS + COUNT_SHOCK_ROWS
     TOTAL_JUMPS_SHOCKS         = COUNT_JUMP_ROWS + COUNT_SHOCK_ROWS
@@ -947,6 +954,11 @@ sub getNoteCounts($){
   }
 
   $$noteCounts{COUNT_HOLDS_AND_ROLLS} = $$noteCounts{COUNT_HOLDS} + $$noteCounts{COUNT_ROLLS};
+
+  #sm dance points:
+  #  FANTASTIC_ROWS*3 + PERFECT_ROWS*2 + GREAT_ROWS*1 + HELD_ARROWS*3 - HIT_MINE_ARROWS*2
+  $$noteCounts{MAX_SM_DANCE_POINTS} =
+    $$noteCounts{COUNT_NOTE_ROWS}*3 + $$noteCounts{COUNT_HOLDS_AND_ROLLS}*3;
 
   return $noteCounts;
 }
