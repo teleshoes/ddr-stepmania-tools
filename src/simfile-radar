@@ -791,23 +791,23 @@ sub handleSimfile($$$$$$$$$){
   my $stats = {};
   for my $gameDiffKey(@gameDiffKeys){
     next if isGameDiffSkipped($gameDiffFilters, $gameDiffKey);
-    my $s = getNoteSetStats($smFile, $smInfo, $gameDiffKey, $readCache, $writeCache);
+    my $noteSetStats = getNoteSetStats($smFile, $smInfo, $gameDiffKey, $readCache, $writeCache);
 
-    $$s{SM_FILE} = $smFile;
+    $$noteSetStats{SM_FILE} = $smFile;
 
     #copy default machine values into plain radar variables
     for my $radarStat(qw(STREAM VOLTAGE AIR FREEZE CHAOS)){
-      my $machineVal = $$s{"${radarStat}_${defaultVarsMachine}"};
-      $$s{$radarStat} = $machineVal;
+      my $machineVal = $$noteSetStats{"${radarStat}_${defaultVarsMachine}"};
+      $$noteSetStats{$radarStat} = $machineVal;
     }
 
-    $$stats{$gameDiffKey} = $s;
+    $$stats{$gameDiffKey} = $noteSetStats;
   }
 
   for my $gameDiffKey(@gameDiffKeys){
-    my $s = $$stats{$gameDiffKey};
+    my $noteSetStats = $$stats{$gameDiffKey};
     next if isGameDiffSkipped($gameDiffFilters, $gameDiffKey);
-    next if not defined $s;
+    next if not defined $noteSetStats;
 
     if($includeNoteRowsPrinting){
       if(not defined $$smInfo{expandedNoteRowsByGameDiffKey}{$gameDiffKey}){
@@ -818,19 +818,19 @@ sub handleSimfile($$$$$$$$$){
           die "ERROR: missing expanded note rows for $smFile $gameDiffKey\n";
         }
       }
-      $$s{NOTE_ROWS} = join ",", @{$$smInfo{expandedNoteRowsByGameDiffKey}{$gameDiffKey}};
+      $$noteSetStats{NOTE_ROWS} = join ",", @{$$smInfo{expandedNoteRowsByGameDiffKey}{$gameDiffKey}};
     }else{
-      $$s{NOTE_ROWS} = 'note-rows-skipped';
+      $$noteSetStats{NOTE_ROWS} = 'note-rows-skipped';
     }
 
     if($dump){
       $formatSpec = "";
-      for my $varName(sort keys %$s){
+      for my $varName(sort keys %$noteSetStats){
         $formatSpec .= "%GAME.%DIFF.$varName=%$varName%n";
       }
     }
 
-    print formatStats($formatSpec, $forceNewlines, $s);
+    print formatStats($formatSpec, $forceNewlines, $noteSetStats);
   }
 }
 
