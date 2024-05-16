@@ -895,6 +895,9 @@ sub getSongDuration($$$){
   my $songDurS = 0;
 
   my $rowCount = getSongRowCount($rows);
+  if($rowCount == 0){
+    return 0;
+  }
 
   my @bpmRows = sort {$a <=> $b} keys %$bpmsByRow;
   for(my $i=0; $i<@bpmRows; $i++){
