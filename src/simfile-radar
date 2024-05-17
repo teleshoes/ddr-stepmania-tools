@@ -1141,9 +1141,9 @@ sub removeBrokenHolds($$){
 
   my $warningMsg = "";
   my $heldArrowStartRowIdx = {};
-  my $numHeldArrows = 0;
   for(my $rowIdx=0; $rowIdx<@$rows; $rowIdx++){
     my $row = $$rows[$rowIdx];
+    my $numHeldArrows = 0 + keys %$heldArrowStartRowIdx;
     next if $row =~ /^0+$/ and $rowIdx != $#$rows;
     next if $row !~ /[234]/ and $numHeldArrows == 0;
 
@@ -1157,7 +1157,6 @@ sub removeBrokenHolds($$){
           $$rows[$rowIdx] = $newRow;
         }else{
           $$heldArrowStartRowIdx{$arrowIdx} = $rowIdx;
-          $numHeldArrows++;
         }
       }elsif($arrows[$arrowIdx] =~ /[3]/){ #hold or roll end
         if(not defined $$heldArrowStartRowIdx{$arrowIdx}){
@@ -1166,8 +1165,7 @@ sub removeBrokenHolds($$){
           $warningMsg .= "  -HOLD/ROLL RELEASE BEFORE START: row#$rowIdx '$row' => '$newRow'\n";
           $$rows[$rowIdx] = $newRow;
         }else{
-          undef $$heldArrowStartRowIdx{$arrowIdx};
-          $numHeldArrows--;
+          delete $$heldArrowStartRowIdx{$arrowIdx};
         }
       }elsif($arrows[$arrowIdx] !~ /0/ or $rowIdx == $#$rows){
         #non-release note in the middle of a hold => remove the hold
@@ -1181,8 +1179,7 @@ sub removeBrokenHolds($$){
           $warningMsg .= "  -HOLD/ROLL NEVER RELEASED:       row#$startRowIdx '$startRow' => '$newRow'\n";
           $$rows[$startRowIdx] = $newRow;
 
-          undef $$heldArrowStartRowIdx{$arrowIdx};
-          $numHeldArrows--;
+          delete $$heldArrowStartRowIdx{$arrowIdx};
        }
       }
     }
