@@ -83,7 +83,7 @@ my @DIFF_ABBREV_ARR = (
 my @DIFF_ABBREV_NAMES = map {$$_[0]} @DIFF_ABBREV_ARR;
 my %DIFF_ABBREVS = map {$$_[0] => $$_[1]} @DIFF_ABBREV_ARR;
 
-sub handleSimfile($$$$$$$$$);
+sub handleSimfile($$$$$$$$$$);
 sub formatStats($$$);
 sub getSongRowCount($);
 sub getSongDuration($$$);
@@ -97,11 +97,11 @@ sub calculateNotesPerSecondInfo($$$);
 sub getTotalNoteIrregularity($);
 sub getBPMChangeAmount($$);
 sub formatDDRDiff($);
-sub getNoteSetStats($$$$$);
+sub getNoteSetStats($$$$$$);
 sub isNoteSetStatsCached($$);
 sub readNoteSetStatsCache($$);
 sub writeNoteSetStatsCache($$$);
-sub calculateNoteSetStats($$);
+sub calculateNoteSetStats($$$);
 sub getSMInfo($$$$);
 sub readSMInfoCache($$);
 sub writeSMInfoCache($$);
@@ -597,6 +597,24 @@ my $usage = "Usage:
         both GAME and GAME_ABBREV do not match (case-insensitive)
         the regular expression GAME_REGEX
 
+    --survive-seconds=SURVIVE_SECONDS
+      only process rows that start within SURVIVE_SECONDS seconds of the song start
+        -implies --no-cache (forcibly disables cache read+write, regardless of -c/-w/-r flags)
+          -since values are cached for the full song, the cache is not read
+          -likewise, since values calculated are not for the full song, the cache is not written)
+        -before calculating any values derived from NOTE_ROWS, BPM_ROWS, and STOP_ROWS:
+          -calculate duration CUR_DUR for each row (see SONG_DUR above)
+          -sum CUR_DUR up to each row to get row START_TIME
+          -remove rows from NOTE_ROWS+BPM_ROWS+STOP_ROWS where START_TIME > SURVIVE_SECONDS
+        -this decreases the value of values like SONG_DUR and COUNT_NOTE_ROWS,
+          and affects most other values
+        -SONG_DUR will always be less than SURVIVE_SECONDS, unless both are 0
+          -SONG_DUR excludes the last row, so will always be exactly one row less
+          -if no non-empty rows are included, SONG_DUR will be 0,
+            (because empty TRAILING rows are removed)
+      NOTE: this only ever REMOVES rows from a song, it does not append empty rows,
+            and does NOT ever increase SONG_DUR (it can decrease SONG_DUR)
+
     --beginner | beginner
       same as: --difficulty='^beginner\$'
     --basic | basic
@@ -709,6 +727,7 @@ sub main(@){
   my $forceNewlines = 1;
   my $readCache = 1;
   my $writeCache = 1;
+  my $surviveSeconds = undef;
   while(@_ > 0){
     my $arg = shift;
     if($arg =~ /^(-h|--help)$/){
@@ -720,6 +739,10 @@ sub main(@){
     }elsif($arg =~ /^(-w|--no-read-cache|--overwrite-cache)$/){
       $readCache = 0;
     }elsif($arg =~ /^(-r|--no-write-cache|--read-only-cache)$/){
+      $writeCache = 0;
+    }elsif($arg =~ /^--survive-seconds=(\d+(?:\.\d*)?)$/){
+      $surviveSeconds = $1;
+      $readCache = 0;
       $writeCache = 0;
     }elsif($arg =~ /^(?:--)?(?:dance-)?(single|double)s?$/){
       $$gameDiffFilters{gameFilterRegex} = "^(dance-$1|$1s)\$";
@@ -756,6 +779,10 @@ sub main(@){
   }
   die "$usage\nERROR: missing SM_FILE\n" if @smFiles == 0;
 
+  if(defined $surviveSeconds and ($readCache or $writeCache)){
+    die "ERROR: cannot read or write cache if SURVIVE_SECONDS is given\n";
+  }
+
   for my $smFile(@smFiles){
     handleSimfile(
       $smFile,
@@ -767,11 +794,12 @@ sub main(@){
       $forceNewlines,
       $readCache,
       $writeCache,
+      $surviveSeconds,
     );
   }
 }
 
-sub handleSimfile($$$$$$$$$){
+sub handleSimfile($$$$$$$$$$){
   my (
     $smFile,
     $gameDiffFilters,
@@ -782,6 +810,7 @@ sub handleSimfile($$$$$$$$$){
     $forceNewlines,
     $readCache,
     $writeCache,
+    $surviveSeconds,
   ) = @_;
 
   my $smInfo = getSMInfo($smFile, $gameDiffFilters, $readCache, $writeCache);
@@ -791,7 +820,8 @@ sub handleSimfile($$$$$$$$$){
   my $stats = {};
   for my $gameDiffKey(@gameDiffKeys){
     next if isGameDiffSkipped($gameDiffFilters, $gameDiffKey);
-    my $noteSetStats = getNoteSetStats($smFile, $smInfo, $gameDiffKey, $readCache, $writeCache);
+    my $noteSetStats = getNoteSetStats(
+      $smFile, $smInfo, $gameDiffKey, $readCache, $writeCache, $surviveSeconds);
 
     $$noteSetStats{SM_FILE} = $smFile;
 
@@ -1499,8 +1529,8 @@ sub formatDDRDiff($){
   }
 }
 
-sub getNoteSetStats($$$$$){
-  my ($smFile, $smInfo, $gameDiffKey, $readCache, $writeCache) = @_;
+sub getNoteSetStats($$$$$$){
+  my ($smFile, $smInfo, $gameDiffKey, $readCache, $writeCache, $surviveSeconds) = @_;
   my $stats = undef;
   $stats = readNoteSetStatsCache($smFile, $gameDiffKey) if $readCache;
   if(not defined $stats){
@@ -1513,7 +1543,7 @@ sub getNoteSetStats($$$$$){
       }
     }
 
-    $stats = calculateNoteSetStats($smInfo, $gameDiffKey);
+    $stats = calculateNoteSetStats($smInfo, $gameDiffKey, $surviveSeconds);
     writeNoteSetStatsCache($smFile, $gameDiffKey, $stats) if $writeCache;
   }
   return $stats;
@@ -1560,8 +1590,8 @@ sub writeNoteSetStatsCache($$$){
   close FH;
 }
 
-sub calculateNoteSetStats($$){
-  my ($smInfo, $gameDiffKey) = @_;
+sub calculateNoteSetStats($$$){
+  my ($smInfo, $gameDiffKey, $surviveSeconds) = @_;
   my $noteSetInfo = $$smInfo{noteSetInfoByGameDiffKey}{$gameDiffKey};
   my $s = {
     GAME                      => $$noteSetInfo{game},
@@ -1597,6 +1627,10 @@ sub calculateNoteSetStats($$){
 
   ($rows, $bpmsByRow, $stopsByRow) = removeWarps($rows, $bpmsByRow, $stopsByRow);
   $rows = removeBrokenHolds($rows, "$$s{SONG_NAME_ID}-$$s{GAME}-$$s{DIFF_SM}");
+
+  if(defined $surviveSeconds){
+    trimRowsToSurviveSeconds($surviveSeconds, $rows, $bpmsByRow, $stopsByRow);
+  }
 
   #analysis + data-collection
   $s = {%$s,                     %{getNoteCounts($rows)},
@@ -2420,6 +2454,43 @@ sub getExpandedNoteRows($){
   }
 
   return \@noteRows;
+}
+
+sub trimRowsToSurviveSeconds($$$$){
+  my ($surviveSeconds, $rows, $bpmsByRow, $stopsByRow) = @_;
+
+  my @bpmChangeRows = sort {$a <=> $b} keys %$bpmsByRow;
+  my $firstBpm = $$bpmsByRow{$bpmChangeRows[0]};
+
+  my $targetNanoS = int($surviveSeconds * $NANOSEC_PER_SEC + 0.5);
+
+  my $lastRowIdx = $#$rows;
+
+  my $totalNanoS = 0;
+  my $curNanoSecPerRow = bpmToNanoSecondsPerRow($firstBpm);
+  for(my $row=0; $row<=@$rows; $row++){
+    $curNanoSecPerRow = bpmToNanoSecondsPerRow($$bpmsByRow{$row}) if defined $$bpmsByRow{$row};
+    $totalNanoS += $curNanoSecPerRow;
+
+    if(defined $$stopsByRow{$row}){
+      #stops are immediately AFTER the row, so add directly to this row duration
+      $totalNanoS += int($NANOSEC_PER_SEC * $$stopsByRow{$row} + 0.5);
+    }
+
+    if($totalNanoS > $targetNanoS){
+      $lastRowIdx = $row - 1; #can be -1, if survive seconds is less than first row dur
+      last;
+    }
+  }
+
+  #delete all rows after the last one
+  splice(@$rows, $lastRowIdx + 1);
+  for my $rowIdx(sort keys %$bpmsByRow){
+    delete $$bpmsByRow{$rowIdx} if $rowIdx > $lastRowIdx;
+  }
+  for my $rowIdx(sort keys %$stopsByRow){
+    delete $$stopsByRow{$rowIdx} if $rowIdx > $lastRowIdx;
+  }
 }
 
 sub getCacheDir($){
