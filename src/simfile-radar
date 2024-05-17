@@ -1151,6 +1151,8 @@ sub removeBrokenHolds($$){
     for(my $arrowIdx=0; $arrowIdx<@arrows; $arrowIdx++){
       if($arrows[$arrowIdx] =~ /[24]/){    #hold or roll start
         if(defined $$heldArrowStartRowIdx{$arrowIdx}){
+          #hold/roll for arrow that is already currently held
+          #  erase duplicate hold, and do not mark arrow re-held
           push @brokenHolds, {
             rowIdx         => $rowIdx,
             arrowIdx       => $arrowIdx,
@@ -1161,6 +1163,8 @@ sub removeBrokenHolds($$){
         }
       }elsif($arrows[$arrowIdx] =~ /[3]/){ #hold or roll end
         if(not defined $$heldArrowStartRowIdx{$arrowIdx}){
+          #release for arrow that is not currently held
+          #  erase useless release, and do not mark arrow re-released
           push @brokenHolds, {
             rowIdx         => $rowIdx,
             arrowIdx       => $arrowIdx,
@@ -1170,10 +1174,9 @@ sub removeBrokenHolds($$){
           delete $$heldArrowStartRowIdx{$arrowIdx};
         }
       }elsif($arrows[$arrowIdx] !~ /0/ or $rowIdx == $#$rows){
-        #non-release note in the middle of a hold => remove the hold
-        # OR hold is not released and this is the last row of the song
         if(defined $$heldArrowStartRowIdx{$arrowIdx}){
-
+          #non-release note in the middle of a hold, OR hold is never released as of last row
+          #  erase previous un-released hold, and mark arrow released
           my $holdStartRowIdx = $$heldArrowStartRowIdx{$arrowIdx};
           push @brokenHolds, {
             rowIdx         => $holdStartRowIdx, #the problem is the previous hold row
