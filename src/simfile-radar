@@ -1139,7 +1139,7 @@ sub removeWarps($$$){
 sub removeBrokenHolds($$){
   my ($rows, $infoMsg) = @_;
 
-  my $warningMsg = "";
+  my @brokenHolds;
   my $heldArrowStartRowIdx = {};
   for(my $rowIdx=0; $rowIdx<@$rows; $rowIdx++){
     my $row = $$rows[$rowIdx];
@@ -1151,19 +1151,21 @@ sub removeBrokenHolds($$){
     for(my $arrowIdx=0; $arrowIdx<@arrows; $arrowIdx++){
       if($arrows[$arrowIdx] =~ /[24]/){    #hold or roll start
         if(defined $$heldArrowStartRowIdx{$arrowIdx}){
-          $arrows[$arrowIdx] = "0";
-          my $newRow = join '', @arrows;
-          $warningMsg .= "  -HOLD/ROLL STARTED AGAIN:        row#$rowIdx '$row' => '$newRow'\n";
-          $$rows[$rowIdx] = $newRow;
+          push @brokenHolds, {
+            rowIdx         => $rowIdx,
+            arrowIdx       => $arrowIdx,
+            reason         => "HOLD/ROLL STARTED AGAIN",
+          };
         }else{
           $$heldArrowStartRowIdx{$arrowIdx} = $rowIdx;
         }
       }elsif($arrows[$arrowIdx] =~ /[3]/){ #hold or roll end
         if(not defined $$heldArrowStartRowIdx{$arrowIdx}){
-          $arrows[$arrowIdx] = "0";
-          my $newRow = join '', @arrows;
-          $warningMsg .= "  -HOLD/ROLL RELEASE BEFORE START: row#$rowIdx '$row' => '$newRow'\n";
-          $$rows[$rowIdx] = $newRow;
+          push @brokenHolds, {
+            rowIdx         => $rowIdx,
+            arrowIdx       => $arrowIdx,
+            reason         => "HOLD/ROLL RELEASE BEFORE START",
+          };
         }else{
           delete $$heldArrowStartRowIdx{$arrowIdx};
         }
@@ -1171,18 +1173,35 @@ sub removeBrokenHolds($$){
         #non-release note in the middle of a hold => remove the hold
         # OR hold is not released and this is the last row of the song
         if(defined $$heldArrowStartRowIdx{$arrowIdx}){
-          my $startRowIdx = $$heldArrowStartRowIdx{$arrowIdx};
-          my $startRow = $$rows[$startRowIdx];
-          my @startArrows = split '', $startRow;
-          $startArrows[$arrowIdx] = 0;
-          my $newRow = join '', @startArrows;
-          $warningMsg .= "  -HOLD/ROLL NEVER RELEASED:       row#$startRowIdx '$startRow' => '$newRow'\n";
-          $$rows[$startRowIdx] = $newRow;
 
+          my $holdStartRowIdx = $$heldArrowStartRowIdx{$arrowIdx};
+          push @brokenHolds, {
+            rowIdx         => $holdStartRowIdx, #the problem is the previous hold row
+            arrowIdx       => $arrowIdx,
+            reason         => "HOLD/ROLL NEVER RELEASED",
+          };
           delete $$heldArrowStartRowIdx{$arrowIdx};
        }
       }
     }
+  }
+
+  my $warningMsg = "";
+  for my $brokenHold(@brokenHolds){
+    my $oldRow = $$rows[$$brokenHold{rowIdx}];
+    my @arrows = split "", $oldRow;
+
+    $arrows[$$brokenHold{arrowIdx}] = 0;
+    my $newRow = join "", @arrows;
+    $$rows[$$brokenHold{rowIdx}] = $newRow;
+
+    my $maxRowIdxLen = length $#$rows;
+    $warningMsg .= sprintf("  -%-30s | row#%-${maxRowIdxLen}d | %s => %s\n",
+      $$brokenHold{reason},
+      $$brokenHold{rowIdx},
+      $oldRow,
+      $newRow,
+    );
   }
 
   if(length $warningMsg > 0){
