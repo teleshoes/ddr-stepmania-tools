@@ -1644,8 +1644,20 @@ sub calculateNoteSetStats($$$){
     $stopsByRow = $$smInfo{stopsByRow};
   }
 
-  ($rows, $bpmsByRow, $stopsByRow) = removeWarps($rows, $bpmsByRow, $stopsByRow);
+  #NOTE: remove broken holds before removing warps
+  #  -stepmania will not count a hold with no release at all,
+  #  -HOWEVER, stepmania WILL count a hold with a release that is warped over
+  #  -if a warp contains a HOLD-RELEASE that is NOT later released:
+  #    -removing the warped release, and then removing broken holds, will remove the start
+  #    -stepmania will count it as a hold, though, so this is wrong
+  #    -therefore, removing warps afterwards is required
+  #  -if a warp contains a HOLD-START that IS later released:
+  #    -removing the warped hold and then removing broken holds, will remove the release
+  #    -stepmania ignores warped starts, AND useless releases
+  #    -therefore, it is still ok to remove warps afterwards
   $rows = removeBrokenHolds($rows, "$$s{SONG_NAME_ID}-$$s{GAME}-$$s{DIFF_SM}");
+
+  ($rows, $bpmsByRow, $stopsByRow) = removeWarps($rows, $bpmsByRow, $stopsByRow);
 
   if(defined $surviveSeconds){
     trimRowsToSurviveSeconds($surviveSeconds, $rows, $bpmsByRow, $stopsByRow);
